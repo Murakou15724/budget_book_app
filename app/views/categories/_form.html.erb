@@ -1,0 +1,39 @@
+<%= form_with model: category do |f| %>
+  <% if category.errors.any? %>
+    <div class="error-messages">
+      <% category.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :kind, "種別" %>
+    <%= f.select :kind, Category.kinds.keys.map { |k| [Category::KIND_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :name, "名称" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :monthly_budget, "基本月予算" %>
+    <%= f.number_field :monthly_budget %>
+  </div>
+
+  <div class="field">
+    <%= f.label :note, "備考" %>
+    <%= f.text_field :note %>
+  </div>
+
+  <div class="field">
+    <%= f.label :position, "表示順" %>
+    <%= f.number_field :position %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", categories_path %>
+  </div>
+<% end %>
