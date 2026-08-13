@@ -1,0 +1,70 @@
+<%= form_with model: transaction do |f| %>
+  <% if transaction.errors.any? %>
+    <div class="error-messages">
+      <% transaction.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :date, "日付" %>
+    <%= f.date_field :date, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :entry_type, "入力区分" %>
+    <%= f.select :entry_type, Transaction.entry_types.keys.map { |k| [Transaction::ENTRY_TYPE_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :direction, "収支区分" %>
+    <%= f.select :direction, Transaction.directions.keys.map { |k| [Transaction::DIRECTION_LABELS[k], k] }, include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :category_id, "カテゴリ" %>
+    <%= f.grouped_collection_select :category_id, [["支出", Category.expense.order(:position, :name)], ["収入", Category.income.order(:position, :name)]],
+          :last, :first, :id, :name, include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :amount, "金額" %>
+    <%= f.number_field :amount, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :payment_method_id, "支払・入金方法" %>
+    <%= f.collection_select :payment_method_id, PaymentMethod.order(:position, :name), :id, :name, include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :account_id, "口座・置き場所" %>
+    <%= f.collection_select :account_id, Account.order(:position, :name), :id, :name, include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :memo, "メモ" %>
+    <%= f.text_field :memo %>
+  </div>
+
+  <div class="field">
+    <%= f.label :satisfaction, "満足度(1〜5、任意)" %>
+    <%= f.select :satisfaction, (1..5), include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :regret, "後悔支出" %>
+    <%= f.check_box :regret %>
+  </div>
+
+  <div class="field">
+    <%= f.label :credit_card_status, "クレカ支払状況" %>
+    <%= f.select :credit_card_status, Transaction.credit_card_statuses.keys.map { |k| [Transaction::CREDIT_CARD_STATUS_LABELS[k], k] } %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", transactions_path %>
+  </div>
+<% end %>
