@@ -5,6 +5,11 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  resources :transactions, except: [:show] do
+    collection do
+      patch :mark_credit_card_paid
+    end
+  end
   resources :categories, except: [:show]
   resources :accounts, except: [:show]
   resources :payment_methods, except: [:show]
@@ -12,5 +17,5 @@ Rails.application.routes.draw do
   resource :budget_plan, only: [:edit, :update]
 
   # Defines the root path route ("/")
-  root "categories#index"
+  root "transactions#index"
 end
