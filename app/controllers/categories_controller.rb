@@ -7,7 +7,8 @@ class CategoriesController < ApplicationController
   end
 
   def new
-    @category = Category.new(kind: params[:kind] || "expense")
+    kind = Category.kinds.key?(params[:kind]) ? params[:kind] : "expense"
+    @category = Category.new(kind: kind)
   end
 
   def create
