@@ -1,0 +1,35 @@
+<h1>設定</h1>
+
+<%= form_with model: @setting, url: settings_path do |f| %>
+  <% if @setting.errors.any? %>
+    <div class="error-messages">
+      <% @setting.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :target_year, "対象年" %>
+    <%= f.number_field :target_year %>
+  </div>
+
+  <div class="field">
+    <%= f.label :total_savings_goal, "全体貯金目標" %>
+    <%= f.number_field :total_savings_goal %>
+  </div>
+
+  <div class="field">
+    <%= f.label :monthly_savings_goal, "毎月貯金目標" %>
+    <%= f.number_field :monthly_savings_goal %>
+  </div>
+
+  <div class="field">
+    <%= f.label :level_unit_amount, "貯金レベル換算額(この金額で1LV)" %>
+    <%= f.number_field :level_unit_amount %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+  </div>
+<% end %>
