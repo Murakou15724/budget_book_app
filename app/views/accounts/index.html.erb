@@ -1,0 +1,25 @@
+<h1>口座・置き場所</h1>
+
+<%= link_to "口座を追加", new_account_path %>
+
+<table>
+  <thead>
+    <tr>
+      <th>名称</th>
+      <th>種別</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @accounts.each do |account| %>
+      <tr>
+        <td><%= account.name %></td>
+        <td><%= account.kind_label %></td>
+        <td>
+          <%= link_to "編集", edit_account_path(account) %>
+          <%= link_to "削除", account_path(account), data: { turbo_method: :delete, turbo_confirm: "「#{account.name}」を削除しますか？" } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

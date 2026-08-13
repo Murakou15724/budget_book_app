@@ -1,0 +1,29 @@
+<%= form_with model: account do |f| %>
+  <% if account.errors.any? %>
+    <div class="error-messages">
+      <% account.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name, "名称" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :kind, "種別" %>
+    <%= f.select :kind, Account.kinds.keys.map { |k| [Account::KIND_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :position, "表示順" %>
+    <%= f.number_field :position %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", accounts_path %>
+  </div>
+<% end %>

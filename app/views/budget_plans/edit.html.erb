@@ -1,0 +1,43 @@
+<h1>月別予算</h1>
+
+<p>
+  <%= link_to "← #{@year - 1}年", edit_budget_plan_path(year: @year - 1) %>
+  <strong><%= @year %>年</strong>
+  <%= link_to "#{@year + 1}年 →", edit_budget_plan_path(year: @year + 1) %>
+</p>
+<p>カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算(カテゴリ設定の値)が使われます。</p>
+
+<%= form_with url: budget_plan_path, method: :patch do %>
+  <%= hidden_field_tag :year, @year %>
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>カテゴリ</th>
+          <th>基本月予算</th>
+          <% (1..12).each do |month| %>
+            <th><%= month %>月</th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @categories.each do |category| %>
+          <tr>
+            <td><%= category.name %></td>
+            <td><%= category.monthly_budget %></td>
+            <% (1..12).each do |month| %>
+              <% existing = @existing_budgets[[category.id, month]] %>
+              <td>
+                <%= number_field_tag "budgets[#{category.id}-#{month}]", existing&.budget || category.monthly_budget, size: 6 %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions">
+    <%= submit_tag "保存" %>
+  </div>
+<% end %>

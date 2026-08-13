@@ -1,0 +1,29 @@
+<%= form_with model: payment_method do |f| %>
+  <% if payment_method.errors.any? %>
+    <div class="error-messages">
+      <% payment_method.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name, "名称" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :note, "備考" %>
+    <%= f.text_field :note %>
+  </div>
+
+  <div class="field">
+    <%= f.label :position, "表示順" %>
+    <%= f.number_field :position %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", payment_methods_path %>
+  </div>
+<% end %>
