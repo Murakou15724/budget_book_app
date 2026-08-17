@@ -1,0 +1,43 @@
+<h1>資産管理</h1>
+
+<%= link_to "資産スナップショットを追加", new_asset_snapshot_path %>
+
+<h2>資産推移</h2>
+<%= asset_trend_svg(@asset_snapshots.to_a.reverse) %>
+
+<h2>スナップショット一覧</h2>
+<% accounts = Account.order(:position, :name) %>
+<div style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>記録日</th>
+        <% accounts.each do |account| %>
+          <th><%= account.name %></th>
+        <% end %>
+        <th>合計資産</th>
+        <th>目標との差</th>
+        <th>メモ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @asset_snapshots.each do |snapshot| %>
+        <% balances_by_account = snapshot.asset_balances.index_by(&:account_id) %>
+        <tr>
+          <td><%= snapshot.recorded_on %></td>
+          <% accounts.each do |account| %>
+            <td><%= number_to_currency(balances_by_account[account.id]&.balance, unit: "¥", precision: 0) if balances_by_account[account.id] %></td>
+          <% end %>
+          <td><%= number_to_currency(snapshot.total_balance, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(snapshot.goal_diff(@savings_goal), unit: "¥", precision: 0) %></td>
+          <td><%= snapshot.memo %></td>
+          <td>
+            <%= link_to "編集", edit_asset_snapshot_path(snapshot) %>
+            <%= link_to "削除", asset_snapshot_path(snapshot), data: { turbo_method: :delete, turbo_confirm: "#{snapshot.recorded_on}のスナップショットを削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
