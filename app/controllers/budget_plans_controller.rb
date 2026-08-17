@@ -1,6 +1,6 @@
 class BudgetPlansController < ApplicationController
   def edit
-    @year = (params[:year] || Setting.current.target_year || Date.current.year).to_i
+    @year = resolve_year(params[:year])
     @categories = Category.expense.order(:position, :name)
     @existing_budgets = CategoryMonthlyBudget.where(year: @year).index_by { |b| [b.category_id, b.month] }
   end
