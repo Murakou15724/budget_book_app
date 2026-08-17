@@ -1,0 +1,71 @@
+<h1>ダッシュボード</h1>
+
+<p>
+  <%= link_to "← #{@year - 1}年", dashboard_path(year: @year - 1) %>
+  <strong><%= @year %>年</strong>
+  <%= link_to "#{@year + 1}年 →", dashboard_path(year: @year + 1) %>
+</p>
+
+<h2>PLAYER STATUS</h2>
+<p>貯金LV <strong><%= @savings_level %></strong>(1LV = <%= number_to_currency(@level_unit_amount, unit: "¥", precision: 0) %>)</p>
+<p>
+  貯金目標進捗: <%= number_to_percentage(@goal_progress_rate * 100, precision: 1) %>
+  (<%= number_to_currency(@total_assets, unit: "¥", precision: 0) %> / <%= number_to_currency(@total_savings_goal, unit: "¥", precision: 0) %>)
+</p>
+<div style="background:#e0e0e0; border-radius:4px; overflow:hidden; width:100%; max-width:400px;">
+  <div style="background:#2f6f4e; height:16px; width:<%= [[@goal_progress_rate * 100, 0].max, 100].min %>%;"></div>
+</div>
+
+<% if @current_summary %>
+  <h2>今月(<%= @current_month %>月)の収支</h2>
+  <table>
+    <tr><th>収入予定込</th><td><%= number_to_currency(@current_summary.income_with_planned, unit: "¥", precision: 0) %></td></tr>
+    <tr><th>支出実績</th><td><%= number_to_currency(@current_summary.expense_actual, unit: "¥", precision: 0) %></td></tr>
+    <tr><th>収支</th><td><%= number_to_currency(@current_summary.actual_balance, unit: "¥", precision: 0) %></td></tr>
+    <tr><th>予算残額</th><td><%= number_to_currency(@current_summary.budget_remaining, unit: "¥", precision: 0) %></td></tr>
+  </table>
+<% else %>
+  <h2>今月の収支</h2>
+  <p><%= @year %>年は現在の年ではないため、今月の集計は表示されません。</p>
+<% end %>
+
+<h2><%= @year %>年間収支</h2>
+<table>
+  <tr><th>年間収入</th><td><%= number_to_currency(@annual_income, unit: "¥", precision: 0) %></td></tr>
+  <tr><th>年間支出</th><td><%= number_to_currency(@annual_expense, unit: "¥", precision: 0) %></td></tr>
+</table>
+
+<h2>資産</h2>
+<table>
+  <tr><th>現在総資産</th><td><%= number_to_currency(@total_assets, unit: "¥", precision: 0) %></td></tr>
+  <tr><th>クレカ未払仮置き</th><td><%= number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0) %></td></tr>
+</table>
+
+<% if @current_month %>
+  <h2>カテゴリ別 今月支出</h2>
+  <table>
+    <thead>
+      <tr><th>カテゴリ</th><th>今月支出</th><th>予算</th><th>予算比</th></tr>
+    </thead>
+    <tbody>
+      <% @category_expenses.each do |entry| %>
+        <tr>
+          <td><%= entry.category.name %></td>
+          <td><%= number_to_currency(entry.spent, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(entry.budget, unit: "¥", precision: 0) %></td>
+          <td><%= entry.usage_rate ? number_to_percentage(entry.usage_rate * 100, precision: 1) : "-" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<h2>月別収入・支出推移</h2>
+<%= monthly_trend_svg(@monthly_summaries) %>
+
+<% if @current_month %>
+  <h2>カテゴリ別 今月支出(グラフ)</h2>
+  <div style="overflow-x: auto;">
+    <%= category_expense_bar_svg(@category_expenses) %>
+  </div>
+<% end %>
