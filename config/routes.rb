@@ -11,6 +11,10 @@ Rails.application.routes.draw do
     end
   end
   resources :asset_snapshots, except: [:show]
+  get "monthly_summaries", to: "monthly_summaries#index"
+  get "monthly_reviews", to: "monthly_reviews#index"
+  get "monthly_reviews/:year/:month/edit", to: "monthly_reviews#edit", as: :edit_monthly_review, constraints: { year: /\d+/, month: /\d+/ }
+  patch "monthly_reviews/:year/:month", to: "monthly_reviews#update", as: :monthly_review, constraints: { year: /\d+/, month: /\d+/ }
   resources :categories, except: [:show]
   resources :accounts, except: [:show]
   resources :payment_methods, except: [:show]
