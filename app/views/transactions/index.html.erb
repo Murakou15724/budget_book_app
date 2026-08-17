@@ -1,98 +1,94 @@
 <h1>取引</h1>
 
-<%= link_to "取引を追加", new_transaction_path %>
+<%= link_to "取引を追加", new_transaction_path, class: "btn-add" %>
 
-<h2>絞り込み</h2>
-<%= form_with url: transactions_path, method: :get, local: true do %>
-  <div class="field">
-    <%= label_tag :from_date, "日付(from)" %>
-    <%= date_field_tag :from_date, params[:from_date] %>
-  </div>
-  <div class="field">
-    <%= label_tag :to_date, "日付(to)" %>
-    <%= date_field_tag :to_date, params[:to_date] %>
-  </div>
-  <div class="field">
-    <%= label_tag :category_id, "カテゴリ" %>
-    <%= select_tag :category_id,
-          options_from_collection_for_select(Category.order(:kind, :position, :name), :id, :name, params[:category_id]),
-          include_blank: "すべて" %>
-  </div>
-  <div class="field">
-    <%= label_tag :direction, "収支区分" %>
-    <%= select_tag :direction,
-          options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, params[:direction]),
-          include_blank: "すべて" %>
-  </div>
-  <div class="field">
-    <%= label_tag :entry_type, "入力区分" %>
-    <%= select_tag :entry_type,
-          options_for_select(Transaction::ENTRY_TYPE_LABELS.map { |k, v| [v, k] }, params[:entry_type]),
-          include_blank: "すべて" %>
-  </div>
-  <div class="field">
-    <%= label_tag :credit_card_status, "クレカ支払状況" %>
-    <%= select_tag :credit_card_status,
-          options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, params[:credit_card_status]),
-          include_blank: "すべて" %>
-  </div>
-  <div class="actions">
-    <%= submit_tag "絞り込む" %>
-    <%= link_to "クリア", transactions_path %>
-  </div>
-<% end %>
+<% filters_active = index_filter_params.to_h.values.any?(&:present?) %>
+<details class="filter-card" <%= "open" if filters_active %>>
+  <summary class="filter-toggle">🔍 絞り込み<%= " (適用中)" if filters_active %></summary>
+  <%= form_with url: transactions_path, method: :get, local: true do %>
+    <div class="filter-grid">
+      <div class="field">
+        <%= label_tag :from_date, "日付(from)" %>
+        <%= date_field_tag :from_date, params[:from_date] %>
+      </div>
+      <div class="field">
+        <%= label_tag :to_date, "日付(to)" %>
+        <%= date_field_tag :to_date, params[:to_date] %>
+      </div>
+      <div class="field">
+        <%= label_tag :category_id, "カテゴリ" %>
+        <%= select_tag :category_id,
+              options_from_collection_for_select(Category.order(:kind, :position, :name), :id, :name, params[:category_id]),
+              include_blank: "すべて" %>
+      </div>
+      <div class="field">
+        <%= label_tag :direction, "収支区分" %>
+        <%= select_tag :direction,
+              options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, params[:direction]),
+              include_blank: "すべて" %>
+      </div>
+      <div class="field">
+        <%= label_tag :entry_type, "入力区分" %>
+        <%= select_tag :entry_type,
+              options_for_select(Transaction::ENTRY_TYPE_LABELS.map { |k, v| [v, k] }, params[:entry_type]),
+              include_blank: "すべて" %>
+      </div>
+      <div class="field">
+        <%= label_tag :credit_card_status, "クレカ支払状況" %>
+        <%= select_tag :credit_card_status,
+              options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, params[:credit_card_status]),
+              include_blank: "すべて" %>
+      </div>
+    </div>
+    <div class="actions">
+      <%= submit_tag "絞り込む" %>
+      <%= link_to "クリア", transactions_path %>
+    </div>
+  <% end %>
+</details>
 
 <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch do %>
   <% index_filter_params.to_h.each do |key, value| %>
     <%= hidden_field_tag key, value %>
   <% end %>
 
-  <div style="overflow-x: auto;">
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>日付</th>
-          <th>入力区分</th>
-          <th>収支区分</th>
-          <th>カテゴリ</th>
-          <th>金額</th>
-          <th>支払方法</th>
-          <th>口座</th>
-          <th>メモ</th>
-          <th>満足度</th>
-          <th>後悔</th>
-          <th>クレカ支払状況</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @transactions.each do |transaction| %>
-          <tr>
-            <td>
-              <% if transaction.unpaid? %>
-                <%= check_box_tag "transaction_ids[]", transaction.id %>
-              <% end %>
-            </td>
-            <td><%= transaction.date %></td>
-            <td><%= transaction.entry_type_label %></td>
-            <td><%= transaction.direction_label %></td>
-            <td><%= transaction.category.name %></td>
-            <td><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %></td>
-            <td><%= transaction.payment_method.name %></td>
-            <td><%= transaction.account.name %></td>
-            <td><%= transaction.memo %></td>
-            <td><%= transaction.satisfaction %></td>
-            <td><%= transaction.regret? ? "あり" : "" %></td>
-            <td><%= transaction.credit_card_status_label %></td>
-            <td>
-              <%= link_to "編集", edit_transaction_path(transaction) %>
-              <%= link_to "削除", transaction_path(transaction), data: { turbo_method: :delete, turbo_confirm: "この取引を削除しますか？" } %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+  <div class="entry-list">
+    <% @transactions.each do |transaction| %>
+      <div class="entry-card">
+        <div class="entry-card__row">
+          <div class="entry-card__main">
+            <p class="entry-card__title">
+              <%= transaction.category.name %>
+              <% if transaction.planned? %><span class="badge badge-neutral">予定</span><% end %>
+            </p>
+            <div class="entry-card__meta">
+              <span><%= transaction.date %></span>
+              <span><%= transaction.payment_method.name %> / <%= transaction.account.name %></span>
+            </div>
+            <% if transaction.memo.present? || transaction.satisfaction || transaction.regret? || !transaction.not_applicable? %>
+              <div class="entry-card__meta">
+                <% if transaction.memo.present? %><span><%= transaction.memo %></span><% end %>
+                <% if transaction.satisfaction %><span>😊 <%= transaction.satisfaction %></span><% end %>
+                <% if transaction.regret? %><span class="badge badge-warning">後悔</span><% end %>
+                <% unless transaction.not_applicable? %>
+                  <span class="badge <%= transaction.unpaid? ? 'badge-warning' : 'badge-good' %>"><%= transaction.credit_card_status_label %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+          <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
+            <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
+          </p>
+        </div>
+        <div class="entry-card__actions">
+          <% if transaction.unpaid? %>
+            <label><%= check_box_tag "transaction_ids[]", transaction.id %> 支払済にする</label>
+          <% end %>
+          <%= link_to "編集", edit_transaction_path(transaction) %>
+          <%= link_to "削除", transaction_path(transaction), data: { turbo_method: :delete, turbo_confirm: "この取引を削除しますか？" } %>
+        </div>
+      </div>
+    <% end %>
   </div>
 
   <div class="actions">
