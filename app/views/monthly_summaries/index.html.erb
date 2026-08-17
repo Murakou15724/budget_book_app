@@ -1,0 +1,43 @@
+<h1>月別集計</h1>
+<p>取引データから自動集計した閲覧専用の画面です。</p>
+
+<p>
+  <%= link_to "← #{@year - 1}年", monthly_summaries_path(year: @year - 1) %>
+  <strong><%= @year %>年</strong>
+  <%= link_to "#{@year + 1}年 →", monthly_summaries_path(year: @year + 1) %>
+</p>
+
+<div style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>月</th>
+        <th>収入予定込</th>
+        <th>収入実績</th>
+        <th>支出実績</th>
+        <th>実績収支</th>
+        <th>月予算</th>
+        <th>予算残</th>
+        <th>毎月貯金目標</th>
+        <th>貯金達成率</th>
+        <th>累計収支</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @monthly_summaries.each do |summary| %>
+        <tr>
+          <td><%= summary.month %>月</td>
+          <td><%= number_to_currency(summary.income_with_planned, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.income_actual, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.expense_actual, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.actual_balance, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.monthly_budget, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.budget_remaining, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.monthly_savings_goal, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_percentage(summary.savings_achievement_rate * 100, precision: 1) %></td>
+          <td><%= number_to_currency(summary.cumulative_balance, unit: "¥", precision: 0) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
