@@ -1,51 +1,55 @@
 <h1>カテゴリ</h1>
 
 <h2>支出カテゴリ</h2>
-<%= link_to "支出カテゴリを追加", new_category_path(kind: "expense") %>
-<table>
-  <thead>
-    <tr>
-      <th>名称</th>
-      <th>基本月予算</th>
-      <th>備考</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @expense_categories.each do |category| %>
+<%= link_to "支出カテゴリを追加", new_category_path(kind: "expense"), class: "btn-add" %>
+<div class="table-scroll">
+  <table>
+    <thead>
       <tr>
-        <td><%= category.name %></td>
-        <td><%= number_to_currency(category.monthly_budget, unit: "¥", precision: 0) if category.monthly_budget %></td>
-        <td><%= category.note %></td>
-        <td>
-          <%= link_to "編集", edit_category_path(category) %>
-          <%= link_to "削除", category_path(category), data: { turbo_method: :delete, turbo_confirm: "「#{category.name}」を削除しますか？" } %>
-        </td>
+        <th>名称</th>
+        <th>基本月予算</th>
+        <th>備考</th>
+        <th></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @expense_categories.each do |category| %>
+        <tr>
+          <td><%= category.name %></td>
+          <td><%= number_to_currency(category.monthly_budget, unit: "¥", precision: 0) if category.monthly_budget %></td>
+          <td><%= category.note %></td>
+          <td>
+            <%= link_to "編集", edit_category_path(category) %>
+            <%= link_to "削除", category_path(category), data: { turbo_method: :delete, turbo_confirm: "「#{category.name}」を削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
 
 <h2>収入カテゴリ</h2>
-<%= link_to "収入カテゴリを追加", new_category_path(kind: "income") %>
-<table>
-  <thead>
-    <tr>
-      <th>名称</th>
-      <th>備考</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @income_categories.each do |category| %>
+<%= link_to "収入カテゴリを追加", new_category_path(kind: "income"), class: "btn-add" %>
+<div class="table-scroll">
+  <table>
+    <thead>
       <tr>
-        <td><%= category.name %></td>
-        <td><%= category.note %></td>
-        <td>
-          <%= link_to "編集", edit_category_path(category) %>
-          <%= link_to "削除", category_path(category), data: { turbo_method: :delete, turbo_confirm: "「#{category.name}」を削除しますか？" } %>
-        </td>
+        <th>名称</th>
+        <th>備考</th>
+        <th></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @income_categories.each do |category| %>
+        <tr>
+          <td><%= category.name %></td>
+          <td><%= category.note %></td>
+          <td>
+            <%= link_to "編集", edit_category_path(category) %>
+            <%= link_to "削除", category_path(category), data: { turbo_method: :delete, turbo_confirm: "「#{category.name}」を削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

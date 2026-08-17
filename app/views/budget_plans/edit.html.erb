@@ -1,15 +1,15 @@
 <h1>月別予算</h1>
 
-<p>
+<div class="year-switcher">
   <%= link_to "← #{@year - 1}年", edit_budget_plan_path(year: @year - 1) %>
-  <strong><%= @year %>年</strong>
+  <span><%= @year %>年</span>
   <%= link_to "#{@year + 1}年 →", edit_budget_plan_path(year: @year + 1) %>
-</p>
-<p>カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算(カテゴリ設定の値)が使われます。</p>
+</div>
+<p class="text-muted">カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算(カテゴリ設定の値)が使われます。</p>
 
 <%= form_with url: budget_plan_path, method: :patch do %>
   <%= hidden_field_tag :year, @year %>
-  <div style="overflow-x: auto;">
+  <div class="table-scroll">
     <table>
       <thead>
         <tr>
@@ -28,7 +28,7 @@
             <% (1..12).each do |month| %>
               <% existing = @existing_budgets[[category.id, month]] %>
               <td>
-                <%= number_field_tag "budgets[#{category.id}-#{month}]", existing&.budget || category.monthly_budget, size: 6 %>
+                <%= number_field_tag "budgets[#{category.id}-#{month}]", existing&.budget || category.monthly_budget, class: "input-compact" %>
               </td>
             <% end %>
           </tr>

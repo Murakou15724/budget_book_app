@@ -1,13 +1,13 @@
 <h1>月別集計</h1>
-<p>取引データから自動集計した閲覧専用の画面です。</p>
+<p class="text-muted">取引データから自動集計した閲覧専用の画面です。</p>
 
-<p>
+<div class="year-switcher">
   <%= link_to "← #{@year - 1}年", monthly_summaries_path(year: @year - 1) %>
-  <strong><%= @year %>年</strong>
+  <span><%= @year %>年</span>
   <%= link_to "#{@year + 1}年 →", monthly_summaries_path(year: @year + 1) %>
-</p>
+</div>
 
-<div style="overflow-x: auto;">
+<div class="table-scroll">
   <table>
     <thead>
       <tr>
