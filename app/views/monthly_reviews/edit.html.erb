@@ -1,10 +1,21 @@
 <h1><%= @year %>年<%= @month %>月の振り返り</h1>
 
-<p>
-  収入実績: <%= number_to_currency(@summary.income_actual, unit: "¥", precision: 0) %> /
-  支出実績: <%= number_to_currency(@summary.expense_actual, unit: "¥", precision: 0) %> /
-  予算残: <%= number_to_currency(@summary.budget_remaining, unit: "¥", precision: 0) %>
-</p>
+<div class="stat-grid">
+  <div class="stat-tile">
+    <p class="stat-tile__label">収入実績</p>
+    <p class="stat-tile__value"><%= number_to_currency(@summary.income_actual, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">支出実績</p>
+    <p class="stat-tile__value"><%= number_to_currency(@summary.expense_actual, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">予算残</p>
+    <p class="stat-tile__value <%= @summary.budget_remaining.negative? ? 'is-negative' : '' %>">
+      <%= number_to_currency(@summary.budget_remaining, unit: "¥", precision: 0) %>
+    </p>
+  </div>
+</div>
 
 <%= form_with model: @monthly_review, url: monthly_review_path(year: @year, month: @month), method: :patch do |f| %>
   <% if @monthly_review.errors.any? %>

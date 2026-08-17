@@ -1,12 +1,12 @@
 <h1>月次振り返り</h1>
 
-<p>
+<div class="year-switcher">
   <%= link_to "← #{@year - 1}年", monthly_reviews_path(year: @year - 1) %>
-  <strong><%= @year %>年</strong>
+  <span><%= @year %>年</span>
   <%= link_to "#{@year + 1}年 →", monthly_reviews_path(year: @year + 1) %>
-</p>
+</div>
 
-<div style="overflow-x: auto;">
+<div class="table-scroll">
   <table>
     <thead>
       <tr>

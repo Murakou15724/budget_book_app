@@ -21,6 +21,9 @@ class DashboardController < ApplicationController
     @total_savings_goal = setting.total_savings_goal || 0
     @goal_progress_rate = @total_savings_goal.zero? ? 0.0 : @total_assets.to_f / @total_savings_goal
 
-    @category_expenses = @current_month ? CategoryExpenseSummary.build_for_month(@year, @current_month) : []
+    # 予算も支出も0のカテゴリは表示しても情報がなく、カテゴリ数が多いと画面が
+    # 縦に長くなりすぎるため、ダッシュボードでは意味のある行だけに絞る
+    # (全カテゴリの一覧は月別予算画面などで確認できる)。
+    @category_expenses = @current_month ? CategoryExpenseSummary.build_for_month(@year, @current_month).reject { |e| e.spent.zero? && e.budget.zero? } : []
   end
 end

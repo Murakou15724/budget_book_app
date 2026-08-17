@@ -1,71 +1,119 @@
 <h1>ダッシュボード</h1>
 
-<p>
+<div class="year-switcher">
   <%= link_to "← #{@year - 1}年", dashboard_path(year: @year - 1) %>
-  <strong><%= @year %>年</strong>
+  <span><%= @year %>年</span>
   <%= link_to "#{@year + 1}年 →", dashboard_path(year: @year + 1) %>
-</p>
+</div>
 
-<h2>PLAYER STATUS</h2>
-<p>貯金LV <strong><%= @savings_level %></strong>(1LV = <%= number_to_currency(@level_unit_amount, unit: "¥", precision: 0) %>)</p>
-<p>
-  貯金目標進捗: <%= number_to_percentage(@goal_progress_rate * 100, precision: 1) %>
-  (<%= number_to_currency(@total_assets, unit: "¥", precision: 0) %> / <%= number_to_currency(@total_savings_goal, unit: "¥", precision: 0) %>)
-</p>
-<div style="background:#e0e0e0; border-radius:4px; overflow:hidden; width:100%; max-width:400px;">
-  <div style="background:#2f6f4e; height:16px; width:<%= [[@goal_progress_rate * 100, 0].max, 100].min %>%;"></div>
+<div class="level-card">
+  <div class="level-card__row">
+    <div class="level-badge">
+      <span class="level-badge__label">LV</span>
+      <span class="level-badge__value"><%= @savings_level %></span>
+    </div>
+    <div style="flex: 1; min-width: 0;">
+      <p class="level-card__goal">
+        貯金目標進捗 <%= number_to_percentage(@goal_progress_rate * 100, precision: 1) %>
+        (<%= number_to_currency(@total_assets, unit: "¥", precision: 0) %> / <%= number_to_currency(@total_savings_goal, unit: "¥", precision: 0) %>)
+      </p>
+      <div class="meter">
+        <div class="meter__fill" style="width: <%= [[@goal_progress_rate * 100, 0].max, 100].min %>%;"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <% if @current_summary %>
   <h2>今月(<%= @current_month %>月)の収支</h2>
-  <table>
-    <tr><th>収入予定込</th><td><%= number_to_currency(@current_summary.income_with_planned, unit: "¥", precision: 0) %></td></tr>
-    <tr><th>支出実績</th><td><%= number_to_currency(@current_summary.expense_actual, unit: "¥", precision: 0) %></td></tr>
-    <tr><th>収支</th><td><%= number_to_currency(@current_summary.actual_balance, unit: "¥", precision: 0) %></td></tr>
-    <tr><th>予算残額</th><td><%= number_to_currency(@current_summary.budget_remaining, unit: "¥", precision: 0) %></td></tr>
-  </table>
+  <div class="stat-grid">
+    <div class="stat-tile">
+      <p class="stat-tile__label">収入予定込</p>
+      <p class="stat-tile__value"><%= number_to_currency(@current_summary.income_with_planned, unit: "¥", precision: 0) %></p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile__label">支出実績</p>
+      <p class="stat-tile__value"><%= number_to_currency(@current_summary.expense_actual, unit: "¥", precision: 0) %></p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile__label">収支</p>
+      <p class="stat-tile__value <%= @current_summary.actual_balance.negative? ? 'is-negative' : 'is-positive' %>">
+        <%= number_to_currency(@current_summary.actual_balance, unit: "¥", precision: 0) %>
+      </p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile__label">予算残額</p>
+      <p class="stat-tile__value <%= @current_summary.budget_remaining.negative? ? 'is-negative' : '' %>">
+        <%= number_to_currency(@current_summary.budget_remaining, unit: "¥", precision: 0) %>
+      </p>
+    </div>
+  </div>
 <% else %>
   <h2>今月の収支</h2>
-  <p><%= @year %>年は現在の年ではないため、今月の集計は表示されません。</p>
+  <p class="text-muted"><%= @year %>年は現在の年ではないため、今月の集計は表示されません。</p>
 <% end %>
 
-<h2><%= @year %>年間収支</h2>
-<table>
-  <tr><th>年間収入</th><td><%= number_to_currency(@annual_income, unit: "¥", precision: 0) %></td></tr>
-  <tr><th>年間支出</th><td><%= number_to_currency(@annual_expense, unit: "¥", precision: 0) %></td></tr>
-</table>
-
-<h2>資産</h2>
-<table>
-  <tr><th>現在総資産</th><td><%= number_to_currency(@total_assets, unit: "¥", precision: 0) %></td></tr>
-  <tr><th>クレカ未払仮置き</th><td><%= number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0) %></td></tr>
-</table>
+<h2><%= @year %>年間収支・資産</h2>
+<div class="stat-grid">
+  <div class="stat-tile">
+    <p class="stat-tile__label">年間収入</p>
+    <p class="stat-tile__value"><%= number_to_currency(@annual_income, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">年間支出</p>
+    <p class="stat-tile__value"><%= number_to_currency(@annual_expense, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">現在総資産</p>
+    <p class="stat-tile__value"><%= number_to_currency(@total_assets, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">クレカ未払仮置き</p>
+    <p class="stat-tile__value"><%= number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0) %></p>
+  </div>
+</div>
 
 <% if @current_month %>
   <h2>カテゴリ別 今月支出</h2>
-  <table>
-    <thead>
-      <tr><th>カテゴリ</th><th>今月支出</th><th>予算</th><th>予算比</th></tr>
-    </thead>
-    <tbody>
-      <% @category_expenses.each do |entry| %>
-        <tr>
-          <td><%= entry.category.name %></td>
-          <td><%= number_to_currency(entry.spent, unit: "¥", precision: 0) %></td>
-          <td><%= number_to_currency(entry.budget, unit: "¥", precision: 0) %></td>
-          <td><%= entry.usage_rate ? number_to_percentage(entry.usage_rate * 100, precision: 1) : "-" %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <div class="entry-list">
+    <% @category_expenses.each do |entry| %>
+      <% rate = entry.usage_rate %>
+      <div class="entry-card">
+        <div class="entry-card__row">
+          <div class="entry-card__main">
+            <p class="entry-card__title"><%= entry.category.name %></p>
+            <div class="entry-card__meta">
+              <%= number_to_currency(entry.spent, unit: "¥", precision: 0) %> / <%= number_to_currency(entry.budget, unit: "¥", precision: 0) %>
+            </div>
+          </div>
+          <% if rate %>
+            <span class="badge <%= rate > 1 ? 'badge-critical' : rate >= 0.8 ? 'badge-warning' : 'badge-good' %>">
+              <%= number_to_percentage(rate * 100, precision: 0) %>
+            </span>
+          <% end %>
+        </div>
+        <% if rate %>
+          <div class="meter meter--neutral" style="margin-top: 0.5rem;">
+            <div class="meter__fill <%= 'is-over' if rate > 1 %>" style="width: <%= [rate * 100, 100].min %>%;"></div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 <% end %>
 
 <h2>月別収入・支出推移</h2>
-<%= monthly_trend_svg(@monthly_summaries) %>
+<div class="card">
+  <div class="table-scroll">
+    <%= monthly_trend_svg(@monthly_summaries) %>
+  </div>
+</div>
 
 <% if @current_month %>
   <h2>カテゴリ別 今月支出(グラフ)</h2>
-  <div style="overflow-x: auto;">
-    <%= category_expense_bar_svg(@category_expenses) %>
+  <div class="card">
+    <div class="card-scroll">
+      <%= category_expense_bar_svg(@category_expenses) %>
+    </div>
   </div>
 <% end %>

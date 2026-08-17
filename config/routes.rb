@@ -21,6 +21,7 @@ Rails.application.routes.draw do
   resources :payment_methods, except: [:show]
   resource :settings, only: [:edit, :update]
   resource :budget_plan, only: [:edit, :update]
+  get "more", to: "more#index"
 
   # Defines the root path route ("/")
   root "dashboard#index"
