@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       patch :mark_credit_card_paid
     end
   end
+  resources :asset_snapshots, except: [:show]
   resources :categories, except: [:show]
   resources :accounts, except: [:show]
   resources :payment_methods, except: [:show]
