@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>BudgetBookApp</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>MONEY QUEST</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4a3aa7">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -11,25 +14,37 @@
   </head>
 
   <body>
-    <nav class="main-nav">
-      <%= link_to "ダッシュボード", dashboard_path %>
-      <%= link_to "取引", transactions_path %>
-      <%= link_to "資産管理", asset_snapshots_path %>
-      <%= link_to "月別集計", monthly_summaries_path %>
-      <%= link_to "月次振り返り", monthly_reviews_path %>
-      <%= link_to "カテゴリ", categories_path %>
-      <%= link_to "口座", accounts_path %>
-      <%= link_to "支払方法", payment_methods_path %>
-      <%= link_to "月別予算", edit_budget_plan_path %>
-      <%= link_to "設定", edit_settings_path %>
-    </nav>
-
-    <% flash.each do |type, message| %>
-      <div class="flash flash-<%= type %>"><%= message %></div>
-    <% end %>
+    <header class="app-header">
+      <%= link_to dashboard_path, class: "app-header__title" do %>
+        💰 MONEY QUEST
+      <% end %>
+    </header>
 
     <main>
+      <% flash.each do |type, message| %>
+        <div class="flash flash-<%= type %>"><%= message %></div>
+      <% end %>
+
       <%= yield %>
     </main>
+
+    <nav class="bottom-nav">
+      <%= link_to dashboard_path, class: "bottom-nav__item #{'is-active' if controller_name == 'dashboard'}" do %>
+        <span class="bottom-nav__icon">🏠</span>ホーム
+      <% end %>
+      <%= link_to transactions_path, class: "bottom-nav__item #{'is-active' if controller_name == 'transactions'}" do %>
+        <span class="bottom-nav__icon">💰</span>取引
+      <% end %>
+      <%= link_to asset_snapshots_path, class: "bottom-nav__item #{'is-active' if controller_name == 'asset_snapshots'}" do %>
+        <span class="bottom-nav__icon">📊</span>資産
+      <% end %>
+      <%= link_to monthly_summaries_path, class: "bottom-nav__item #{'is-active' if controller_name == 'monthly_summaries'}" do %>
+        <span class="bottom-nav__icon">📈</span>集計
+      <% end %>
+      <% more_section = %w[more monthly_reviews categories accounts payment_methods budget_plans settings].include?(controller_name) %>
+      <%= link_to more_path, class: "bottom-nav__item #{'is-active' if more_section}" do %>
+        <span class="bottom-nav__icon">⋯</span>その他
+      <% end %>
+    </nav>
   </body>
 </html>
