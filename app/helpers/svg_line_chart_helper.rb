@@ -33,10 +33,13 @@ module SvgLineChartHelper
 
   # 1系列分の折れ線(polyline)と各点の丸(circle)を描画する。ブロックは点のindexを受け取り、
   # tag.titleなどのツールチップ要素を返すこと。
+  # colorはCSSカスタムプロパティ参照(例: "var(--color-series-income)")を想定しており、
+  # style属性経由で適用することでダークモードの配色切り替えに追従させる
+  # (fill/stroke属性はvar()を解釈できないため使わない)。
   def svg_line_series(points, color)
-    polyline = tag.polyline(points: points.map { |x, y| "#{x},#{y}" }.join(" "), fill: "none", stroke: color, "stroke-width": 2)
+    polyline = tag.polyline(points: points.map { |x, y| "#{x},#{y}" }.join(" "), style: "fill: none; stroke: #{color}; stroke-width: 2")
     circles = points.each_with_index.map do |(x, y), index|
-      tag.circle(cx: x, cy: y, r: 3, fill: color) { yield(index) }
+      tag.circle(cx: x, cy: y, r: 3, style: "fill: #{color}") { yield(index) }
     end.join.html_safe
     polyline + circles
   end
