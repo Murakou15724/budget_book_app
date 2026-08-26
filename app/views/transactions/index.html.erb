@@ -9,11 +9,11 @@
     <div class="filter-grid">
       <div class="field">
         <%= label_tag :from_date, "日付(from)" %>
-        <%= date_field_tag :from_date, params[:from_date] %>
+        <%= date_field_tag :from_date, @from_date %>
       </div>
       <div class="field">
         <%= label_tag :to_date, "日付(to)" %>
-        <%= date_field_tag :to_date, params[:to_date] %>
+        <%= date_field_tag :to_date, @to_date %>
       </div>
       <div class="field">
         <%= label_tag :category_id, "カテゴリ" %>

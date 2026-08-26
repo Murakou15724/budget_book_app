@@ -2,6 +2,7 @@ class TransactionsController < ApplicationController
   before_action :set_transaction, only: [:edit, :update, :destroy]
 
   def index
+    @from_date, @to_date = date_range_params
     @transactions = filtered_transactions.includes(:category, :payment_method, :account).order(date: :desc, id: :desc)
   end
 
@@ -63,11 +64,17 @@ class TransactionsController < ApplicationController
     scope = scope.where(entry_type: params[:entry_type]) if params[:entry_type].present?
     scope = scope.where(category_id: params[:category_id]) if params[:category_id].present?
     scope = scope.where(credit_card_status: params[:credit_card_status]) if params[:credit_card_status].present?
-    from_date = parse_date_param(params[:from_date])
-    to_date = parse_date_param(params[:to_date])
-    scope = scope.where("date >= ?", from_date) if from_date
-    scope = scope.where("date <= ?", to_date) if to_date
+    scope = scope.where("date >= ?", @from_date) if @from_date
+    scope = scope.where("date <= ?", @to_date) if @to_date
     scope
+  end
+
+  # from_date/to_dateが両方未指定の場合(初期表示・クリア後)は今月分をデフォルト表示する。
+  # どちらか一方でも指定されている場合はユーザーの意図した範囲をそのまま使う。
+  def date_range_params
+    return [Date.current.beginning_of_month, Date.current.end_of_month] if params[:from_date].blank? && params[:to_date].blank?
+
+    [parse_date_param(params[:from_date]), parse_date_param(params[:to_date])]
   end
 
   # 不正な日付文字列(from_date/to_date)をそのままSQLに渡すとMysql2::Errorで
