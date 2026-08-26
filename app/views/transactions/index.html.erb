@@ -2,6 +2,13 @@
 
 <%= link_to "取引を追加", new_transaction_path, class: "btn-add" %>
 
+<div class="range-switcher">
+  <% date_ranges.each do |range| %>
+    <%= link_to range[:label], transactions_path(range: range[:key]),
+          class: "range-switcher__item#{' is-active' if @date_range_key == range[:key]}" %>
+  <% end %>
+</div>
+
 <% filters_active = index_filter_params.to_h.values.any?(&:present?) %>
 <details class="filter-card" <%= "open" if filters_active %>>
   <summary class="filter-toggle">🔍 絞り込み<%= " (適用中)" if filters_active %></summary>
