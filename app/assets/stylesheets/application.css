@@ -698,6 +698,46 @@ input.input-compact {
   fill: var(--color-text-muted);
 }
 
+/* y軸を左端に固定したまま、グラフ本体だけ横スクロールさせるレイアウト */
+.chart-with-fixed-axis {
+  display: flex;
+  align-items: flex-start;
+}
+
+.chart-y-axis {
+  flex-shrink: 0;
+}
+
+.chart-with-fixed-axis .card-scroll {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== Range switcher (period filter buttons, e.g. asset trend chart) ========== */
+
+.range-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.range-switcher__item {
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.range-switcher__item.is-active {
+  background: var(--color-accent-gradient);
+  color: var(--color-accent-contrast);
+}
+
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }

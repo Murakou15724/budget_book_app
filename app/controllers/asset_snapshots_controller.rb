@@ -1,11 +1,22 @@
 class AssetSnapshotsController < ApplicationController
   before_action :set_asset_snapshot, only: [:edit, :update, :destroy]
 
+  # 資産推移グラフの期間フィルタボタン。表示順もこの並びに従う。
+  CHART_RANGES = [
+    { key: "3m", label: "直近3ヶ月", duration: 3.months },
+    { key: "6m", label: "直近6ヶ月", duration: 6.months },
+    { key: "1y", label: "直近1年", duration: 1.year },
+    { key: "all", label: "全期間", duration: nil }
+  ].freeze
+  helper_method :chart_ranges
+
   def index
     @asset_snapshots = AssetSnapshot.includes(asset_balances: :account).order(recorded_on: :desc, id: :desc).to_a
     @latest_snapshot = @asset_snapshots.first
     @recent_snapshots = @asset_snapshots.select { |snapshot| snapshot.recorded_on >= 1.year.ago.to_date }
     @savings_goal = Setting.current.total_savings_goal
+    @chart_range = chart_ranges.find { |range| range[:key] == params[:range] } || chart_ranges.first
+    @chart_snapshots = chart_snapshots_for(@chart_range[:duration])
   end
 
   def new
@@ -49,6 +60,16 @@ class AssetSnapshotsController < ApplicationController
   end
 
   private
+
+  def chart_ranges
+    CHART_RANGES
+  end
+
+  # @asset_snapshots(記録日の降順)からグラフ表示対象を絞り込み、古い→新しい順で返す。
+  def chart_snapshots_for(duration)
+    snapshots = duration ? @asset_snapshots.select { |snapshot| snapshot.recorded_on >= duration.ago.to_date } : @asset_snapshots
+    snapshots.reverse
+  end
 
   def set_asset_snapshot
     @asset_snapshot = AssetSnapshot.includes(asset_balances: :account).find(params[:id])

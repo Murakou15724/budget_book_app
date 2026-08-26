@@ -3,10 +3,14 @@
 <%= link_to "資産スナップショットを追加", new_asset_snapshot_path, class: "btn-add" %>
 
 <h2>資産推移</h2>
+<div class="range-switcher">
+  <% chart_ranges.each do |range| %>
+    <%= link_to range[:label], asset_snapshots_path(range: range[:key]),
+          class: "range-switcher__item#{' is-active' if @chart_range[:key] == range[:key]}" %>
+  <% end %>
+</div>
 <div class="card">
-  <div class="card-scroll">
-    <%= asset_trend_svg(@asset_snapshots.to_a.reverse) %>
-  </div>
+  <%= asset_trend_svg(@chart_snapshots) %>
 </div>
 
 <% accounts = Account.order(:position, :name) %>

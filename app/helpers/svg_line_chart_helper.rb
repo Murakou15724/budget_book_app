@@ -9,16 +9,19 @@ module SvgLineChartHelper
   # padding_*を個別に指定すると、軸ラベル分だけ左/下の余白を広げるといった使い方ができる
   # (未指定の場合はpaddingの値がそのまま使われ、従来の挙動と互換)。
   # 描画可能な値がない場合(系列が空、または:zeroで全値が0)はnilを返す。
+  # min_value/max_valueを明示的に渡すと、系列の実データから自動計算する代わりに
+  # そのスケールでプロットする(#nice_axis_domainで求めた「ちょうどいい」軸幅を使う場合など)。
   def scaled_line_chart_points(values_list, width:, height:, baseline: :zero, padding: DEFAULT_PADDING,
                                 padding_left: padding, padding_right: padding,
-                                padding_top: padding, padding_bottom: padding)
+                                padding_top: padding, padding_bottom: padding,
+                                min_value: nil, max_value: nil)
     all_values = values_list.flatten
     return nil if all_values.empty?
 
-    max_value = all_values.max
-    return nil if max_value.zero? && baseline == :zero
+    max_value ||= all_values.max
+    return nil if max_value.zero? && baseline == :zero && min_value.nil?
 
-    min_value = baseline == :zero ? 0 : all_values.min
+    min_value ||= (baseline == :zero ? 0 : all_values.min)
     range = (max_value - min_value).nonzero? || 1
 
     usable_width = width - padding_left - padding_right
@@ -35,30 +38,66 @@ module SvgLineChartHelper
     end
   end
 
-  # 折れ線グラフの軸線・目盛線(横方向)・目盛ラベル(x軸・y軸)を描画する。
-  # x_labelsは点ごとのラベル文字列の配列(要素数は点の数と揃える)。nil/空文字の要素は
-  # ラベルを描画しない(#thin_labelsで間引いたラベルを渡す想定)。
-  def svg_chart_axes(width:, height:, min_value:, max_value:,
-                      padding_left:, padding_right:, padding_top:, padding_bottom:,
-                      x_labels:, y_tick_count: 4, value_formatter: ->(v) { v.round.to_s })
-    usable_width = width - padding_left - padding_right
+  # データの最小値/最大値をstep単位に切り下げ/切り上げして「ちょうどいい」軸の
+  # 上下限を求める。幅がmin_span未満の場合は両端をstep単位で広げてmin_span以上を確保する
+  # (値の変動が小さい期間でもグラフが極端に間延びしたり潰れたりしないようにするため)。
+  def nice_axis_domain(min_value, max_value, step:, min_span:)
+    lower = (min_value.to_f / step).floor * step
+    upper = (max_value.to_f / step).ceil * step
+    upper = lower + step if upper <= lower
+
+    while upper - lower < min_span
+      lower -= step
+      upper += step
+    end
+
+    [lower, upper]
+  end
+
+  # y軸の目盛(値とSVG上のy座標)を計算する。配列の先頭が下(最小値)、末尾が上(最大値)。
+  # 固定表示側(#svg_y_axis)とスクロール側(#svg_chart_body_axes)の両方で同じ目盛位置を
+  # 使うことで、横スクロールしてもy軸の目盛線と位置がずれないようにする。
+  def y_axis_ticks(min_value:, max_value:, step:, height:, padding_top:, padding_bottom:)
     usable_height = height - padding_top - padding_bottom
-    axis_bottom = padding_top + usable_height
-    axis_right = padding_left + usable_width
-    range = (max_value - min_value).nonzero? || 1
+    tick_count = ((max_value - min_value) / step).round
 
-    gridlines = (0..y_tick_count).map do |i|
-      ratio = i.to_f / y_tick_count
-      value = min_value + (range * ratio)
-      y = (axis_bottom - (usable_height * ratio)).round(1)
+    (0..tick_count).map do |i|
+      ratio = tick_count.zero? ? 0 : i.to_f / tick_count
+      y = (padding_top + usable_height - (usable_height * ratio)).round(1)
+      { value: min_value + (step * i), y: y }
+    end
+  end
 
-      line = tag.line(x1: padding_left, y1: y, x2: axis_right, y2: y, class: "chart-gridline")
-      label = tag.text(value_formatter.call(value), x: padding_left - 6, y: y + 3, "text-anchor": "end", class: "chart-axis-label")
-      line + label
+  # y軸(左端に固定表示する側)のSVGを組み立てる。目盛線本体はスクロールする側
+  # (#svg_chart_body_axes)に描画し、ここでは短い目盛マーク+ラベル+縦の軸線のみを描く。
+  def svg_y_axis(width:, height:, ticks:, value_formatter:)
+    axis_x = width - 1
+
+    marks_and_labels = ticks.map do |tick|
+      mark = tag.line(x1: axis_x - 4, y1: tick[:y], x2: axis_x, y2: tick[:y], class: "chart-axis-line")
+      label = tag.text(value_formatter.call(tick[:value]), x: axis_x - 8, y: tick[:y] + 3, "text-anchor": "end", class: "chart-axis-label")
+      mark + label
     end.join.html_safe
 
-    axes = tag.line(x1: padding_left, y1: padding_top, x2: padding_left, y2: axis_bottom, class: "chart-axis-line") +
-           tag.line(x1: padding_left, y1: axis_bottom, x2: axis_right, y2: axis_bottom, class: "chart-axis-line")
+    axis_line = tag.line(x1: axis_x, y1: ticks.first[:y], x2: axis_x, y2: ticks.last[:y], class: "chart-axis-line")
+
+    content_tag(:svg, marks_and_labels + axis_line, width: width, height: height, viewBox: "0 0 #{width} #{height}", class: "chart-y-axis")
+  end
+
+  # グラフ本体(スクロールする側)の横方向目盛線・x軸線・x軸ラベルを描画する。
+  # svg_line_seriesの出力と組み合わせて<svg>の中身として使うこと。
+  # x_labelsは点ごとのラベル文字列の配列(要素数は点の数と揃える)。nil/空文字の要素は
+  # ラベルを描画しない(#thin_labelsで間引いたラベルを渡す想定)。
+  def svg_chart_body_axes(width:, height:, padding_left:, padding_right:, padding_bottom:, ticks:, x_labels:)
+    usable_width = width - padding_left - padding_right
+    axis_bottom = height - padding_bottom
+    axis_right = padding_left + usable_width
+
+    gridlines = ticks.map do |tick|
+      tag.line(x1: padding_left, y1: tick[:y], x2: axis_right, y2: tick[:y], class: "chart-gridline")
+    end.join.html_safe
+
+    x_axis_line = tag.line(x1: padding_left, y1: axis_bottom, x2: axis_right, y2: axis_bottom, class: "chart-axis-line")
 
     count = x_labels.size
     step_x = count > 1 ? usable_width.to_f / (count - 1) : 0
@@ -69,7 +108,7 @@ module SvgLineChartHelper
       tag.text(label, x: x, y: axis_bottom + 16, "text-anchor": "middle", class: "chart-axis-label")
     end.join.html_safe
 
-    gridlines + axes + x_tick_labels
+    gridlines + x_axis_line + x_tick_labels
   end
 
   # ラベル数が多いグラフでx軸の文字が重なるのを避けるため、表示するラベルを均等に
