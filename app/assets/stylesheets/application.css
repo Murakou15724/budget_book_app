@@ -773,6 +773,15 @@ input.input-compact {
   display: table-cell;
 }
 
+/* whole section (not just table columns) hidden until the toggle is checked */
+.detail-toggle-section {
+  display: none;
+}
+
+.detail-toggle-input:checked ~ .detail-toggle-section {
+  display: block;
+}
+
 /* ===== Small-screen tweaks ====================================================== */
 
 @media (max-width: 420px) {

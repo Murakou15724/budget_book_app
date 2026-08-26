@@ -2,7 +2,9 @@ class AssetSnapshotsController < ApplicationController
   before_action :set_asset_snapshot, only: [:edit, :update, :destroy]
 
   def index
-    @asset_snapshots = AssetSnapshot.includes(asset_balances: :account).order(recorded_on: :desc, id: :desc)
+    @asset_snapshots = AssetSnapshot.includes(asset_balances: :account).order(recorded_on: :desc, id: :desc).to_a
+    @latest_snapshot = @asset_snapshots.first
+    @recent_snapshots = @asset_snapshots.select { |snapshot| snapshot.recorded_on >= 1.year.ago.to_date }
     @savings_goal = Setting.current.total_savings_goal
   end
 
