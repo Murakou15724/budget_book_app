@@ -93,8 +93,11 @@ module DashboardHelper
       end
       # transformのrotate()は%座標を扱えないため、CSSのtransform-originで回転の
       # 軸(ラベルの右下=text-anchor: endの基準点相当)を指定して回転させる。
+      # transform-boxを指定しない場合、%はSVG全体(ビューポート)基準になってしまい
+      # 全ラベルがグラフ右下の1点を中心に回転してしまうため、fill-boxで
+      # 各ラベル自身の描画範囲を基準にする。
       label = tag.text(entry.category.name, x: "#{center_percent}%", y: label_y, class: "chart-axis-label", "text-anchor": "end",
-                        style: "transform: rotate(-45deg); transform-origin: 100% 100%;")
+                        style: "transform: rotate(-45deg); transform-origin: 100% 100%; transform-box: fill-box;")
       bar + label
     end.join.html_safe
 
