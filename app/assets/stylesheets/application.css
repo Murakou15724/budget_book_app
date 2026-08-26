@@ -698,7 +698,7 @@ input.input-compact {
   fill: var(--color-text-muted);
 }
 
-/* y軸を左端に固定したまま、グラフ本体だけ横スクロールさせるレイアウト */
+/* y軸を左端に固定幅で表示したまま、グラフ本体だけ幅いっぱいに追従させるレイアウト */
 .chart-with-fixed-axis {
   display: flex;
   align-items: flex-start;
@@ -708,7 +708,7 @@ input.input-compact {
   flex-shrink: 0;
 }
 
-.chart-with-fixed-axis .card-scroll {
+.chart-body {
   flex: 1;
   min-width: 0;
 }

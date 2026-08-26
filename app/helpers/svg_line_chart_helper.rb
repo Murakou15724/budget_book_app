@@ -1,20 +1,22 @@
-# 追加のJSライブラリを使わず、折れ線グラフをインラインSVGで描画するための共通の
-# 座標計算・描画ロジック。AssetSnapshotsHelper/DashboardHelperから利用する。
+# 追加のJSライブラリを使わず、折れ線グラフ/棒グラフをインラインSVGで描画するための
+# 共通の座標計算・描画ロジック。AssetSnapshotsHelper/DashboardHelperから利用する。
+#
+# グラフ本体はviewBoxで丸ごと拡大縮小するのではなく、x座標を%指定・y座標(や文字サイズ・
+# 線の太さ)はpx指定にすることで、コンテナの幅(スマホ〜PC)に応じて左右いっぱいに
+# 追従させつつ、文字や線がデバイス幅によって拡大縮小されないようにしている。
 module SvgLineChartHelper
-  DEFAULT_PADDING = 24
+  # SVGは既定でビューポート外の描画をクリップするため、0%/100%際の点やラベルが
+  # 半端に切れないようにoverflowを可視化し、幅はCSSでコンテナいっぱいに広げる。
+  FLUID_SVG_STYLE = "width: 100%; display: block; overflow: visible;"
 
-  # values_list([[v1, v2, ...], ...])の各系列を共通のスケールでプロットする座標を計算する。
+  # 系列(values_listの各配列)のプロット座標を計算する。xはコンテナ幅に対する
+  # 割合(0〜100のパーセント数値)、yはpx(数値)。
   # baseline: :zero なら0を起点に、:min なら全系列の最小値を起点にスケーリングする
   # (値の変動幅が小さいデータを見やすくしたい場合は :min を使う)。
-  # padding_*を個別に指定すると、軸ラベル分だけ左/下の余白を広げるといった使い方ができる
-  # (未指定の場合はpaddingの値がそのまま使われ、従来の挙動と互換)。
-  # 描画可能な値がない場合(系列が空、または:zeroで全値が0)はnilを返す。
   # min_value/max_valueを明示的に渡すと、系列の実データから自動計算する代わりに
   # そのスケールでプロットする(#nice_axis_domainで求めた「ちょうどいい」軸幅を使う場合など)。
-  def scaled_line_chart_points(values_list, width:, height:, baseline: :zero, padding: DEFAULT_PADDING,
-                                padding_left: padding, padding_right: padding,
-                                padding_top: padding, padding_bottom: padding,
-                                min_value: nil, max_value: nil)
+  # 描画可能な値がない場合(系列が空、または:zeroで全値が0)はnilを返す。
+  def fluid_line_points(values_list, height:, padding_top:, padding_bottom:, baseline: :zero, min_value: nil, max_value: nil)
     all_values = values_list.flatten
     return nil if all_values.empty?
 
@@ -23,17 +25,14 @@ module SvgLineChartHelper
 
     min_value ||= (baseline == :zero ? 0 : all_values.min)
     range = (max_value - min_value).nonzero? || 1
-
-    usable_width = width - padding_left - padding_right
     usable_height = height - padding_top - padding_bottom
     count = values_list.map(&:size).max
-    step_x = count > 1 ? usable_width.to_f / (count - 1) : 0
 
     values_list.map do |values|
       values.each_with_index.map do |value, index|
-        x = padding_left + (step_x * index)
-        y = padding_top + usable_height - ((value - min_value).to_f / range * usable_height)
-        [x.round(1), y.round(1)]
+        x_percent = count > 1 ? (index.to_f / (count - 1) * 100).round(2) : 50.0
+        y = (padding_top + usable_height - ((value - min_value).to_f / range * usable_height)).round(1)
+        [x_percent, y]
       end
     end
   end
@@ -64,8 +63,8 @@ module SvgLineChartHelper
   end
 
   # y軸の目盛(値とSVG上のy座標)を計算する。配列の先頭が下(最小値)、末尾が上(最大値)。
-  # 固定表示側(#svg_y_axis)とスクロール側(#svg_chart_body_axes)の両方で同じ目盛位置を
-  # 使うことで、横スクロールしてもy軸の目盛線と位置がずれないようにする。
+  # 固定表示側(#svg_y_axis)とグラフ本体側(#svg_chart_body_axes)の両方で同じ目盛位置を
+  # 使うことで、y軸の目盛線と位置がずれないようにする。
   def y_axis_ticks(min_value:, max_value:, step:, height:, padding_top:, padding_bottom:)
     usable_height = height - padding_top - padding_bottom
     tick_count = ((max_value - min_value) / step).round
@@ -77,8 +76,9 @@ module SvgLineChartHelper
     end
   end
 
-  # y軸(左端に固定表示する側)のSVGを組み立てる。目盛線本体はスクロールする側
+  # y軸(左端に固定表示する側)のSVGを組み立てる。目盛線本体はグラフ本体側
   # (#svg_chart_body_axes)に描画し、ここでは短い目盛マーク+ラベル+縦の軸線のみを描く。
+  # 固定の狭い幅のまま常にpx単位で描くため、コンテナ幅が変わっても拡大縮小されない。
   def svg_y_axis(width:, height:, ticks:, value_formatter:)
     axis_x = width - 1
 
@@ -93,34 +93,29 @@ module SvgLineChartHelper
     content_tag(:svg, marks_and_labels + axis_line, width: width, height: height, viewBox: "0 0 #{width} #{height}", class: "chart-y-axis")
   end
 
-  # y軸の目盛線(横方向の破線)だけを描画する。折れ線グラフ本体(#svg_chart_body_axes)の
-  # ほか、x軸ラベルの描き方が異なる棒グラフ(回転ラベルなど)からも個別に利用する。
-  def svg_gridlines(padding_left:, axis_right:, ticks:)
+  # y軸の目盛線(横方向の破線)を、コンテナ幅いっぱい(0%〜100%)に描画する。
+  def svg_gridlines(ticks:)
     ticks.map do |tick|
-      tag.line(x1: padding_left, y1: tick[:y], x2: axis_right, y2: tick[:y], class: "chart-gridline")
+      tag.line(x1: "0%", y1: tick[:y], x2: "100%", y2: tick[:y], class: "chart-gridline")
     end.join.html_safe
   end
 
-  # グラフ本体(スクロールする側)の横方向目盛線・x軸線・x軸ラベルを描画する。
-  # svg_line_seriesの出力と組み合わせて<svg>の中身として使うこと。
+  # グラフ本体(幅いっぱいに追従する側)の横方向目盛線・x軸線・x軸ラベルを描画する。
+  # #fluid_line_seriesの出力と組み合わせて<svg>の中身として使うこと。
   # x_labelsは点ごとのラベル文字列の配列(要素数は点の数と揃える)。nil/空文字の要素は
   # ラベルを描画しない(#thin_labelsで間引いたラベルを渡す想定)。
-  def svg_chart_body_axes(width:, height:, padding_left:, padding_right:, padding_bottom:, ticks:, x_labels:)
-    usable_width = width - padding_left - padding_right
+  def svg_chart_body_axes(height:, padding_bottom:, ticks:, x_labels:)
     axis_bottom = height - padding_bottom
-    axis_right = padding_left + usable_width
 
-    gridlines = svg_gridlines(padding_left: padding_left, axis_right: axis_right, ticks: ticks)
-
-    x_axis_line = tag.line(x1: padding_left, y1: axis_bottom, x2: axis_right, y2: axis_bottom, class: "chart-axis-line")
+    gridlines = svg_gridlines(ticks: ticks)
+    x_axis_line = tag.line(x1: "0%", y1: axis_bottom, x2: "100%", y2: axis_bottom, class: "chart-axis-line")
 
     count = x_labels.size
-    step_x = count > 1 ? usable_width.to_f / (count - 1) : 0
     x_tick_labels = x_labels.each_with_index.filter_map do |label, index|
       next if label.blank?
 
-      x = (padding_left + (step_x * index)).round(1)
-      tag.text(label, x: x, y: axis_bottom + 16, "text-anchor": "middle", class: "chart-axis-label")
+      x_percent = count > 1 ? (index.to_f / (count - 1) * 100).round(2) : 50.0
+      tag.text(label, x: "#{x_percent}%", y: axis_bottom + 16, "text-anchor": "middle", class: "chart-axis-label")
     end.join.html_safe
 
     gridlines + x_axis_line + x_tick_labels
@@ -158,16 +153,21 @@ module SvgLineChartHelper
   end
   private :dedupe_adjacent_labels
 
-  # 1系列分の折れ線(polyline)と各点の丸(circle)を描画する。ブロックは点のindexを受け取り、
-  # tag.titleなどのツールチップ要素を返すこと。
+  # 1系列分の折れ線+各点の丸を描画する。ブロックは点のindexを受け取り、tag.titleなどの
+  # ツールチップ要素を返すこと。xが%指定のため<polyline points="...">は使えない
+  # (points属性は%を扱えない)。代わりに隣接点同士を結ぶ<line>を連結する。
   # colorはCSSカスタムプロパティ参照(例: "var(--color-series-income)")を想定しており、
   # style属性経由で適用することでダークモードの配色切り替えに追従させる
   # (fill/stroke属性はvar()を解釈できないため使わない)。
-  def svg_line_series(points, color)
-    polyline = tag.polyline(points: points.map { |x, y| "#{x},#{y}" }.join(" "), style: "fill: none; stroke: #{color}; stroke-width: 2")
-    circles = points.each_with_index.map do |(x, y), index|
-      tag.circle(cx: x, cy: y, r: 3, style: "fill: #{color}") { yield(index) }
+  def fluid_line_series(points, color)
+    segments = points.each_cons(2).map do |(x1, y1), (x2, y2)|
+      tag.line(x1: "#{x1}%", y1: y1, x2: "#{x2}%", y2: y2, style: "stroke: #{color}; stroke-width: 2")
     end.join.html_safe
-    polyline + circles
+
+    circles = points.each_with_index.map do |(x, y), index|
+      tag.circle(cx: "#{x}%", cy: y, r: 3, style: "fill: #{color}") { yield(index) }
+    end.join.html_safe
+
+    segments + circles
   end
 end
