@@ -41,7 +41,16 @@ module SvgLineChartHelper
   # データの最小値/最大値をstep単位に切り下げ/切り上げして「ちょうどいい」軸の
   # 上下限を求める。幅がmin_span未満の場合は両端をstep単位で広げてmin_span以上を確保する
   # (値の変動が小さい期間でもグラフが極端に間延びしたり潰れたりしないようにするため)。
-  def nice_axis_domain(min_value, max_value, step:, min_span:)
+  # anchor_zero: trueの場合は下限を常に0に固定し、上限だけをstep単位に広げる
+  # (収入・支出・カテゴリ別支出額など、負の値を取らずグラフを0始点にしたい系列向け)。
+  def nice_axis_domain(min_value, max_value, step:, min_span:, anchor_zero: false)
+    if anchor_zero
+      upper = (max_value.to_f / step).ceil * step
+      upper = step if upper.zero?
+      upper = min_span if upper < min_span
+      return [0, upper]
+    end
+
     lower = (min_value.to_f / step).floor * step
     upper = (max_value.to_f / step).ceil * step
     upper = lower + step if upper <= lower
@@ -84,6 +93,14 @@ module SvgLineChartHelper
     content_tag(:svg, marks_and_labels + axis_line, width: width, height: height, viewBox: "0 0 #{width} #{height}", class: "chart-y-axis")
   end
 
+  # y軸の目盛線(横方向の破線)だけを描画する。折れ線グラフ本体(#svg_chart_body_axes)の
+  # ほか、x軸ラベルの描き方が異なる棒グラフ(回転ラベルなど)からも個別に利用する。
+  def svg_gridlines(padding_left:, axis_right:, ticks:)
+    ticks.map do |tick|
+      tag.line(x1: padding_left, y1: tick[:y], x2: axis_right, y2: tick[:y], class: "chart-gridline")
+    end.join.html_safe
+  end
+
   # グラフ本体(スクロールする側)の横方向目盛線・x軸線・x軸ラベルを描画する。
   # svg_line_seriesの出力と組み合わせて<svg>の中身として使うこと。
   # x_labelsは点ごとのラベル文字列の配列(要素数は点の数と揃える)。nil/空文字の要素は
@@ -93,9 +110,7 @@ module SvgLineChartHelper
     axis_bottom = height - padding_bottom
     axis_right = padding_left + usable_width
 
-    gridlines = ticks.map do |tick|
-      tag.line(x1: padding_left, y1: tick[:y], x2: axis_right, y2: tick[:y], class: "chart-gridline")
-    end.join.html_safe
+    gridlines = svg_gridlines(padding_left: padding_left, axis_right: axis_right, ticks: ticks)
 
     x_axis_line = tag.line(x1: padding_left, y1: axis_bottom, x2: axis_right, y2: axis_bottom, class: "chart-axis-line")
 

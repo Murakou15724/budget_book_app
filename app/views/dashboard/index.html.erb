@@ -108,16 +108,12 @@
 
 <h2>月別収入・支出推移</h2>
 <div class="card">
-  <div class="table-scroll">
-    <%= monthly_trend_svg(@monthly_summaries) %>
-  </div>
+  <%= monthly_trend_svg(@monthly_summaries) %>
 </div>
 
 <% if @current_month %>
   <h2>カテゴリ別 今月支出(グラフ)</h2>
   <div class="card">
-    <div class="card-scroll">
-      <%= category_expense_bar_svg(@category_expenses) %>
-    </div>
+    <%= category_expense_bar_svg(@category_expenses) %>
   </div>
 <% end %>
