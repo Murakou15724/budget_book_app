@@ -680,6 +680,24 @@ input.input-compact {
   font-size: 0.875rem;
 }
 
+/* ===== Line/bar chart axes (inline SVG, no JS/chart library) ================== */
+
+.chart-axis-line {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.chart-gridline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.chart-axis-label {
+  font-size: 10px;
+  fill: var(--color-text-muted);
+}
+
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }
