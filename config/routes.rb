@@ -5,6 +5,10 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # 外部cronから定期的に叩いて起こす(Renderの無料プランはアクセスが無いとスリープする)用の、
+  # DBアクセス・ビューレンダリングを一切行わない最小コスト routing。
+  get "ping", to: "ping#show"
+
   get "dashboard", to: "dashboard#index"
   resources :transactions, except: [:show] do
     collection do
