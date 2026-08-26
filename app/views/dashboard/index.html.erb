@@ -75,6 +75,9 @@
 
 <% if @current_month %>
   <h2>カテゴリ別 今月支出</h2>
+  <% if @category_expenses.empty? %>
+    <p class="text-muted">今月は表示できる支出カテゴリがありません。</p>
+  <% else %>
   <div class="entry-list">
     <% @category_expenses.each do |entry| %>
       <% rate = entry.usage_rate %>
@@ -100,6 +103,7 @@
       </div>
     <% end %>
   </div>
+  <% end %>
 <% end %>
 
 <h2>月別収入・支出推移</h2>
