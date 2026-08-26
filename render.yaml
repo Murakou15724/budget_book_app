@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: budget-book-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      # config/master.keyの中身をRenderのダッシュボードで直接入力する(sync: falseのためgit管理されない)
+      - key: RAILS_MASTER_KEY
+        sync: false
+      # SupabaseのConnection Pooler接続文字列(?sslmode=require)をRenderのダッシュボードで入力する
+      - key: DATABASE_URL
+        sync: false
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_LEVEL
+        value: info

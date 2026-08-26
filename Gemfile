@@ -8,8 +8,14 @@ gem "rails", "~> 7.1.6"
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"
 
-# Use mysql as the database for Active Record
-gem "mysql2", "~> 0.5"
+# Use PostgreSQL as the database for Active Record in production (Supabase)
+gem "pg", "~> 1.5"
+
+# Ruby's bundled default "uri" gem (0.13.0) fails to parse non-standard schemes
+# like "postgres://user:pass@host" ("does not accept registry part"). Pin a
+# newer release so DATABASE_URL parsing works consistently in every environment,
+# not just machines that happen to have a newer uri gem installed globally.
+gem "uri", ">= 1.0"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
@@ -50,6 +56,9 @@ group :development, :test do
 
   # RSpec for Rails
   gem "rspec-rails"
+
+  # Use mysql as the database for Active Record (local development/test only; production uses pg)
+  gem "mysql2", "~> 0.5"
 end
 
 group :development do
