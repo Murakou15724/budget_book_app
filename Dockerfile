@@ -11,7 +11,7 @@ WORKDIR /rails
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT="development:test"
 
 
 # Throw-away build stage to reduce size of final image
@@ -19,7 +19,7 @@ FROM base as build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential default-libmysqlclient-dev git libvips pkg-config
+    apt-get install --no-install-recommends -y build-essential libpq-dev git libvips pkg-config
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -42,7 +42,7 @@ FROM base
 
 # Install packages needed for deployment
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl default-mysql-client libvips && \
+    apt-get install --no-install-recommends -y curl libpq5 libvips && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Copy built artifacts: gems, application

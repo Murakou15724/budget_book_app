@@ -49,8 +49,12 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# 本番はSupabase(PostgreSQL)を使うため、developmentとはアダプタが異なる。
+# 接続情報はSupabaseが発行するDATABASE_URL(Connection Pooler推奨)を
+# Render側の環境変数として設定する。
 production:
-  <<: *default
-  database: budget_book_app_production
-  username: budget_book_app
-  password: <%= ENV["BUDGET_BOOK_APP_DATABASE_PASSWORD"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV["DATABASE_URL"] %>
+  sslmode: require

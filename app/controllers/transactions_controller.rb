@@ -1,7 +1,17 @@
 class TransactionsController < ApplicationController
   before_action :set_transaction, only: [:edit, :update, :destroy]
 
+  # 表示期間の切り替えボタン。表示順もこの並びに従う。
+  DATE_RANGES = [
+    { key: "this_month", label: "今月分表示" },
+    { key: "last_month", label: "先月分表示" },
+    { key: "all", label: "全表示" }
+  ].freeze
+  helper_method :date_ranges
+
   def index
+    @date_range_key = resolve_date_range_key
+    @from_date, @to_date = date_bounds_for(@date_range_key)
     @transactions = filtered_transactions.includes(:category, :payment_method, :account).order(date: :desc, id: :desc)
   end
 
@@ -63,11 +73,38 @@ class TransactionsController < ApplicationController
     scope = scope.where(entry_type: params[:entry_type]) if params[:entry_type].present?
     scope = scope.where(category_id: params[:category_id]) if params[:category_id].present?
     scope = scope.where(credit_card_status: params[:credit_card_status]) if params[:credit_card_status].present?
-    from_date = parse_date_param(params[:from_date])
-    to_date = parse_date_param(params[:to_date])
-    scope = scope.where("date >= ?", from_date) if from_date
-    scope = scope.where("date <= ?", to_date) if to_date
+    scope = scope.where("date >= ?", @from_date) if @from_date
+    scope = scope.where("date <= ?", @to_date) if @to_date
     scope
+  end
+
+  def date_ranges
+    DATE_RANGES
+  end
+
+  # 期間ボタン(range)が指定されていればそれを使う。指定がなく、from_date/to_dateも
+  # 両方未指定の場合(初期表示・クリア後)は「今月分表示」をデフォルトとする。
+  # from_date/to_dateが手動で指定されている場合はどのボタンも選択されていない状態
+  # (nil)とし、フィルタ欄で指定された範囲をそのまま使う。
+  def resolve_date_range_key
+    return params[:range] if date_ranges.any? { |range| range[:key] == params[:range] }
+    return nil if params[:from_date].present? || params[:to_date].present?
+
+    "this_month"
+  end
+
+  def date_bounds_for(key)
+    case key
+    when "this_month"
+      [Date.current.beginning_of_month, Date.current.end_of_month]
+    when "last_month"
+      last_month = Date.current.prev_month
+      [last_month.beginning_of_month, last_month.end_of_month]
+    when "all"
+      [nil, nil]
+    else
+      [parse_date_param(params[:from_date]), parse_date_param(params[:to_date])]
+    end
   end
 
   # 不正な日付文字列(from_date/to_date)をそのままSQLに渡すとMysql2::Errorで

@@ -1,8 +1,14 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
+# If running the rails server then migrate the database.
+# db:migrate (not db:prepare/db:schema:load) is used deliberately: db/schema.rb is
+# generated against the local MySQL adapter and contains MySQL-only options
+# (charset/collation) that the production PostgreSQL (Supabase) adapter cannot
+# load. Supabase already provisions the database itself, so replaying the
+# migration files (adapter-agnostic Ruby, no schema.rb involved) is sufficient
+# and also creates schema_migrations on a brand-new database.
 if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
-  ./bin/rails db:prepare
+  ./bin/rails db:migrate
 fi
 
 exec "${@}"

@@ -124,6 +124,19 @@ a {
   color: var(--color-accent-2);
 }
 
+a:hover {
+  opacity: 0.75;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+
 h1, h2, h3 {
   line-height: 1.3;
 }
@@ -667,6 +680,64 @@ input.input-compact {
   font-size: 0.875rem;
 }
 
+/* ===== Line/bar chart axes (inline SVG, no JS/chart library) ================== */
+
+.chart-axis-line {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.chart-gridline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.chart-axis-label {
+  font-size: 10px;
+  fill: var(--color-text-muted);
+}
+
+/* y軸を左端に固定幅で表示したまま、グラフ本体だけ幅いっぱいに追従させるレイアウト */
+.chart-with-fixed-axis {
+  display: flex;
+  align-items: flex-start;
+}
+
+.chart-y-axis {
+  flex-shrink: 0;
+}
+
+.chart-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ===== Range switcher (period filter buttons, e.g. asset trend chart) ========== */
+
+.range-switcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.range-switcher__item {
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.range-switcher__item.is-active {
+  background: var(--color-accent-gradient);
+  color: var(--color-accent-contrast);
+}
+
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }
@@ -721,6 +792,52 @@ input.input-compact {
 
 .filter-toggle::-webkit-details-marker {
   display: none;
+}
+
+/* ===== Table detail-column toggle (CSS-only checkbox hack, no JS) ============== */
+
+.detail-toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.detail-toggle-input:focus-visible {
+  outline: none;
+}
+
+.detail-toggle-label {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.detail-toggle-input:focus-visible + .detail-toggle-label {
+  outline: 2px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+
+.col-detail {
+  display: none;
+}
+
+.detail-toggle-input:checked ~ .table-scroll .col-detail {
+  display: table-cell;
+}
+
+/* whole section (not just table columns) hidden until the toggle is checked */
+.detail-toggle-section {
+  display: none;
+}
+
+.detail-toggle-input:checked ~ .detail-toggle-section {
+  display: block;
 }
 
 /* ===== Small-screen tweaks ====================================================== */

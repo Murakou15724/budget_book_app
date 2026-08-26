@@ -3,45 +3,92 @@
 <%= link_to "資産スナップショットを追加", new_asset_snapshot_path, class: "btn-add" %>
 
 <h2>資産推移</h2>
+<div class="range-switcher">
+  <% chart_ranges.each do |range| %>
+    <%= link_to range[:label], asset_snapshots_path(range: range[:key]),
+          class: "range-switcher__item#{' is-active' if @chart_range[:key] == range[:key]}" %>
+  <% end %>
+</div>
 <div class="card">
-  <div class="card-scroll">
-    <%= asset_trend_svg(@asset_snapshots.to_a.reverse) %>
-  </div>
+  <%= asset_trend_svg(@chart_snapshots) %>
 </div>
 
-<h2>スナップショット一覧</h2>
 <% accounts = Account.order(:position, :name) %>
-<div class="table-scroll">
-  <table>
-    <thead>
-      <tr>
-        <th>記録日</th>
-        <% accounts.each do |account| %>
-          <th><%= account.name %></th>
-        <% end %>
-        <th>合計資産</th>
-        <th>目標との差</th>
-        <th>メモ</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @asset_snapshots.each do |snapshot| %>
-        <% balances_by_account = snapshot.asset_balances.index_by(&:account_id) %>
-        <tr>
-          <td><%= snapshot.recorded_on %></td>
-          <% accounts.each do |account| %>
-            <td><%= number_to_currency(balances_by_account[account.id]&.balance, unit: "¥", precision: 0) if balances_by_account[account.id] %></td>
-          <% end %>
-          <td><%= number_to_currency(snapshot.total_balance, unit: "¥", precision: 0) %></td>
-          <td><%= number_to_currency(snapshot.goal_diff(@savings_goal), unit: "¥", precision: 0) %></td>
-          <td><%= snapshot.memo %></td>
-          <td>
-            <%= link_to "編集", edit_asset_snapshot_path(snapshot) %>
-            <%= link_to "削除", asset_snapshot_path(snapshot), data: { turbo_method: :delete, turbo_confirm: "#{snapshot.recorded_on}のスナップショットを削除しますか？" } %>
-          </td>
-        </tr>
+
+<h2>最新の資産状況</h2>
+<% if @latest_snapshot %>
+  <% latest_balances_by_account = @latest_snapshot.asset_balances.index_by(&:account_id) %>
+  <div class="card">
+    <p class="text-muted"><%= @latest_snapshot.recorded_on %>時点</p>
+    <div class="stat-grid">
+      <% accounts.each do |account| %>
+        <% balance = latest_balances_by_account[account.id] %>
+        <% next unless balance %>
+        <div class="stat-tile">
+          <p class="stat-tile__label"><%= account.name %></p>
+          <p class="stat-tile__value"><%= number_to_currency(balance.balance, unit: "¥", precision: 0) %></p>
+        </div>
       <% end %>
-    </tbody>
-  </table>
+      <div class="stat-tile">
+        <p class="stat-tile__label">合計資産</p>
+        <p class="stat-tile__value"><%= number_to_currency(@latest_snapshot.total_balance, unit: "¥", precision: 0) %></p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-tile__label">目標との差</p>
+        <p class="stat-tile__value <%= @latest_snapshot.goal_diff(@savings_goal).negative? ? 'is-negative' : 'is-positive' %>">
+          <%= number_to_currency(@latest_snapshot.goal_diff(@savings_goal), unit: "¥", precision: 0) %>
+        </p>
+      </div>
+    </div>
+    <% if @latest_snapshot.memo.present? %>
+      <p class="text-muted"><%= @latest_snapshot.memo %></p>
+    <% end %>
+    <div class="actions">
+      <%= link_to "編集", edit_asset_snapshot_path(@latest_snapshot) %>
+      <%= link_to "削除", asset_snapshot_path(@latest_snapshot), data: { turbo_method: :delete, turbo_confirm: "#{@latest_snapshot.recorded_on}のスナップショットを削除しますか？" } %>
+    </div>
+  </div>
+<% else %>
+  <p class="text-muted">資産スナップショットがまだ登録されていません。</p>
+<% end %>
+
+<input type="checkbox" id="asset-snapshot-list-toggle" class="detail-toggle-input">
+<label for="asset-snapshot-list-toggle" class="detail-toggle-label">📅 スナップショット一覧(直近1年)を表示</label>
+
+<div class="detail-toggle-section">
+  <h2>スナップショット一覧(直近1年)</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>記録日</th>
+          <% accounts.each do |account| %>
+            <th><%= account.name %></th>
+          <% end %>
+          <th>合計資産</th>
+          <th>目標との差</th>
+          <th>メモ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_snapshots.each do |snapshot| %>
+          <% balances_by_account = snapshot.asset_balances.index_by(&:account_id) %>
+          <tr>
+            <td><%= snapshot.recorded_on %></td>
+            <% accounts.each do |account| %>
+              <td><%= number_to_currency(balances_by_account[account.id]&.balance, unit: "¥", precision: 0) if balances_by_account[account.id] %></td>
+            <% end %>
+            <td><%= number_to_currency(snapshot.total_balance, unit: "¥", precision: 0) %></td>
+            <td><%= number_to_currency(snapshot.goal_diff(@savings_goal), unit: "¥", precision: 0) %></td>
+            <td><%= snapshot.memo %></td>
+            <td>
+              <%= link_to "編集", edit_asset_snapshot_path(snapshot) %>
+              <%= link_to "削除", asset_snapshot_path(snapshot), data: { turbo_method: :delete, turbo_confirm: "#{snapshot.recorded_on}のスナップショットを削除しますか？" } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </div>
