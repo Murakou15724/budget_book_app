@@ -736,6 +736,43 @@ input.input-compact {
   display: none;
 }
 
+/* ===== Table detail-column toggle (CSS-only checkbox hack, no JS) ============== */
+
+.detail-toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.detail-toggle-input:focus-visible {
+  outline: none;
+}
+
+.detail-toggle-label {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.detail-toggle-input:focus-visible + .detail-toggle-label {
+  outline: 2px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+
+.col-detail {
+  display: none;
+}
+
+.detail-toggle-input:checked ~ .table-scroll .col-detail {
+  display: table-cell;
+}
+
 /* ===== Small-screen tweaks ====================================================== */
 
 @media (max-width: 420px) {
