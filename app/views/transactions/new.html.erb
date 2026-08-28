@@ -1,3 +1,8 @@
 <h1>取引を追加</h1>
 
+<div class="link-chip-list">
+  <%= link_to "🤖 AIによる取引登録", new_image_imports_path, class: "link-chip" %>
+  <%= link_to "🔍 取込レビュー待ち一覧", image_import_drafts_path, class: "link-chip" %>
+</div>
+
 <%= render "form", transaction: @transaction %>
