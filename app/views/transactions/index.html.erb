@@ -2,6 +2,14 @@
 
 <%= link_to "取引を追加", new_transaction_path, class: "btn-add" %>
 
+<% if @quick_entry_templates.any? %>
+  <div class="quick-entry-list">
+    <% @quick_entry_templates.each do |template| %>
+      <%= link_to template.name, new_transaction_path(quick_entry_template_id: template.id), class: "quick-entry-chip" %>
+    <% end %>
+  </div>
+<% end %>
+
 <div class="range-switcher">
   <% date_ranges.each do |range| %>
     <%= link_to range[:label], transactions_path(range: range[:key]),

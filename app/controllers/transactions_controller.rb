@@ -13,10 +13,20 @@ class TransactionsController < ApplicationController
     @date_range_key = resolve_date_range_key
     @from_date, @to_date = date_bounds_for(@date_range_key)
     @transactions = filtered_transactions.includes(:category, :payment_method, :account).order(date: :desc, id: :desc)
+    @quick_entry_templates = QuickEntryTemplate.order(:position, :name)
   end
 
   def new
-    @transaction = Transaction.new(date: Date.current)
+    @transaction = Transaction.new(date: Date.current, entry_type: :actual)
+    if (template = QuickEntryTemplate.find_by(id: params[:quick_entry_template_id]))
+      @transaction.assign_attributes(
+        direction: template.direction,
+        category_id: template.category_id,
+        payment_method_id: template.payment_method_id,
+        account_id: template.account_id,
+        credit_card_status: template.credit_card_status
+      )
+    end
   end
 
   def create
@@ -51,7 +61,8 @@ class TransactionsController < ApplicationController
     ids = Array(params[:transaction_ids])
     updated = Transaction.unpaid.where(id: ids)
                           .update_all(credit_card_status: Transaction.credit_card_statuses[:paid], updated_at: Time.current)
-    redirect_to transactions_path(index_filter_params), notice: "#{updated}件の取引を支払済にしました。"
+    redirect_path = params[:return_to] == "credit_card_unpaids" ? credit_card_unpaids_path : transactions_path(index_filter_params)
+    redirect_to redirect_path, notice: "#{updated}件の取引を支払済にしました。"
   end
 
   private

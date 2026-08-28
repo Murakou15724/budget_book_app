@@ -1,0 +1,50 @@
+<%= form_with model: quick_entry_template do |f| %>
+  <% if quick_entry_template.errors.any? %>
+    <div class="error-messages">
+      <% quick_entry_template.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name, "名称" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :direction, "収支区分" %>
+    <%= f.select :direction, QuickEntryTemplate.directions.keys.map { |k| [Transaction::DIRECTION_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :category_id, "カテゴリ" %>
+    <%= f.grouped_collection_select :category_id, [["支出", Category.expense.order(:position, :name)], ["収入", Category.income.order(:position, :name)]],
+          :last, :first, :id, :name %>
+  </div>
+
+  <div class="field">
+    <%= f.label :payment_method_id, "支払・入金方法" %>
+    <%= f.collection_select :payment_method_id, PaymentMethod.order(:position, :name), :id, :name %>
+  </div>
+
+  <div class="field">
+    <%= f.label :account_id, "口座・置き場所" %>
+    <%= f.collection_select :account_id, Account.order(:position, :name), :id, :name %>
+  </div>
+
+  <div class="field">
+    <%= f.label :credit_card_status, "クレカ支払状況" %>
+    <%= f.select :credit_card_status, QuickEntryTemplate.credit_card_statuses.keys.map { |k| [Transaction::CREDIT_CARD_STATUS_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :position, "表示順" %>
+    <%= f.number_field :position %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", quick_entry_templates_path %>
+  </div>
+<% end %>

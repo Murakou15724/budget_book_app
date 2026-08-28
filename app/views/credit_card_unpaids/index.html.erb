@@ -1,0 +1,59 @@
+<h1>クレカ未払い一覧</h1>
+<p class="text-muted">引落予定日は保持していないため、利用日の古い順に表示しています。</p>
+
+<div class="stat-grid">
+  <div class="stat-tile">
+    <p class="stat-tile__label">未払い合計</p>
+    <p class="stat-tile__value"><%= number_to_currency(@total, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">件数</p>
+    <p class="stat-tile__value"><%= @transactions.size %>件</p>
+  </div>
+</div>
+
+<% if @transactions.empty? %>
+  <p class="text-muted">未払いのクレカ取引はありません。</p>
+<% else %>
+  <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch, data: { controller: "select-all" } do %>
+    <%= hidden_field_tag :return_to, "credit_card_unpaids" %>
+
+    <label class="select-all-toggle">
+      <%= check_box_tag "select_all", "1", false, data: { action: "select-all#toggle" } %>
+      すべて選択
+    </label>
+
+    <% @grouped_transactions.each do |payment_method_name, transactions| %>
+      <h2><%= payment_method_name %>（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
+      <div class="entry-list">
+        <% transactions.each do |transaction| %>
+          <div class="entry-card">
+            <div class="entry-card__row">
+              <div class="entry-card__main">
+                <p class="entry-card__title"><%= transaction.category.name %></p>
+                <div class="entry-card__meta">
+                  <span><%= transaction.date %></span>
+                  <span><%= transaction.account.name %></span>
+                  <% if transaction.memo.present? %><span><%= transaction.memo %></span><% end %>
+                </div>
+              </div>
+              <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
+                <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
+              </p>
+            </div>
+            <div class="entry-card__actions">
+              <label>
+                <%= check_box_tag "transaction_ids[]", transaction.id, false, data: { select_all_target: "checkbox" } %>
+                支払済にする
+              </label>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="actions">
+      <%= submit_tag "選択した取引を支払済にする" %>
+    </div>
+  <% end %>
+<% end %>
