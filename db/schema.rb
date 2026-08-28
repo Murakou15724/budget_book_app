@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_13_025638) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_28_031521) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -84,6 +84,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_025638) do
     t.index ["name"], name: "index_payment_methods_on_name", unique: true
   end
 
+  create_table "quick_entry_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "direction", default: 1, null: false
+    t.bigint "category_id", null: false
+    t.bigint "payment_method_id", null: false
+    t.bigint "account_id", null: false
+    t.integer "credit_card_status", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_quick_entry_templates_on_account_id"
+    t.index ["category_id"], name: "index_quick_entry_templates_on_category_id"
+    t.index ["name"], name: "index_quick_entry_templates_on_name", unique: true
+    t.index ["payment_method_id"], name: "index_quick_entry_templates_on_payment_method_id"
+  end
+
   create_table "settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "target_year"
     t.integer "total_savings_goal"
@@ -117,6 +133,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_13_025638) do
   add_foreign_key "asset_balances", "accounts"
   add_foreign_key "asset_balances", "asset_snapshots"
   add_foreign_key "category_monthly_budgets", "categories"
+  add_foreign_key "quick_entry_templates", "accounts"
+  add_foreign_key "quick_entry_templates", "categories"
+  add_foreign_key "quick_entry_templates", "payment_methods"
   add_foreign_key "transactions", "accounts"
   add_foreign_key "transactions", "categories"
   add_foreign_key "transactions", "payment_methods"

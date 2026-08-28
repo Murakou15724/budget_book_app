@@ -69,7 +69,7 @@
   </div>
   <div class="stat-tile">
     <p class="stat-tile__label">クレカ未払仮置き</p>
-    <p class="stat-tile__value"><%= number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0) %></p>
+    <p class="stat-tile__value"><%= link_to number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0), credit_card_unpaids_path %></p>
   </div>
 </div>
 
