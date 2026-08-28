@@ -31,11 +31,29 @@ RSpec.describe ImageImportDraftBuilder do
     expect(draft.suggested_category_name).to eq("謎カテゴリ")
   end
 
-  it "不正な日付形式はnilになる" do
-    items = [{ "date" => "not-a-date", "direction" => "expense", "amount" => 100 }]
+  describe "日付の優先度(手動指定 > 画像内から特定 > アップロード日)" do
+    it "手動指定日付があれば画像内の日付より優先する" do
+      items = [{ "date" => "2026-08-01", "direction" => "expense", "amount" => 100 }]
 
-    _, drafts = ImageImportDraftBuilder.build(items)
+      _, drafts = ImageImportDraftBuilder.build(items, manual_date: Date.new(2026, 8, 20))
 
-    expect(drafts.first.date).to be_nil
+      expect(drafts.first.date).to eq(Date.new(2026, 8, 20))
+    end
+
+    it "手動指定がなければ画像内から読み取った日付を使う" do
+      items = [{ "date" => "2026-08-01", "direction" => "expense", "amount" => 100 }]
+
+      _, drafts = ImageImportDraftBuilder.build(items)
+
+      expect(drafts.first.date).to eq(Date.new(2026, 8, 1))
+    end
+
+    it "手動指定も画像内の日付もなければアップロード日(今日)になる" do
+      items = [{ "date" => "not-a-date", "direction" => "expense", "amount" => 100 }]
+
+      _, drafts = ImageImportDraftBuilder.build(items)
+
+      expect(drafts.first.date).to eq(Date.current)
+    end
   end
 end

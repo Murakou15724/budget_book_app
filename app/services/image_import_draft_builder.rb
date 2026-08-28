@@ -1,18 +1,18 @@
 # Gemini::TransactionExtractorの抽出結果(Hashの配列)から、レビュー画面用のImageImportDraftを作成する。
 class ImageImportDraftBuilder
-  def self.build(items)
-    new.build(items)
+  def self.build(items, manual_date: nil)
+    new.build(items, manual_date: manual_date)
   end
 
-  def build(items)
+  def build(items, manual_date: nil)
     batch_id = SecureRandom.uuid
-    drafts = items.map { |item| build_draft(item, batch_id) }
+    drafts = items.map { |item| build_draft(item, batch_id, manual_date) }
     [batch_id, drafts]
   end
 
   private
 
-  def build_draft(item, batch_id)
+  def build_draft(item, batch_id, manual_date)
     direction = item["direction"] == "income" ? :income : :expense
     category = find_master(Category.where(kind: direction), item["category_name"])
     payment_method = find_master(PaymentMethod.all, item["payment_method_name"])
@@ -22,9 +22,12 @@ class ImageImportDraftBuilder
     # 口座が「クレカ仮置き」と突合できた場合はGeminiの判定に頼らず機械的に導出する。
     credit_card_status = account&.credit_pending? ? :unpaid : :not_applicable
 
+    # 日付の優先度: 手動指定 > 画像内から特定 > アップロード日
+    date = manual_date || parse_date(item["date"]) || Date.current
+
     ImageImportDraft.create!(
       batch_id: batch_id,
-      date: parse_date(item["date"]),
+      date: date,
       direction: direction,
       amount: item["amount"],
       memo: item["memo"],

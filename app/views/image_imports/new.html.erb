@@ -10,6 +10,12 @@
     <%= file_field_tag :image, accept: "image/jpeg,image/png,image/webp", required: true %>
   </div>
 
+  <div class="field">
+    <%= label_tag :manual_date, "日付(任意)" %>
+    <%= date_field_tag :manual_date %>
+    <p class="text-muted">指定するとこの日付を優先します。未指定の場合は画像から日付の読み取りを試み、それも読み取れない場合はアップロード日を使います。</p>
+  </div>
+
   <div class="actions">
     <%= submit_tag "アップロードして解析する" %>
   </div>

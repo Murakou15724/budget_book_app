@@ -17,7 +17,7 @@ class ImageImportsController < ApplicationController
     return redirect_to new_image_imports_path, alert: result.error_message unless result.success?
     return redirect_to new_image_imports_path, notice: "画像から取引を検出できませんでした。" if result.items.empty?
 
-    batch_id, drafts = ImageImportDraftBuilder.build(result.items)
+    batch_id, drafts = ImageImportDraftBuilder.build(result.items, manual_date: parse_manual_date)
 
     if Setting.current.image_import_requires_approval?
       redirect_to image_import_drafts_path(batch_id: batch_id)
@@ -49,5 +49,13 @@ class ImageImportsController < ApplicationController
       end
     end
     [applied, drafts.size - applied]
+  end
+
+  def parse_manual_date
+    return nil if params[:manual_date].blank?
+
+    Date.parse(params[:manual_date])
+  rescue ArgumentError
+    nil
   end
 end
