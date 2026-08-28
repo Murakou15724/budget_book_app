@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     end
   end
   resources :asset_snapshots, except: [:show]
+  get "credit_card_unpaids", to: "credit_card_unpaids#index"
   get "monthly_summaries", to: "monthly_summaries#index"
   get "monthly_reviews", to: "monthly_reviews#index"
   get "monthly_reviews/:year/:month/edit", to: "monthly_reviews#edit", as: :edit_monthly_review, constraints: { year: /\d+/, month: /\d+/ }
@@ -23,6 +24,14 @@ Rails.application.routes.draw do
   resources :categories, except: [:show]
   resources :accounts, except: [:show]
   resources :payment_methods, except: [:show]
+  resources :quick_entry_templates, except: [:show]
+  resource :image_imports, only: [:new, :create]
+  resources :image_import_drafts, only: [:index, :destroy] do
+    collection do
+      patch :bulk_approve
+      delete :bulk_reject
+    end
+  end
   resource :settings, only: [:edit, :update]
   resource :budget_plan, only: [:edit, :update]
   get "more", to: "more#index"

@@ -1,0 +1,35 @@
+<h1>クイック入力テンプレート</h1>
+
+<%= link_to "テンプレートを追加", new_quick_entry_template_path, class: "btn-add" %>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>収支区分</th>
+        <th>カテゴリ</th>
+        <th>支払方法</th>
+        <th>口座</th>
+        <th>クレカ状況</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @quick_entry_templates.each do |template| %>
+        <tr>
+          <td><%= template.name %></td>
+          <td><%= template.direction_label %></td>
+          <td><%= template.category.name %></td>
+          <td><%= template.payment_method.name %></td>
+          <td><%= template.account.name %></td>
+          <td><%= template.credit_card_status_label %></td>
+          <td>
+            <%= link_to "編集", edit_quick_entry_template_path(template) %>
+            <%= link_to "削除", quick_entry_template_path(template), data: { turbo_method: :delete, turbo_confirm: "「#{template.name}」を削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

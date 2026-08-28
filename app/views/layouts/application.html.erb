@@ -33,6 +33,8 @@
       <%= yield %>
     </main>
 
+    <%= link_to "＋", new_transaction_path, class: "fab-add", "aria-label": "取引を追加" %>
+
     <nav class="bottom-nav">
       <%= link_to dashboard_path, class: "bottom-nav__item #{'is-active' if controller_name == 'dashboard'}" do %>
         <span class="bottom-nav__icon">🏠</span>ホーム
