@@ -25,6 +25,13 @@ Rails.application.routes.draw do
   resources :accounts, except: [:show]
   resources :payment_methods, except: [:show]
   resources :quick_entry_templates, except: [:show]
+  resource :image_imports, only: [:new, :create]
+  resources :image_import_drafts, only: [:index, :destroy] do
+    collection do
+      patch :bulk_approve
+      delete :bulk_reject
+    end
+  end
   resource :settings, only: [:edit, :update]
   resource :budget_plan, only: [:edit, :update]
   get "more", to: "more#index"

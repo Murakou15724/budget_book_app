@@ -479,6 +479,90 @@ a.btn-add::before {
   margin-right: 0.2rem;
 }
 
+.link-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.link-chip {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-accent-1);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* ===== AI loading overlay (image import) ===================================== */
+
+.ai-loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(13, 13, 13, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.ai-loading-overlay.is-active {
+  display: flex;
+}
+
+.ai-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  animation: ai-loading-spin 0.8s linear infinite;
+}
+
+.ai-loading-icon {
+  font-size: 2.75rem;
+  line-height: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ai-loading-icon.is-fading {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.ai-loading-message {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-align: center;
+  padding: 0 2rem;
+  margin: 0;
+  transition: opacity 0.25s ease;
+}
+
+.ai-loading-message.is-fading {
+  opacity: 0;
+}
+
+@keyframes ai-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ===== Tables ================================================================ */
 
 .table-scroll {

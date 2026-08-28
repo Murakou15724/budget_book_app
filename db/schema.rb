@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_28_031521) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_28_035611) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -61,6 +61,27 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_28_031521) do
     t.index ["category_id"], name: "index_category_monthly_budgets_on_category_id"
   end
 
+  create_table "image_import_drafts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "batch_id", null: false
+    t.date "date"
+    t.integer "direction", default: 1, null: false
+    t.integer "amount"
+    t.string "memo"
+    t.bigint "category_id"
+    t.bigint "payment_method_id"
+    t.bigint "account_id"
+    t.integer "credit_card_status", default: 0, null: false
+    t.string "suggested_category_name"
+    t.string "suggested_payment_method_name"
+    t.string "suggested_account_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_image_import_drafts_on_account_id"
+    t.index ["batch_id"], name: "index_image_import_drafts_on_batch_id"
+    t.index ["category_id"], name: "index_image_import_drafts_on_category_id"
+    t.index ["payment_method_id"], name: "index_image_import_drafts_on_payment_method_id"
+  end
+
   create_table "monthly_reviews", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "year", null: false
     t.integer "month", null: false
@@ -107,6 +128,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_28_031521) do
     t.integer "level_unit_amount", default: 10000, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "image_import_requires_approval", default: true, null: false
   end
 
   create_table "transactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -133,6 +155,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_28_031521) do
   add_foreign_key "asset_balances", "accounts"
   add_foreign_key "asset_balances", "asset_snapshots"
   add_foreign_key "category_monthly_budgets", "categories"
+  add_foreign_key "image_import_drafts", "accounts"
+  add_foreign_key "image_import_drafts", "categories"
+  add_foreign_key "image_import_drafts", "payment_methods"
   add_foreign_key "quick_entry_templates", "accounts"
   add_foreign_key "quick_entry_templates", "categories"
   add_foreign_key "quick_entry_templates", "payment_methods"

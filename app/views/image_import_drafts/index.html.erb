@@ -1,0 +1,98 @@
+<%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
+
+<h1>画像取込レビュー</h1>
+<p class="text-muted">AIが画像から読み取った内容です。必要に応じて修正してから登録してください。</p>
+
+<% if @drafts.empty? %>
+  <p class="text-muted">レビュー待ちの候補はありません。</p>
+<% else %>
+  <%= form_with url: bulk_approve_image_import_drafts_path(batch_id: params[:batch_id]), method: :patch, data: { controller: "select-all" } do %>
+    <label class="select-all-toggle">
+      <%= check_box_tag "select_all", "1", false, data: { action: "select-all#toggle" } %>
+      すべて選択
+    </label>
+
+    <div class="entry-list">
+      <% @drafts.each do |draft| %>
+        <div class="entry-card">
+          <div class="field">
+            <label><%= check_box_tag "draft_ids[]", draft.id, false, data: { select_all_target: "checkbox" } %> この候補を登録する</label>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "日付" %>
+            <%= date_field_tag "drafts[#{draft.id}][date]", draft.date %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "収支区分" %>
+            <%= select_tag "drafts[#{draft.id}][direction]",
+                  options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, draft.direction) %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "カテゴリ" %>
+            <%= select_tag "drafts[#{draft.id}][category_id]",
+                  grouped_options_for_select(
+                    [["支出", @expense_categories.pluck(:name, :id)], ["収入", @income_categories.pluck(:name, :id)]],
+                    draft.category_id
+                  ),
+                  include_blank: draft.category_id ? false : (draft.suggested_category_name.presence || "選択してください") %>
+            <% if draft.category_id.nil? && draft.suggested_category_name.present? %>
+              <span class="badge badge-neutral">AI推定: <%= draft.suggested_category_name %>(未一致)</span>
+            <% end %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "支払・入金方法" %>
+            <%= select_tag "drafts[#{draft.id}][payment_method_id]",
+                  options_from_collection_for_select(@payment_methods, :id, :name, draft.payment_method_id),
+                  include_blank: draft.payment_method_id ? false : (draft.suggested_payment_method_name.presence || "選択してください") %>
+            <% if draft.payment_method_id.nil? && draft.suggested_payment_method_name.present? %>
+              <span class="badge badge-neutral">AI推定: <%= draft.suggested_payment_method_name %>(未一致)</span>
+            <% end %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "口座・置き場所" %>
+            <%= select_tag "drafts[#{draft.id}][account_id]",
+                  options_from_collection_for_select(@accounts, :id, :name, draft.account_id),
+                  include_blank: draft.account_id ? false : (draft.suggested_account_name.presence || "選択してください") %>
+            <% if draft.account_id.nil? && draft.suggested_account_name.present? %>
+              <span class="badge badge-neutral">AI推定: <%= draft.suggested_account_name %>(未一致)</span>
+            <% end %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "金額" %>
+            <%= number_field_tag "drafts[#{draft.id}][amount]", draft.amount %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "メモ" %>
+            <%= text_field_tag "drafts[#{draft.id}][memo]", draft.memo %>
+          </div>
+
+          <div class="field">
+            <%= label_tag nil, "クレカ支払状況" %>
+            <%= select_tag "drafts[#{draft.id}][credit_card_status]",
+                  options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, draft.credit_card_status) %>
+          </div>
+
+          <div class="entry-card__actions">
+            <%= link_to "この候補を却下", image_import_draft_path(draft, batch_id: params[:batch_id]),
+                  data: { turbo_method: :delete, turbo_confirm: "この候補を却下しますか？" } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="actions">
+      <%= submit_tag "選択した候補を承認して登録" %>
+    </div>
+  <% end %>
+
+  <%= button_to "選択した候補をまとめて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
+        method: :delete, params: { draft_ids: @drafts.map(&:id) },
+        form: { data: { turbo_confirm: "表示中の候補をすべて却下しますか？" } }, class: "btn" %>
+<% end %>
