@@ -6,7 +6,7 @@ module Gemini
   # PayPay/クレジットカードのスクリーンショットから取引情報を抽出する。
   # 画像データはこの呼び出しの中でのみ使い、どこにも永続化しない。
   class TransactionExtractor
-    MODEL = "gemini-2.5-flash".freeze
+    MODEL = "gemini-3.6-flash".freeze
     ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/#{MODEL}:generateContent".freeze
     OPEN_TIMEOUT = 10
     READ_TIMEOUT = 25
