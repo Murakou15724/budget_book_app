@@ -8,20 +8,21 @@
 </div>
 
 <input type="checkbox" id="monthly-summary-detail-toggle" class="detail-toggle-input">
-<label for="monthly-summary-detail-toggle" class="detail-toggle-label">📊 詳細項目(収入予定込・予算・貯金目標)を表示</label>
+<label for="monthly-summary-detail-toggle" class="detail-toggle-label">📊 詳細項目(収入実績・収入予定込・月予算・累計収支・貯金目標)を表示</label>
 
 <div class="table-scroll">
   <table>
     <thead>
       <tr>
         <th>月</th>
-        <th>収入実績</th>
         <th>支出実績</th>
         <th>実績収支</th>
-        <th>累計収支</th>
+        <th>予算残</th>
+        <th>残り予算%</th>
+        <th class="col-detail">収入実績</th>
         <th class="col-detail">収入予定込</th>
         <th class="col-detail">月予算</th>
-        <th class="col-detail">予算残</th>
+        <th class="col-detail">累計収支</th>
         <th class="col-detail">毎月貯金目標</th>
         <th class="col-detail">貯金達成率</th>
       </tr>
@@ -30,13 +31,14 @@
       <% @monthly_summaries.each do |summary| %>
         <tr>
           <td><%= summary.month %>月</td>
-          <td><%= number_to_currency(summary.income_actual, unit: "¥", precision: 0) %></td>
           <td><%= number_to_currency(summary.expense_actual, unit: "¥", precision: 0) %></td>
           <td><%= number_to_currency(summary.actual_balance, unit: "¥", precision: 0) %></td>
-          <td><%= number_to_currency(summary.cumulative_balance, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.budget_remaining, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_percentage(summary.budget_remaining_rate * 100, precision: 1) %></td>
+          <td class="col-detail"><%= number_to_currency(summary.income_actual, unit: "¥", precision: 0) %></td>
           <td class="col-detail"><%= number_to_currency(summary.income_with_planned, unit: "¥", precision: 0) %></td>
           <td class="col-detail"><%= number_to_currency(summary.monthly_budget, unit: "¥", precision: 0) %></td>
-          <td class="col-detail"><%= number_to_currency(summary.budget_remaining, unit: "¥", precision: 0) %></td>
+          <td class="col-detail"><%= number_to_currency(summary.cumulative_balance, unit: "¥", precision: 0) %></td>
           <td class="col-detail"><%= number_to_currency(summary.monthly_savings_goal, unit: "¥", precision: 0) %></td>
           <td class="col-detail"><%= number_to_percentage(summary.savings_achievement_rate * 100, precision: 1) %></td>
         </tr>

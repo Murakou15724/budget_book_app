@@ -75,6 +75,12 @@ class MonthlySummary
     monthly_budget - expense_actual
   end
 
+  def budget_remaining_rate
+    return 0.0 if monthly_budget.zero?
+
+    budget_remaining.to_f / monthly_budget
+  end
+
   def savings_achievement_rate
     return 0.0 if monthly_savings_goal.zero?
 
