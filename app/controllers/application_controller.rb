@@ -6,7 +6,9 @@ class ApplicationController < ActionController::Base
   private
 
   def render_bad_request(exception)
-    render plain: exception.message, status: :bad_request
+    render "errors/show", status: :bad_request, locals: ErrorsController::ERROR_INFO.fetch(:bad_request).merge(
+      message: exception.message, request_id: request.request_id
+    )
   end
 
   # 年切り替えのある一覧画面(月別予算・月別集計・月次振り返り)共通の対象年解決ロジック。

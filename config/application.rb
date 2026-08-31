@@ -38,5 +38,10 @@ module BudgetBookApp
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # 404/422/500等の例外発生時に、public/*.htmlの静的ページではなく
+    # ErrorsController経由でアプリと同じデザインのエラーページを表示する。
+    # (development環境ではconsider_all_requests_local=trueのため、通常のデバッグ画面が優先される)
+    config.exceptions_app = self.routes
   end
 end
