@@ -21,7 +21,7 @@ class ImageImportDraftsController < ApplicationController
       draft = ImageImportDraft.find_by(id: id)
       next unless draft
 
-      attrs = ActionController::Parameters.new((params[:drafts] || {})[id.to_s] || {})
+      attrs = params.dig(:drafts, id.to_s) || ActionController::Parameters.new
       draft.assign_attributes(attrs.permit(:date, :direction, :amount, :memo, :category_id, :payment_method_id, :account_id, :credit_card_status))
 
       transaction = Transaction.new(
