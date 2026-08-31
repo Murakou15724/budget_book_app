@@ -36,6 +36,12 @@ Rails.application.routes.draw do
   resource :budget_plan, only: [:edit, :update]
   get "more", to: "more#index"
 
+  # config.exceptions_appから例外発生時に振り分けられるエラーページ用ルート。
+  match "/404", to: "errors#not_found", via: :all
+  match "/422", to: "errors#unprocessable_entity", via: :all
+  match "/500", to: "errors#internal_server_error", via: :all
+  match "/:status_code", to: "errors#show", via: :all, constraints: { status_code: /\d{3}/ }
+
   # Defines the root path route ("/")
   root "dashboard#index"
 end
