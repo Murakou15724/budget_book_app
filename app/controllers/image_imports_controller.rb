@@ -6,30 +6,54 @@ class ImageImportsController < ApplicationController
   end
 
   def create
-    image = params[:image]
-    return redirect_to new_image_imports_path, alert: "画像ファイルを選択してください。" if image.blank?
-    unless ALLOWED_CONTENT_TYPES.include?(image.content_type)
-      return redirect_to new_image_imports_path, alert: "対応していないファイル形式です(jpeg/png/webpのみ)。"
+    images = Array(params[:images]).select(&:present?)
+    return redirect_to new_image_imports_path, alert: "画像ファイルを選択してください。" if images.empty?
+
+    manual_date = parse_manual_date
+    items = []
+    errors = []
+
+    images.each do |image|
+      validation_error = validate_image(image)
+      if validation_error
+        errors << "#{image.original_filename}: #{validation_error}"
+        next
+      end
+
+      result = Gemini::TransactionExtractor.new(image_bytes: image.read, mime_type: image.content_type).call
+      if result.success?
+        items.concat(result.items)
+      else
+        errors << "#{image.original_filename}: #{result.error_message}"
+      end
     end
-    return redirect_to new_image_imports_path, alert: "ファイルサイズが大きすぎます(8MBまで)。" if image.size > MAX_FILE_SIZE
 
-    result = Gemini::TransactionExtractor.new(image_bytes: image.read, mime_type: image.content_type).call
-    return redirect_to new_image_imports_path, alert: result.error_message unless result.success?
-    return redirect_to new_image_imports_path, notice: "画像から取引を検出できませんでした。" if result.items.empty?
+    if items.empty?
+      return redirect_to new_image_imports_path, alert: errors.presence&.join(" / ") || "画像から取引を検出できませんでした。"
+    end
 
-    batch_id, drafts = ImageImportDraftBuilder.build(result.items, manual_date: parse_manual_date)
+    batch_id, drafts = ImageImportDraftBuilder.build(items, manual_date: manual_date)
+    partial_failure_note = "(#{errors.size}枚は処理できませんでした: #{errors.join(" / ")})" if errors.any?
 
     if Setting.current.image_import_requires_approval?
-      redirect_to image_import_drafts_path(batch_id: batch_id)
+      redirect_to image_import_drafts_path(batch_id: batch_id), notice: partial_failure_note
     else
       applied_count, remaining_count = apply_resolved_drafts(drafts)
       notice = "#{applied_count}件を自動登録しました。"
       notice += " #{remaining_count}件は内容の確認が必要です。" if remaining_count.positive?
+      notice += " #{partial_failure_note}" if partial_failure_note
       redirect_to image_import_drafts_path(batch_id: batch_id), notice: notice
     end
   end
 
   private
+
+  def validate_image(image)
+    return "対応していないファイル形式です(jpeg/png/webpのみ)。" unless ALLOWED_CONTENT_TYPES.include?(image.content_type)
+    return "ファイルサイズが大きすぎます(8MBまで)。" if image.size > MAX_FILE_SIZE
+
+    nil
+  end
 
   # 承認不要設定の場合、マスタ突合が完全なドラフトのみその場でTransaction化する。
   # 未解決のドラフトはレビュー画面に残し、ユーザーに確認してもらう。

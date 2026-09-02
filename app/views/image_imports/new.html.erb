@@ -1,13 +1,13 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像から取引を登録</h1>
-<p class="text-muted">PayPayの支払い完了画面や、クレジットカードの利用履歴一覧のスクリーンショットをアップロードすると、AIが取引内容を読み取ります。1枚の画像に複数件の取引が写っていても、まとめて抽出します。</p>
+<p class="text-muted">PayPayの支払い完了画面や、クレジットカードの利用履歴一覧のスクリーンショットをアップロードすると、AIが取引内容を読み取ります。1枚の画像に複数件の取引が写っていても、まとめて抽出します。複数枚を選択して同時にアップロードすることもできます。</p>
 
 <%= form_with url: image_imports_path, method: :post, multipart: true,
       data: { controller: "upload-progress", action: "submit->upload-progress#start" } do %>
   <div class="field">
-    <%= label_tag :image, "画像ファイル" %>
-    <%= file_field_tag :image, accept: "image/jpeg,image/png,image/webp", required: true %>
+    <%= label_tag :images, "画像ファイル(複数選択可)" %>
+    <%= file_field_tag "images[]", multiple: true, accept: "image/jpeg,image/png,image/webp", required: true %>
   </div>
 
   <div class="field">
