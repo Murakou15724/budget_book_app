@@ -8,11 +8,11 @@
   </div>
   <div class="stat-tile">
     <p class="stat-tile__label">件数</p>
-    <p class="stat-tile__value"><%= @transactions.size %>件</p>
+    <p class="stat-tile__value"><%= @grouped_transactions.values.sum(&:size) %>件</p>
   </div>
 </div>
 
-<% if @transactions.empty? %>
+<% if @grouped_transactions.empty? %>
   <p class="text-muted">未払いのクレカ取引はありません。</p>
 <% else %>
   <% @grouped_transactions.each do |due_on, transactions| %>

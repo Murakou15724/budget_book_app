@@ -71,6 +71,12 @@
     <p class="stat-tile__label">クレカ未払仮置き</p>
     <p class="stat-tile__value"><%= link_to number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0), credit_card_unpaids_path %></p>
   </div>
+  <% if @next_credit_card_payment_due_on %>
+    <div class="stat-tile">
+      <p class="stat-tile__label">次回クレカ支払い(<%= @next_credit_card_payment_due_on.strftime("%-m/%-d") %>)</p>
+      <p class="stat-tile__value"><%= link_to number_to_currency(@next_credit_card_payment_total, unit: "¥", precision: 0), credit_card_unpaids_path %></p>
+    </div>
+  <% end %>
 </div>
 
 <% if @current_month %>

@@ -1,4 +1,6 @@
 class ImageImportDraft < ApplicationRecord
+  include CreditCardPaymentCycle
+
   enum :direction, { income: 0, expense: 1 }
   enum :credit_card_status, { not_applicable: 0, unpaid: 1, paid: 2 }
 

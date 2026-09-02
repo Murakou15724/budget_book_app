@@ -1,7 +1,7 @@
 # 月別の収支・予算集計値。DBに保持せず、取引データ等から都度計算する(要件定義書6章)。
 class MonthlySummary
   attr_reader :year, :month, :income_with_planned, :income_actual, :expense_actual,
-              :monthly_budget, :monthly_savings_goal
+              :monthly_budget, :monthly_savings_goal, :credit_card_expense
   attr_accessor :cumulative_balance
 
   # 対象年の1〜12月分をまとめて計算する。年単位でTransaction/CategoryMonthlyBudgetを
@@ -51,13 +51,17 @@ class MonthlySummary
       income_with_planned: month_transactions.select(&:income?).sum(&:amount),
       income_actual: month_transactions.select { |t| t.income? && t.actual? }.sum(&:amount),
       expense_actual: month_transactions.select { |t| t.expense? && t.actual? }.sum(&:amount),
+      # クレカ利用額は「支払予定日」ではなく「利用日」で当月に属するかを判定する
+      # (この月の予算消化・振り返りに使う値のため、支払日ベースにすると
+      #  実際に使った月と表示上の月がズレてしまう)。
+      credit_card_expense: month_transactions.select { |t| t.expense? && t.actual? && !t.not_applicable? }.sum(&:amount),
       monthly_budget: monthly_budget,
       monthly_savings_goal: savings_goal
     )
   end
   private_class_method :for_month
 
-  def initialize(year:, month:, income_with_planned:, income_actual:, expense_actual:, monthly_budget:, monthly_savings_goal:)
+  def initialize(year:, month:, income_with_planned:, income_actual:, expense_actual:, monthly_budget:, monthly_savings_goal:, credit_card_expense:)
     @year = year
     @month = month
     @income_with_planned = income_with_planned
@@ -65,6 +69,7 @@ class MonthlySummary
     @expense_actual = expense_actual
     @monthly_budget = monthly_budget
     @monthly_savings_goal = monthly_savings_goal
+    @credit_card_expense = credit_card_expense
   end
 
   def actual_balance
