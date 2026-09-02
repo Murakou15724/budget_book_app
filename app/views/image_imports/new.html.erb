@@ -3,26 +3,28 @@
 <h1>画像から取引を登録</h1>
 <p class="text-muted">PayPayの支払い完了画面や、クレジットカードの利用履歴一覧のスクリーンショットをアップロードすると、AIが取引内容を読み取ります。1枚の画像に複数件の取引が写っていても、まとめて抽出します。</p>
 
-<%= form_with url: image_imports_path, method: :post, multipart: true,
-      data: { controller: "upload-progress", action: "submit->upload-progress#start" } do %>
-  <div class="field">
-    <%= label_tag :image, "画像ファイル" %>
-    <%= file_field_tag :image, accept: "image/jpeg,image/png,image/webp", required: true %>
-  </div>
+<div data-controller="upload-progress">
+  <%= form_with url: image_imports_path, method: :post, multipart: true,
+        data: { action: "submit->upload-progress#start" } do %>
+    <div class="field">
+      <%= label_tag :image, "画像ファイル" %>
+      <%= file_field_tag :image, accept: "image/jpeg,image/png,image/webp", required: true %>
+    </div>
 
-  <div class="field">
-    <%= label_tag :manual_date, "日付(任意)" %>
-    <%= date_field_tag :manual_date %>
-    <p class="text-muted">指定するとこの日付を優先します。未指定の場合は画像から日付の読み取りを試み、それも読み取れない場合はアップロード日を使います。</p>
-  </div>
+    <div class="field">
+      <%= label_tag :manual_date, "日付(任意)" %>
+      <%= date_field_tag :manual_date %>
+      <p class="text-muted">指定するとこの日付を優先します。未指定の場合は画像から日付の読み取りを試み、それも読み取れない場合はアップロード日を使います。</p>
+    </div>
 
-  <div class="actions">
-    <%= submit_tag "アップロードして解析する" %>
-  </div>
-<% end %>
+    <div class="actions">
+      <%= submit_tag "アップロードして解析する" %>
+    </div>
+  <% end %>
 
-<div class="ai-loading-overlay" data-upload-progress-target="overlay">
-  <div class="ai-loading-spinner"></div>
-  <div class="ai-loading-icon" data-upload-progress-target="icon">📥</div>
-  <p class="ai-loading-message" data-upload-progress-target="message">解析を準備しています…</p>
+  <div class="ai-loading-overlay" data-upload-progress-target="overlay">
+    <div class="ai-loading-spinner"></div>
+    <div class="ai-loading-icon" data-upload-progress-target="icon">📥</div>
+    <p class="ai-loading-message" data-upload-progress-target="message">解析を準備しています…</p>
+  </div>
 </div>
