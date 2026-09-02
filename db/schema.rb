@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_033240) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_02_071946) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -129,7 +129,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_033240) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "image_import_requires_approval", default: true, null: false
-    t.integer "credit_card_closing_day", default: 15, null: false
+    t.integer "credit_card_closing_day", default: 31, null: false
     t.integer "credit_card_payment_day", default: 26, null: false
   end
 
