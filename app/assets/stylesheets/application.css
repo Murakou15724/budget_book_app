@@ -874,6 +874,32 @@ input.input-compact {
   color: var(--color-accent-contrast);
 }
 
+/* ===== Info notes ================================================================ */
+
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--color-surface-sunken);
+  border-left: 3px solid var(--color-accent-2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.info-note__icon {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.info-note__text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }

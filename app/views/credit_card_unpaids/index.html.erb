@@ -1,5 +1,6 @@
 <h1>クレカ未払い一覧</h1>
-<p class="text-muted">設定した締め日・支払日から算出した支払予定日ごとにまとめています(祝日は考慮していないため、実際の支払日と数日ずれる場合があります)。</p>
+<%= render "application/info_note", icon: "🗓️",
+      text: "設定した締め日・支払日から算出した支払予定日ごとにまとめています(祝日は考慮していないため、実際の支払日と数日ずれる場合があります)。" %>
 
 <div class="stat-grid">
   <div class="stat-tile">
@@ -12,4 +13,4 @@
   </div>
 </div>
 
-<%= render "grouped_form", grouped_transactions: @grouped_transactions, return_to: "credit_card_unpaids" %>
+<%= render "grouped_form", grouped_transactions: @grouped_transactions %>

@@ -1,7 +1,7 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像取込レビュー</h1>
-<p class="text-muted">AIが画像から読み取った内容です。必要に応じて修正してから登録してください。</p>
+<%= render "application/info_note", icon: "🔍", text: "AIが画像から読み取った内容です。必要に応じて修正してから登録してください。" %>
 
 <% if @drafts.empty? %>
   <p class="text-muted">レビュー待ちの候補はありません。</p>

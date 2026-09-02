@@ -14,10 +14,6 @@ class TransactionsController < ApplicationController
     @from_date, @to_date = date_bounds_for(@date_range_key)
     @transactions = filtered_transactions.includes(:category, :payment_method, :account).order(date: :desc, id: :desc)
     @quick_entry_templates = QuickEntryTemplate.order(:position, :name)
-
-    # 「クレカ支払状況: 未払」だけに絞り込んでいるときは、クレカ未払い一覧と同じ
-    # 支払予定日ごとのグルーピング+一括処理フォームを表示する(個別チェックの手間を省く)。
-    @grouped_unpaid_transactions = @transactions.group_by(&:credit_card_payment_due_on).sort.to_h if params[:credit_card_status] == "unpaid"
   end
 
   def new
@@ -65,8 +61,7 @@ class TransactionsController < ApplicationController
     ids = Array(params[:transaction_ids])
     updated = Transaction.unpaid.where(id: ids)
                           .update_all(credit_card_status: Transaction.credit_card_statuses[:paid], updated_at: Time.current)
-    redirect_path = params[:return_to] == "credit_card_unpaids" ? credit_card_unpaids_path : transactions_path(index_filter_params)
-    redirect_to redirect_path, notice: "#{updated}件の取引を支払済にしました。"
+    redirect_to credit_card_unpaids_path, notice: "#{updated}件の取引を支払済にしました。"
   end
 
   private
