@@ -1,5 +1,5 @@
 <h1>クレカ未払い一覧</h1>
-<p class="text-muted">引落予定日は保持していないため、利用日の古い順に表示しています。</p>
+<p class="text-muted">設定した締め日・支払日から算出した支払予定日ごとにまとめています(祝日は考慮していないため、実際の支払日と数日ずれる場合があります)。</p>
 
 <div class="stat-grid">
   <div class="stat-tile">
@@ -15,45 +15,48 @@
 <% if @transactions.empty? %>
   <p class="text-muted">未払いのクレカ取引はありません。</p>
 <% else %>
-  <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch, data: { controller: "select-all" } do %>
-    <%= hidden_field_tag :return_to, "credit_card_unpaids" %>
+  <% @grouped_transactions.each do |due_on, transactions| %>
+    <div data-controller="select-all">
+      <h2><%= due_on.strftime("%-m月%-d日") %>払い分（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
 
-    <label class="select-all-toggle">
-      <%= check_box_tag "select_all", "1", false, data: { action: "select-all#toggle" } %>
-      すべて選択
-    </label>
+      <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch do %>
+        <%= hidden_field_tag :return_to, "credit_card_unpaids" %>
 
-    <% @grouped_transactions.each do |payment_method_name, transactions| %>
-      <h2><%= payment_method_name %>（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
-      <div class="entry-list">
-        <% transactions.each do |transaction| %>
-          <div class="entry-card">
-            <div class="entry-card__row">
-              <div class="entry-card__main">
-                <p class="entry-card__title"><%= transaction.category.name %></p>
-                <div class="entry-card__meta">
-                  <span><%= transaction.date %></span>
-                  <span><%= transaction.account.name %></span>
-                  <% if transaction.memo.present? %><span><%= transaction.memo %></span><% end %>
+        <label class="select-all-toggle">
+          <%= check_box_tag "select_all_#{due_on}", "1", true, data: { action: "select-all#toggle" } %>
+          すべて選択
+        </label>
+
+        <div class="entry-list">
+          <% transactions.each do |transaction| %>
+            <div class="entry-card">
+              <div class="entry-card__row">
+                <div class="entry-card__main">
+                  <p class="entry-card__title"><%= transaction.category.name %></p>
+                  <div class="entry-card__meta">
+                    <span><%= transaction.date %></span>
+                    <span><%= transaction.account.name %></span>
+                    <% if transaction.memo.present? %><span><%= transaction.memo %></span><% end %>
+                  </div>
                 </div>
+                <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
+                  <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
+                </p>
               </div>
-              <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
-                <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
-              </p>
+              <div class="entry-card__actions">
+                <label>
+                  <%= check_box_tag "transaction_ids[]", transaction.id, true, data: { select_all_target: "checkbox" } %>
+                  支払済にする
+                </label>
+              </div>
             </div>
-            <div class="entry-card__actions">
-              <label>
-                <%= check_box_tag "transaction_ids[]", transaction.id, false, data: { select_all_target: "checkbox" } %>
-                支払済にする
-              </label>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
+          <% end %>
+        </div>
 
-    <div class="actions">
-      <%= submit_tag "選択した取引を支払済にする" %>
+        <div class="actions">
+          <%= submit_tag "この#{transactions.size}件を支払済にする" %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 <% end %>
