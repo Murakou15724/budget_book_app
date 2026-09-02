@@ -68,15 +68,16 @@
     <p class="stat-tile__value"><%= number_to_currency(@total_assets, unit: "¥", precision: 0) %></p>
   </div>
   <div class="stat-tile">
-    <p class="stat-tile__label">クレカ未払仮置き</p>
-    <p class="stat-tile__value"><%= link_to number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0), credit_card_unpaids_path %></p>
+    <p class="stat-tile__label">
+      <%= @next_credit_card_payment_due_on ? "クレカ未払い(次回#{@next_credit_card_payment_due_on.strftime('%-m/%-d')})" : "クレカ未払い" %>
+    </p>
+    <p class="stat-tile__value">
+      <%= link_to number_to_currency(@next_credit_card_payment_total, unit: "¥", precision: 0), credit_card_unpaids_path %>
+    </p>
+    <% if @next_credit_card_payment_due_on && @credit_card_unpaid_total != @next_credit_card_payment_total %>
+      <p class="text-muted">未払い合計 <%= number_to_currency(@credit_card_unpaid_total, unit: "¥", precision: 0) %></p>
+    <% end %>
   </div>
-  <% if @next_credit_card_payment_due_on %>
-    <div class="stat-tile">
-      <p class="stat-tile__label">次回クレカ支払い(<%= @next_credit_card_payment_due_on.strftime("%-m/%-d") %>)</p>
-      <p class="stat-tile__value"><%= link_to number_to_currency(@next_credit_card_payment_total, unit: "¥", precision: 0), credit_card_unpaids_path %></p>
-    </div>
-  <% end %>
 </div>
 
 <% if @current_month %>

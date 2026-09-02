@@ -77,8 +77,8 @@
             <%= label_tag nil, "クレカ支払状況" %>
             <%= select_tag "drafts[#{draft.id}][credit_card_status]",
                   options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, draft.credit_card_status) %>
-            <% if draft.unpaid? && draft.credit_card_payment_due_on %>
-              <span class="badge badge-neutral">支払予定: <%= draft.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
+            <% if draft.credit_card_payment_due_on %>
+              <span class="badge badge-neutral">未払で登録した場合の支払予定: <%= draft.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
             <% end %>
           </div>
 

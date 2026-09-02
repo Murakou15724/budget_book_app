@@ -61,6 +61,9 @@
   <div class="field">
     <%= f.label :credit_card_status, "クレカ支払状況" %>
     <%= f.select :credit_card_status, Transaction.credit_card_statuses.keys.map { |k| [Transaction::CREDIT_CARD_STATUS_LABELS[k], k] } %>
+    <% if transaction.unpaid? && transaction.credit_card_payment_due_on %>
+      <span class="badge badge-neutral">支払予定: <%= transaction.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
+    <% end %>
   </div>
 
   <div class="actions">

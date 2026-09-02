@@ -1,0 +1,51 @@
+<% if grouped_transactions.empty? %>
+  <p class="text-muted">未払いのクレカ取引はありません。</p>
+<% else %>
+  <% grouped_transactions.each do |due_on, transactions| %>
+    <div data-controller="select-all">
+      <h2><%= due_on.strftime("%-m月%-d日") %>払い分（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
+
+      <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch do %>
+        <% if return_to %>
+          <%= hidden_field_tag :return_to, return_to %>
+        <% end %>
+
+        <label class="select-all-toggle">
+          <%= check_box_tag "select_all_#{due_on}", "1", true, data: { action: "select-all#toggle" } %>
+          すべて選択
+        </label>
+
+        <div class="entry-list">
+          <% transactions.each do |transaction| %>
+            <div class="entry-card">
+              <div class="entry-card__row">
+                <div class="entry-card__main">
+                  <p class="entry-card__title"><%= transaction.category.name %></p>
+                  <div class="entry-card__meta">
+                    <span><%= transaction.date %></span>
+                    <span><%= transaction.account.name %></span>
+                    <% if transaction.memo.present? %><span><%= transaction.memo %></span><% end %>
+                  </div>
+                </div>
+                <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
+                  <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
+                </p>
+              </div>
+              <div class="entry-card__actions">
+                <label>
+                  <%= check_box_tag "transaction_ids[]", transaction.id, true, data: { select_all_target: "checkbox" } %>
+                  支払済にする
+                </label>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="actions">
+          <%= submit_tag "この#{transactions.size}件を支払済にする",
+                data: { turbo_confirm: "#{transactions.size}件(#{number_to_currency(transactions.sum(&:amount), unit: '¥', precision: 0)})を支払済にしますか？" } %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
