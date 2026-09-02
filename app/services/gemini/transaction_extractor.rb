@@ -9,7 +9,7 @@ module Gemini
     MODEL = "gemini-3.6-flash".freeze
     ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/#{MODEL}:generateContent".freeze
     OPEN_TIMEOUT = 10
-    READ_TIMEOUT = 25
+    READ_TIMEOUT = 60
 
     RESPONSE_SCHEMA = {
       type: "ARRAY",
