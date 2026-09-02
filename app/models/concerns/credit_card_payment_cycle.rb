@@ -8,6 +8,19 @@ module CreditCardPaymentCycle
     before_save :clear_redundant_credit_card_payment_due_on_override
   end
 
+  class_methods do
+    # 指定した月を対象に、設定済みの支払日(月末を超える場合は月末に、土日の場合は
+    # 翌平日に調整)で支払日を確定する。前月/次月への1サイクルシフトのように、
+    # 締め日の判定をやり直さず「対象月の支払日」だけを再計算したい場合に使う。
+    def resolve_payment_due_date(target_month)
+      payment_day = Setting.current.credit_card_payment_day
+      last_day = target_month.end_of_month.day
+      due_date = target_month.change(day: [payment_day, last_day].min)
+      due_date += 1 while due_date.saturday? || due_date.sunday?
+      due_date
+    end
+  end
+
   # 利用日(date)から、設定済みの締め日・支払日に基づいて支払予定日を算出する。
   # 締め日以前の利用は当月締め、締め日より後の利用は翌月締めとし、
   # 支払いは締め月の翌月(支払日)に行われる(例: 締め15日・支払日26日の場合、
@@ -23,17 +36,9 @@ module CreditCardPaymentCycle
   def calculated_credit_card_payment_due_on
     return nil if date.blank?
 
-    setting = Setting.current
-    closing_day = setting.credit_card_closing_day
-    payment_day = setting.credit_card_payment_day
-
+    closing_day = Setting.current.credit_card_closing_day
     closing_month = date.day <= closing_day ? date.beginning_of_month : date.next_month.beginning_of_month
-    payment_month = closing_month.next_month
-    last_day_of_payment_month = payment_month.end_of_month.day
-    due_date = payment_month.change(day: [payment_day, last_day_of_payment_month].min)
-
-    due_date += 1 while due_date.saturday? || due_date.sunday?
-    due_date
+    self.class.resolve_payment_due_date(closing_month.next_month)
   end
 
   private

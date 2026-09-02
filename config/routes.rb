@@ -14,6 +14,9 @@ Rails.application.routes.draw do
     collection do
       patch :mark_credit_card_paid
     end
+    member do
+      patch :shift_credit_card_payment_due_on
+    end
   end
   resources :asset_snapshots, except: [:show]
   get "credit_card_unpaids", to: "credit_card_unpaids#index"

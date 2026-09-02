@@ -82,7 +82,9 @@
           <% if draft.credit_card_payment_due_on %>
             <div class="field">
               <%= label_tag nil, "未払で登録した場合の支払予定日(通常は自動算出。例外的にズレる場合はここで修正できます)" %>
-              <%= date_field_tag "drafts[#{draft.id}][credit_card_payment_due_on_override]", draft.credit_card_payment_due_on %>
+              <%= render "application/credit_card_due_date_field",
+                    field_name: "drafts[#{draft.id}][credit_card_payment_due_on_override]",
+                    value: draft.credit_card_payment_due_on %>
             </div>
           <% end %>
 

@@ -900,6 +900,28 @@ input.input-compact {
   margin: 0;
 }
 
+/* ===== Credit card due date shift ================================================ */
+
+.due-date-shift {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.due-date-shift__btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }

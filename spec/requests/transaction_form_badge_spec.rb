@@ -19,9 +19,11 @@ RSpec.describe "transaction form payment due date field", type: :request do
 
     expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
     expect(response.body).to include('value="2028-10-26"')
+    expect(response.body).to include("credit-card-due-date#shiftPrev")
+    expect(response.body).to include("credit-card-due-date#shiftNext")
   end
 
-  it "現金取引の編集画面にはフィールドが出ない" do
+  it "現金取引の編集画面でも(後からクレカに変更する場合に備えて)フィールドは表示される" do
     cash_method = PaymentMethod.create!(name: "現金2", position: 2)
     cash_account = Account.create!(name: "現金2", kind: :cash, position: 2)
     transaction = Transaction.create!(
@@ -31,6 +33,12 @@ RSpec.describe "transaction form payment due date field", type: :request do
 
     get edit_transaction_path(transaction)
 
-    expect(response.body).not_to include("credit_card_payment_due_on_override")
+    expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
+  end
+
+  it "新規登録画面(日付未確定)でもデフォルト日付を基準にフィールドが表示される" do
+    get new_transaction_path
+
+    expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
   end
 end
