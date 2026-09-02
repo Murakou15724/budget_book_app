@@ -77,10 +77,14 @@
             <%= label_tag nil, "クレカ支払状況" %>
             <%= select_tag "drafts[#{draft.id}][credit_card_status]",
                   options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, draft.credit_card_status) %>
-            <% if draft.credit_card_payment_due_on %>
-              <span class="badge badge-neutral">未払で登録した場合の支払予定: <%= draft.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
-            <% end %>
           </div>
+
+          <% if draft.credit_card_payment_due_on %>
+            <div class="field">
+              <%= label_tag nil, "未払で登録した場合の支払予定日(通常は自動算出。例外的にズレる場合はここで修正できます)" %>
+              <%= date_field_tag "drafts[#{draft.id}][credit_card_payment_due_on_override]", draft.credit_card_payment_due_on %>
+            </div>
+          <% end %>
 
           <div class="entry-card__actions">
             <%= link_to "この候補を却下", image_import_draft_path(draft, batch_id: params[:batch_id]),

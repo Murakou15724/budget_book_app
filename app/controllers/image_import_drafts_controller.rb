@@ -22,12 +22,16 @@ class ImageImportDraftsController < ApplicationController
       next unless draft
 
       attrs = params.dig(:drafts, id.to_s) || ActionController::Parameters.new
-      draft.assign_attributes(attrs.permit(:date, :direction, :amount, :memo, :category_id, :payment_method_id, :account_id, :credit_card_status))
+      draft.assign_attributes(attrs.permit(
+        :date, :direction, :amount, :memo, :category_id, :payment_method_id, :account_id,
+        :credit_card_status, :credit_card_payment_due_on_override
+      ))
 
       transaction = Transaction.new(
         date: draft.date, entry_type: :actual, direction: draft.direction, category_id: draft.category_id,
         amount: draft.amount, payment_method_id: draft.payment_method_id, account_id: draft.account_id,
-        memo: draft.memo, credit_card_status: draft.credit_card_status
+        memo: draft.memo, credit_card_status: draft.credit_card_status,
+        credit_card_payment_due_on_override: draft.credit_card_payment_due_on_override
       )
       if transaction.save
         draft.destroy

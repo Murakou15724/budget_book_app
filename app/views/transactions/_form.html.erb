@@ -61,10 +61,14 @@
   <div class="field">
     <%= f.label :credit_card_status, "クレカ支払状況" %>
     <%= f.select :credit_card_status, Transaction.credit_card_statuses.keys.map { |k| [Transaction::CREDIT_CARD_STATUS_LABELS[k], k] } %>
-    <% if transaction.unpaid? && transaction.credit_card_payment_due_on %>
-      <span class="badge badge-neutral">支払予定: <%= transaction.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
-    <% end %>
   </div>
+
+  <% if transaction.unpaid? && transaction.credit_card_payment_due_on %>
+    <div class="field">
+      <%= f.label :credit_card_payment_due_on_override, "支払予定日(通常は自動算出。例外的にズレる場合はここで修正できます)" %>
+      <%= f.date_field :credit_card_payment_due_on_override, value: transaction.credit_card_payment_due_on %>
+    </div>
+  <% end %>
 
   <div class="actions">
     <%= f.submit "保存" %>

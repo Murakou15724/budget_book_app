@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_071946) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -76,6 +76,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_071946) do
     t.string "suggested_account_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "credit_card_payment_due_on_override"
     t.index ["account_id"], name: "index_image_import_drafts_on_account_id"
     t.index ["batch_id"], name: "index_image_import_drafts_on_batch_id"
     t.index ["category_id"], name: "index_image_import_drafts_on_category_id"
@@ -147,6 +148,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_071946) do
     t.integer "credit_card_status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "credit_card_payment_due_on_override"
     t.index ["account_id"], name: "index_transactions_on_account_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
     t.index ["date"], name: "index_transactions_on_date"
