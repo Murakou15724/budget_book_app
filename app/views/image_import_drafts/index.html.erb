@@ -6,7 +6,17 @@
 <% if @drafts.empty? %>
   <p class="text-muted">レビュー待ちの候補はありません。</p>
 <% else %>
+  <% reject_button = button_to "選択した候補をまとめて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
+        method: :delete, params: { draft_ids: @drafts.map(&:id) },
+        form: { data: { turbo_confirm: "表示中の候補をすべて却下しますか？" } }, class: "btn" %>
+
+  <%= reject_button %>
+
   <%= form_with url: bulk_approve_image_import_drafts_path(batch_id: params[:batch_id]), method: :patch, data: { controller: "select-all" } do %>
+    <div class="actions">
+      <%= submit_tag "選択した候補を承認して登録" %>
+    </div>
+
     <label class="select-all-toggle">
       <%= check_box_tag "select_all", "1", false, data: { action: "select-all#toggle" } %>
       すべて選択
@@ -101,7 +111,5 @@
     </div>
   <% end %>
 
-  <%= button_to "選択した候補をまとめて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
-        method: :delete, params: { draft_ids: @drafts.map(&:id) },
-        form: { data: { turbo_confirm: "表示中の候補をすべて却下しますか？" } }, class: "btn" %>
+  <%= reject_button %>
 <% end %>

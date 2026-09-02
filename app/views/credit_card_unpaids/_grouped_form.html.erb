@@ -6,6 +6,11 @@
       <h2><%= due_on.strftime("%-m月%-d日") %>払い分（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
 
       <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch do %>
+        <div class="actions">
+          <%= submit_tag "この#{transactions.size}件を支払済にする",
+                data: { turbo_confirm: "#{transactions.size}件(#{number_to_currency(transactions.sum(&:amount), unit: '¥', precision: 0)})を支払済にしますか？" } %>
+        </div>
+
         <label class="select-all-toggle">
           <%= check_box_tag "select_all_#{due_on}", "1", true, data: { action: "select-all#toggle" } %>
           すべて選択
@@ -41,11 +46,6 @@
               </div>
             </div>
           <% end %>
-        </div>
-
-        <div class="actions">
-          <%= submit_tag "この#{transactions.size}件を支払済にする",
-                data: { turbo_confirm: "#{transactions.size}件(#{number_to_currency(transactions.sum(&:amount), unit: '¥', precision: 0)})を支払済にしますか？" } %>
         </div>
       <% end %>
     </div>
