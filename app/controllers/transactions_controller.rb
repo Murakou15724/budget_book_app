@@ -61,8 +61,7 @@ class TransactionsController < ApplicationController
     ids = Array(params[:transaction_ids])
     updated = Transaction.unpaid.where(id: ids)
                           .update_all(credit_card_status: Transaction.credit_card_statuses[:paid], updated_at: Time.current)
-    redirect_path = params[:return_to] == "credit_card_unpaids" ? credit_card_unpaids_path : transactions_path(index_filter_params)
-    redirect_to redirect_path, notice: "#{updated}件の取引を支払済にしました。"
+    redirect_to credit_card_unpaids_path, notice: "#{updated}件の取引を支払済にしました。"
   end
 
   private

@@ -14,6 +14,8 @@ class DashboardController < ApplicationController
     @latest_snapshot = AssetSnapshot.order(recorded_on: :desc, id: :desc).first
     @total_assets = @latest_snapshot&.total_balance || 0
     @credit_card_unpaid_total = Transaction.unpaid.sum(:amount)
+    @next_credit_card_payment_due_on, next_due_transactions = Transaction.unpaid_grouped_by_payment_due_date.first
+    @next_credit_card_payment_total = next_due_transactions&.sum(&:amount) || 0
 
     setting = Setting.current
     @level_unit_amount = setting.level_unit_amount

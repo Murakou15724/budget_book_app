@@ -1,4 +1,6 @@
 class Transaction < ApplicationRecord
+  include CreditCardPaymentCycle
+
   enum :entry_type, { actual: 0, planned: 1 }
   enum :direction, { income: 0, expense: 1 }
   enum :credit_card_status, { not_applicable: 0, unpaid: 1, paid: 2 }
@@ -40,5 +42,15 @@ class Transaction < ApplicationRecord
 
   def credit_card_status_label
     CREDIT_CARD_STATUS_LABELS[credit_card_status]
+  end
+
+  # 未払いのクレカ取引を支払予定日ごとにグルーピングする(支払日の昇順)。
+  # クレカ未払い一覧・ダッシュボードの「次回支払い」表示で共用する。
+  def self.unpaid_grouped_by_payment_due_date
+    unpaid.includes(:category, :payment_method, :account)
+          .order(date: :asc, id: :asc)
+          .group_by(&:credit_card_payment_due_on)
+          .sort
+          .to_h
   end
 end

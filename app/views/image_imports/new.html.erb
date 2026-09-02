@@ -1,7 +1,8 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像から取引を登録</h1>
-<p class="text-muted">PayPayの支払い完了画面や、クレジットカードの利用履歴一覧のスクリーンショットをアップロードすると、AIが取引内容を読み取ります。1枚の画像に複数件の取引が写っていても、まとめて抽出します。複数枚を選択して同時にアップロードすることもできます。</p>
+<%= render "application/info_note", icon: "🤖",
+      text: "PayPayの支払い完了画面や、クレジットカードの利用履歴一覧のスクリーンショットをアップロードすると、AIが取引内容を読み取ります。1枚の画像に複数件の取引が写っていても、まとめて抽出します。複数枚を選択して同時にアップロードすることもできます。" %>
 
 <div data-controller="upload-progress">
   <%= form_with url: image_imports_path, method: :post, multipart: true,

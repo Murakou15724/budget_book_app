@@ -1,7 +1,7 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像取込レビュー</h1>
-<p class="text-muted">AIが画像から読み取った内容です。必要に応じて修正してから登録してください。</p>
+<%= render "application/info_note", icon: "🔍", text: "AIが画像から読み取った内容です。必要に応じて修正してから登録してください。" %>
 
 <% if @drafts.empty? %>
   <p class="text-muted">レビュー待ちの候補はありません。</p>
@@ -77,6 +77,9 @@
             <%= label_tag nil, "クレカ支払状況" %>
             <%= select_tag "drafts[#{draft.id}][credit_card_status]",
                   options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, draft.credit_card_status) %>
+            <% if draft.credit_card_payment_due_on %>
+              <span class="badge badge-neutral">未払で登録した場合の支払予定: <%= draft.credit_card_payment_due_on.strftime("%-m/%-d") %></span>
+            <% end %>
           </div>
 
           <div class="entry-card__actions">

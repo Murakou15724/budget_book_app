@@ -5,7 +5,8 @@
   <span><%= @year %>年</span>
   <%= link_to "#{@year + 1}年 →", edit_budget_plan_path(year: @year + 1) %>
 </div>
-<p class="text-muted">カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算が使われます。基本月予算もここから変更できます。</p>
+<%= render "application/info_note", icon: "💡",
+      text: "カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算が使われます。基本月予算もここから変更できます。" %>
 
 <%= form_with url: budget_plan_path, method: :patch do %>
   <%= hidden_field_tag :year, @year %>

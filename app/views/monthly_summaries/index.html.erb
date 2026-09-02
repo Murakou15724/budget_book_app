@@ -1,5 +1,6 @@
 <h1>月別集計</h1>
-<p class="text-muted">取引データから自動集計した閲覧専用の画面です。</p>
+<%= render "application/info_note", icon: "📊",
+      text: "取引データから自動集計した閲覧専用の画面です。「うちクレカ利用額」は利用日基準の金額です(支払日ではなく、実際にその月に使った額を表します)。" %>
 
 <div class="year-switcher">
   <%= link_to "← #{@year - 1}年", monthly_summaries_path(year: @year - 1) %>
@@ -16,6 +17,7 @@
       <tr>
         <th>月</th>
         <th>支出実績</th>
+        <th>うちクレカ利用額</th>
         <th>実績収支</th>
         <th>予算残</th>
         <th>残り予算%</th>
@@ -32,6 +34,7 @@
         <tr>
           <td><%= summary.month %>月</td>
           <td><%= number_to_currency(summary.expense_actual, unit: "¥", precision: 0) %></td>
+          <td><%= number_to_currency(summary.credit_card_expense, unit: "¥", precision: 0) %></td>
           <td><%= number_to_currency(summary.actual_balance, unit: "¥", precision: 0) %></td>
           <td><%= number_to_currency(summary.budget_remaining, unit: "¥", precision: 0) %></td>
           <td><%= number_to_percentage(summary.budget_remaining_rate * 100, precision: 1) %></td>
