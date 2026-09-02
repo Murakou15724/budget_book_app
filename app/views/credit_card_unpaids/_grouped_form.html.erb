@@ -47,11 +47,6 @@
             </div>
           <% end %>
         </div>
-
-        <div class="actions">
-          <%= submit_tag "この#{transactions.size}件を支払済にする",
-                data: { turbo_confirm: "#{transactions.size}件(#{number_to_currency(transactions.sum(&:amount), unit: '¥', precision: 0)})を支払済にしますか？" } %>
-        </div>
       <% end %>
     </div>
   <% end %>
