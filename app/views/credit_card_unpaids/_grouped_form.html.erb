@@ -32,6 +32,12 @@
                   <%= check_box_tag "transaction_ids[]", transaction.id, true, data: { select_all_target: "checkbox" } %>
                   支払済にする
                 </label>
+                <span class="due-date-shift">
+                  <%= link_to "◀前月", shift_credit_card_payment_due_on_transaction_path(transaction, direction: "prev"),
+                        data: { turbo_method: :patch }, class: "due-date-shift__btn" %>
+                  <%= link_to "次月▶", shift_credit_card_payment_due_on_transaction_path(transaction, direction: "next"),
+                        data: { turbo_method: :patch }, class: "due-date-shift__btn" %>
+                </span>
               </div>
             </div>
           <% end %>

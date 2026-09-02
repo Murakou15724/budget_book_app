@@ -1,5 +1,5 @@
 class TransactionsController < ApplicationController
-  before_action :set_transaction, only: [:edit, :update, :destroy]
+  before_action :set_transaction, only: [:edit, :update, :destroy, :shift_credit_card_payment_due_on]
 
   # 表示期間の切り替えボタン。表示順もこの並びに従う。
   DATE_RANGES = [
@@ -64,6 +64,16 @@ class TransactionsController < ApplicationController
     redirect_to credit_card_unpaids_path, notice: "#{updated}件の取引を支払済にしました。"
   end
 
+  # クレカ未払い一覧から、個別の取引だけ支払予定日を1サイクル前後にずらす
+  # (取込日と処理日のズレ等で、自動計算通りにならない例外に対応するため)。
+  def shift_credit_card_payment_due_on
+    months = params[:direction] == "prev" ? -1 : 1
+    target_month = @transaction.credit_card_payment_due_on.advance(months: months).beginning_of_month
+    @transaction.update!(credit_card_payment_due_on_override: Transaction.resolve_payment_due_date(target_month))
+    redirect_to credit_card_unpaids_path,
+                notice: "支払予定日を#{@transaction.credit_card_payment_due_on.strftime('%-m/%-d')}に変更しました。"
+  end
+
   private
 
   def set_transaction
@@ -73,7 +83,7 @@ class TransactionsController < ApplicationController
   def transaction_params
     params.require(:transaction).permit(
       :date, :entry_type, :direction, :category_id, :amount, :payment_method_id,
-      :account_id, :memo, :satisfaction, :regret, :credit_card_status
+      :account_id, :memo, :satisfaction, :regret, :credit_card_status, :credit_card_payment_due_on_override
     )
   end
 

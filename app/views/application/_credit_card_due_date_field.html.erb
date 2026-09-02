@@ -1,0 +1,6 @@
+<div class="due-date-shift" data-controller="credit-card-due-date"
+     data-credit-card-due-date-payment-day-value="<%= Setting.current.credit_card_payment_day %>">
+  <%= date_field_tag field_name, value, data: { credit_card_due_date_target: "input" } %>
+  <button type="button" class="due-date-shift__btn" data-action="credit-card-due-date#shiftPrev">◀前月</button>
+  <button type="button" class="due-date-shift__btn" data-action="credit-card-due-date#shiftNext">次月▶</button>
+</div>

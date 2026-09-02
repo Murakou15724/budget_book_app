@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "transaction form payment due badge", type: :request do
+RSpec.describe "transaction form payment due date field", type: :request do
   before do
     Setting.current.update!(credit_card_closing_day: 15, credit_card_payment_day: 26)
   end
@@ -9,7 +9,7 @@ RSpec.describe "transaction form payment due badge", type: :request do
   let!(:payment_method) { PaymentMethod.create!(name: "クレカ", position: 1) }
   let!(:account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 1) }
 
-  it "未払のクレカ取引を編集する画面に支払予定日バッジが出る" do
+  it "未払のクレカ取引を編集する画面に支払予定日の編集フィールドが出る" do
     transaction = Transaction.create!(
       date: Date.new(2028, 8, 20), entry_type: :actual, direction: :expense, amount: 1000,
       category: category, payment_method: payment_method, account: account, credit_card_status: :unpaid
@@ -17,10 +17,13 @@ RSpec.describe "transaction form payment due badge", type: :request do
 
     get edit_transaction_path(transaction)
 
-    expect(response.body).to include("支払予定: 10/26")
+    expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
+    expect(response.body).to include('value="2028-10-26"')
+    expect(response.body).to include("credit-card-due-date#shiftPrev")
+    expect(response.body).to include("credit-card-due-date#shiftNext")
   end
 
-  it "現金取引の編集画面にはバッジが出ない" do
+  it "現金取引の編集画面でも(後からクレカに変更する場合に備えて)フィールドは表示される" do
     cash_method = PaymentMethod.create!(name: "現金2", position: 2)
     cash_account = Account.create!(name: "現金2", kind: :cash, position: 2)
     transaction = Transaction.create!(
@@ -30,6 +33,12 @@ RSpec.describe "transaction form payment due badge", type: :request do
 
     get edit_transaction_path(transaction)
 
-    expect(response.body).not_to include("支払予定")
+    expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
+  end
+
+  it "新規登録画面(日付未確定)でもデフォルト日付を基準にフィールドが表示される" do
+    get new_transaction_path
+
+    expect(response.body).to include("name=\"transaction[credit_card_payment_due_on_override]\"")
   end
 end
