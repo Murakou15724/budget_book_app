@@ -17,7 +17,8 @@ class SettingsController < ApplicationController
   def setting_params
     params.require(:setting).permit(
       :target_year, :total_savings_goal, :monthly_savings_goal, :level_unit_amount,
-      :image_import_requires_approval, :credit_card_closing_day, :credit_card_payment_day
+      :image_import_requires_approval, :credit_card_closing_day, :credit_card_payment_day,
+      :credit_card_payment_account_id
     )
   end
 end
