@@ -46,7 +46,8 @@ class QuickEntryTemplatesController < ApplicationController
 
   def quick_entry_template_params
     params.require(:quick_entry_template).permit(
-      :name, :direction, :category_id, :payment_method_id, :account_id, :credit_card_status, :position
+      :name, :direction, :category_id, :payment_method_id, :account_id, :to_account_id,
+      :credit_card_status, :position
     )
   end
 end

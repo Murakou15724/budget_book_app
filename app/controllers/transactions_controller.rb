@@ -24,6 +24,7 @@ class TransactionsController < ApplicationController
         category_id: template.category_id,
         payment_method_id: template.payment_method_id,
         account_id: template.account_id,
+        to_account_id: template.to_account_id,
         credit_card_status: template.credit_card_status
       )
     end
@@ -83,7 +84,8 @@ class TransactionsController < ApplicationController
   def transaction_params
     params.require(:transaction).permit(
       :date, :entry_type, :direction, :category_id, :amount, :payment_method_id,
-      :account_id, :memo, :satisfaction, :regret, :credit_card_status, :credit_card_payment_due_on_override
+      :account_id, :to_account_id, :memo, :satisfaction, :regret, :credit_card_status,
+      :credit_card_payment_due_on_override
     )
   end
 

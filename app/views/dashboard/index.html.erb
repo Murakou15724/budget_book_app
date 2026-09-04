@@ -47,7 +47,12 @@
         <%= number_to_currency(@current_summary.budget_remaining, unit: "¥", precision: 0) %>
       </p>
     </div>
+    <div class="stat-tile">
+      <p class="stat-tile__label">今月の投資</p>
+      <p class="stat-tile__value"><%= number_to_currency(@current_summary.investment_actual, unit: "¥", precision: 0) %></p>
+    </div>
   </div>
+  <p class="text-muted">投資・振替(口座間の資金移動)は生活費の支出には含まれません。</p>
 <% else %>
   <h2>今月の収支</h2>
   <p class="text-muted"><%= @year %>年は現在の年ではないため、今月の集計は表示されません。</p>
@@ -62,6 +67,10 @@
   <div class="stat-tile">
     <p class="stat-tile__label">年間支出</p>
     <p class="stat-tile__value"><%= number_to_currency(@annual_expense, unit: "¥", precision: 0) %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">年間投資</p>
+    <p class="stat-tile__value"><%= number_to_currency(@annual_investment, unit: "¥", precision: 0) %></p>
   </div>
   <div class="stat-tile">
     <p class="stat-tile__label">現在総資産</p>

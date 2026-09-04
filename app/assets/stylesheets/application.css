@@ -760,6 +760,7 @@ input.input-compact {
 
 .entry-card__amount.is-income { color: var(--color-good); }
 .entry-card__amount.is-expense { color: var(--color-text); }
+.entry-card__amount.is-transfer { color: var(--color-text-secondary); }
 
 .entry-card__actions {
   margin-top: 0.6rem;
