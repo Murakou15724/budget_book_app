@@ -10,8 +10,12 @@ class Account < ApplicationRecord
   }.freeze
 
   has_many :transactions, dependent: :restrict_with_error
+  has_many :incoming_transfers, class_name: "Transaction", foreign_key: :to_account_id, inverse_of: :to_account,
+                                 dependent: :restrict_with_error
   has_many :asset_balances, dependent: :restrict_with_error
   has_many :quick_entry_templates, dependent: :restrict_with_error
+  has_many :incoming_quick_entry_templates, class_name: "QuickEntryTemplate", foreign_key: :to_account_id,
+                                             inverse_of: :to_account, dependent: :restrict_with_error
 
   validates :name, presence: true, uniqueness: true
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_04_000002) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -109,17 +109,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
   create_table "quick_entry_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "direction", default: 1, null: false
-    t.bigint "category_id", null: false
+    t.bigint "category_id"
     t.bigint "payment_method_id", null: false
     t.bigint "account_id", null: false
     t.integer "credit_card_status", default: 0, null: false
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "to_account_id"
     t.index ["account_id"], name: "index_quick_entry_templates_on_account_id"
     t.index ["category_id"], name: "index_quick_entry_templates_on_category_id"
     t.index ["name"], name: "index_quick_entry_templates_on_name", unique: true
     t.index ["payment_method_id"], name: "index_quick_entry_templates_on_payment_method_id"
+    t.index ["to_account_id"], name: "index_quick_entry_templates_on_to_account_id"
   end
 
   create_table "settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -132,13 +134,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
     t.boolean "image_import_requires_approval", default: true, null: false
     t.integer "credit_card_closing_day", default: 31, null: false
     t.integer "credit_card_payment_day", default: 26, null: false
+    t.bigint "credit_card_payment_account_id"
+    t.index ["credit_card_payment_account_id"], name: "index_settings_on_credit_card_payment_account_id"
   end
 
   create_table "transactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.date "date", null: false
     t.integer "entry_type", default: 0, null: false
     t.integer "direction", null: false
-    t.bigint "category_id", null: false
+    t.bigint "category_id"
     t.integer "amount", null: false
     t.bigint "payment_method_id", null: false
     t.bigint "account_id", null: false
@@ -149,11 +153,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.date "credit_card_payment_due_on_override"
+    t.bigint "to_account_id"
     t.index ["account_id"], name: "index_transactions_on_account_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
     t.index ["date"], name: "index_transactions_on_date"
     t.index ["direction", "entry_type"], name: "index_transactions_on_direction_and_entry_type"
     t.index ["payment_method_id"], name: "index_transactions_on_payment_method_id"
+    t.index ["to_account_id"], name: "index_transactions_on_to_account_id"
   end
 
   add_foreign_key "asset_balances", "accounts"
@@ -163,9 +169,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_02_073040) do
   add_foreign_key "image_import_drafts", "categories"
   add_foreign_key "image_import_drafts", "payment_methods"
   add_foreign_key "quick_entry_templates", "accounts"
+  add_foreign_key "quick_entry_templates", "accounts", column: "to_account_id"
   add_foreign_key "quick_entry_templates", "categories"
   add_foreign_key "quick_entry_templates", "payment_methods"
+  add_foreign_key "settings", "accounts", column: "credit_card_payment_account_id"
   add_foreign_key "transactions", "accounts"
+  add_foreign_key "transactions", "accounts", column: "to_account_id"
   add_foreign_key "transactions", "categories"
   add_foreign_key "transactions", "payment_methods"
 end
