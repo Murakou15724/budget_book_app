@@ -17,6 +17,9 @@ class AssetSnapshotsController < ApplicationController
     @savings_goal = Setting.current.total_savings_goal
     @chart_range = chart_ranges.find { |range| range[:key] == params[:range] } || chart_ranges.first
     @chart_snapshots = chart_snapshots_for(@chart_range[:duration])
+
+    @reconciliation_mismatches = AccountReconciliation.build_for(@latest_snapshot, @asset_snapshots[1])
+    @credit_card_pending_diff = AccountReconciliation.credit_card_pending_diff(@latest_snapshot)
   end
 
   def new

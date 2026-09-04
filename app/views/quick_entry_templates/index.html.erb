@@ -7,10 +7,11 @@
     <thead>
       <tr>
         <th>名称</th>
-        <th>収支区分</th>
+        <th>取引種別</th>
         <th>カテゴリ</th>
         <th>支払方法</th>
         <th>口座</th>
+        <th>移動先口座</th>
         <th>クレカ状況</th>
         <th></th>
       </tr>
@@ -20,9 +21,10 @@
         <tr>
           <td><%= template.name %></td>
           <td><%= template.direction_label %></td>
-          <td><%= template.category.name %></td>
+          <td><%= template.category&.name %></td>
           <td><%= template.payment_method.name %></td>
           <td><%= template.account.name %></td>
+          <td><%= template.to_account&.name %></td>
           <td><%= template.credit_card_status_label %></td>
           <td>
             <%= link_to "編集", edit_quick_entry_template_path(template) %>

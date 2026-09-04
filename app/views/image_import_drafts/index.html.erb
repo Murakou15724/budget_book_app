@@ -35,7 +35,7 @@
           </div>
 
           <div class="field">
-            <%= label_tag nil, "収支区分" %>
+            <%= label_tag nil, "取引種別" %>
             <%= select_tag "drafts[#{draft.id}][direction]",
                   options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, draft.direction) %>
           </div>

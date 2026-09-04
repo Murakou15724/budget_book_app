@@ -273,6 +273,25 @@ main {
   content: "⚠️";
 }
 
+.reconciliation-warning {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(208, 59, 59, 0.12);
+  color: var(--color-text);
+}
+
+.reconciliation-warning__title {
+  margin: 0 0 0.5rem;
+  color: var(--color-critical);
+  font-weight: 600;
+}
+
+.reconciliation-warning ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
 /* ===== Cards ================================================================ */
 
 .card {
@@ -760,6 +779,7 @@ input.input-compact {
 
 .entry-card__amount.is-income { color: var(--color-good); }
 .entry-card__amount.is-expense { color: var(--color-text); }
+.entry-card__amount.is-transfer { color: var(--color-text-secondary); }
 
 .entry-card__actions {
   margin-top: 0.6rem;

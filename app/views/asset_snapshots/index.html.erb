@@ -13,6 +13,31 @@
   <%= asset_trend_svg(@chart_snapshots) %>
 </div>
 
+<% if @reconciliation_mismatches.present? || (@credit_card_pending_diff && !@credit_card_pending_diff.zero?) %>
+  <div class="reconciliation-warning">
+    <p class="reconciliation-warning__title">⚠ 残高整合性チェック</p>
+    <p class="text-muted">
+      取引記録から見込まれる残高増減と、実際に記録した残高とが一致していません。支出・振替の記録漏れや二重計上がないかご確認ください
+      (クレカ引落やスナップショット未記録期間による差異はベストエフォートでの検出のため、実際には問題ない場合もあります)。
+    </p>
+    <ul>
+      <% @reconciliation_mismatches.each do |mismatch| %>
+        <li>
+          <%= mismatch.account.name %>: 見込み <%= number_to_currency(mismatch.expected_delta, unit: "¥", precision: 0) %> に対し、
+          実際は <%= number_to_currency(mismatch.actual_delta, unit: "¥", precision: 0) %>
+          (差額 <%= number_to_currency(mismatch.diff, unit: "¥", precision: 0) %>)
+        </li>
+      <% end %>
+      <% if @credit_card_pending_diff && !@credit_card_pending_diff.zero? %>
+        <li>
+          クレカ仮置き: スナップショット記録時点の残高と、現在の未払いクレカ取引合計が一致していません
+          (差額 <%= number_to_currency(@credit_card_pending_diff, unit: "¥", precision: 0) %>)
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
 <% accounts = Account.order(:position, :name) %>
 
 <h2>最新の資産状況</h2>

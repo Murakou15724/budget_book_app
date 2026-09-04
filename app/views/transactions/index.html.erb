@@ -38,7 +38,7 @@
               include_blank: "すべて" %>
       </div>
       <div class="field">
-        <%= label_tag :direction, "収支区分" %>
+        <%= label_tag :direction, "取引種別" %>
         <%= select_tag :direction,
               options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, params[:direction]),
               include_blank: "すべて" %>
@@ -69,12 +69,19 @@
       <div class="entry-card__row">
         <div class="entry-card__main">
           <p class="entry-card__title">
-            <%= transaction.category.name %>
+            <% if transaction.category %>
+              <%= transaction.category.name %>
+            <% else %>
+              <span class="badge badge-neutral"><%= transaction.direction_label %></span>
+            <% end %>
             <% if transaction.planned? %><span class="badge badge-neutral">予定</span><% end %>
           </p>
           <div class="entry-card__meta">
             <span><%= transaction.date %></span>
-            <span><%= transaction.payment_method.name %> / <%= transaction.account.name %></span>
+            <span>
+              <%= transaction.payment_method.name %> / <%= transaction.account.name %>
+              <% if transaction.to_account %> → <%= transaction.to_account.name %><% end %>
+            </span>
           </div>
           <% if transaction.memo.present? || transaction.satisfaction || transaction.regret? || !transaction.not_applicable? %>
             <div class="entry-card__meta">
@@ -90,8 +97,8 @@
             </div>
           <% end %>
         </div>
-        <p class="entry-card__amount <%= transaction.income? ? 'is-income' : 'is-expense' %>">
-          <%= transaction.income? ? "+" : "-" %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
+        <p class="entry-card__amount <%= transaction_amount_css_class(transaction) %>">
+          <%= transaction_amount_sign(transaction) %><%= number_to_currency(transaction.amount, unit: "¥", precision: 0) %>
         </p>
       </div>
       <div class="entry-card__actions">

@@ -18,12 +18,13 @@
   </div>
 
   <div class="field">
-    <%= f.label :direction, "収支区分" %>
+    <%= f.label :direction, "取引種別" %>
     <%= f.select :direction, Transaction.directions.keys.map { |k| [Transaction::DIRECTION_LABELS[k], k] }, include_blank: true %>
+    <p class="text-muted">「振替」「投資」は口座間の資金移動で、消費ではないため支出合計には含まれません(例: クレカ引落・電子マネーへのチャージ・証券口座への入金)。</p>
   </div>
 
   <div class="field">
-    <%= f.label :category_id, "カテゴリ" %>
+    <%= f.label :category_id, "カテゴリ(振替・投資では任意)" %>
     <%= f.grouped_collection_select :category_id, [["支出", Category.expense.order(:position, :name)], ["収入", Category.income.order(:position, :name)]],
           :last, :first, :id, :name, include_blank: true %>
   </div>
@@ -39,8 +40,14 @@
   </div>
 
   <div class="field">
-    <%= f.label :account_id, "口座・置き場所" %>
+    <%= f.label :account_id, "口座・置き場所(振替・投資では移動元)" %>
     <%= f.collection_select :account_id, Account.order(:position, :name), :id, :name, include_blank: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :to_account_id, "移動先口座(振替・投資の場合のみ、任意)" %>
+    <%= f.collection_select :to_account_id, Account.order(:position, :name), :id, :name, include_blank: true %>
+    <p class="text-muted">入力すると、資産管理画面の残高整合性チェックの精度が上がります。</p>
   </div>
 
   <div class="field">
