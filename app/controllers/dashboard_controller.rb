@@ -10,6 +10,7 @@ class DashboardController < ApplicationController
 
     @annual_income = @monthly_summaries.sum(&:income_actual)
     @annual_expense = @monthly_summaries.sum(&:expense_actual)
+    @annual_investment = @monthly_summaries.sum(&:investment_actual)
 
     @latest_snapshot = AssetSnapshot.order(recorded_on: :desc, id: :desc).first
     @total_assets = @latest_snapshot&.total_balance || 0
