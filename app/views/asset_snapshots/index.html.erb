@@ -26,6 +26,17 @@
           <%= mismatch.account.name %>: 見込み <%= number_to_currency(mismatch.expected_delta, unit: "¥", precision: 0) %> に対し、
           実際は <%= number_to_currency(mismatch.actual_delta, unit: "¥", precision: 0) %>
           (差額 <%= number_to_currency(mismatch.diff, unit: "¥", precision: 0) %>)
+          <% candidates = mismatch.candidate_causes %>
+          <% if candidates.present? %>
+            <p class="text-muted" style="margin: 0.25rem 0 0;">原因の候補(自動推定):</p>
+            <ul>
+              <% candidates.each do |candidate| %>
+                <li><%= candidate.message %></li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-muted" style="margin: 0.25rem 0 0;">一致する取引は見つかりませんでした。記録漏れの可能性があります。</p>
+          <% end %>
         </li>
       <% end %>
       <% if @credit_card_pending_diff && !@credit_card_pending_diff.zero? %>

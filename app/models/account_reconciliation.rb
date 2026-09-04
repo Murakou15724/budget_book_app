@@ -14,6 +14,11 @@
 class AccountReconciliation
   RECONCILABLE_KINDS = %w[bank e_money securities cash].freeze
 
+  # 差額の原因になっていそうな取引の候補(AIを使わないルールベースの推定)。
+  # kind: :wrong_account(他の口座の取引だが、実はこの口座の取引だったのでは)
+  #       :duplicate(この口座・この期間に、同額・同カテゴリの取引が複数ある)
+  Candidate = Struct.new(:kind, :transaction, :message, keyword_init: true)
+
   attr_reader :account, :expected_delta, :actual_delta
 
   # 直近2回のスナップショット間で、残高の記録があり見込みと食い違う口座だけを返す。
@@ -21,7 +26,7 @@ class AccountReconciliation
     return [] if current_snapshot.nil? || previous_snapshot.nil?
 
     period = (previous_snapshot.recorded_on + 1)..current_snapshot.recorded_on
-    transactions = Transaction.actual.where(date: period).to_a
+    transactions = Transaction.actual.includes(:account, :category).where(date: period).to_a
     payment_account_id = Setting.current.credit_card_payment_account_id
     prev_balances = previous_snapshot.asset_balances.index_by(&:account_id)
     curr_balances = current_snapshot.asset_balances.index_by(&:account_id)
@@ -35,7 +40,7 @@ class AccountReconciliation
       actual_delta = curr_balance - prev_balance
       next if expected_delta == actual_delta
 
-      new(account: account, expected_delta: expected_delta, actual_delta: actual_delta)
+      new(account: account, expected_delta: expected_delta, actual_delta: actual_delta, period_transactions: transactions)
     end
   end
 
@@ -66,13 +71,54 @@ class AccountReconciliation
   end
   private_class_method :expected_delta_for
 
-  def initialize(account:, expected_delta:, actual_delta:)
+  def initialize(account:, expected_delta:, actual_delta:, period_transactions:)
     @account = account
     @expected_delta = expected_delta
     @actual_delta = actual_delta
+    @period_transactions = period_transactions
   end
 
   def diff
     actual_delta - expected_delta
+  end
+
+  # 差額の原因になっていそうな取引を、AIを使わずルールベースで推定する(ベストエフォート)。
+  # 差額そのものが記録漏れ(そもそも取引が存在しない)由来の場合は何も見つからない。
+  def candidate_causes
+    return [] if diff.zero?
+
+    wrong_account_candidates + duplicate_candidates
+  end
+
+  private
+
+  # 差額と同じ金額の取引が、同じ期間の別口座に記録されている
+  # -> 口座の選び間違いで、本来この口座の取引だったのではないか、という候補。
+  def wrong_account_candidates
+    @period_transactions.select { |t| t.account_id != account.id && t.amount == diff.abs }
+                         .map do |t|
+      Candidate.new(
+        kind: :wrong_account, transaction: t,
+        message: "#{t.date} #{t.account.name}の#{t.direction_label}¥#{t.amount}" \
+                 "(#{t.category&.name || t.direction_label}) — 本来#{account.name}の取引だった可能性はありませんか?"
+      )
+    end
+  end
+
+  # 同じ口座・同じ期間に、金額とカテゴリが一致する取引が複数あり、
+  # その金額が差額と一致する -> 二重登録の可能性がある候補。
+  def duplicate_candidates
+    @period_transactions.select { |t| t.account_id == account.id }
+                         .group_by { |t| [t.amount, t.category_id, t.direction] }
+                         .select { |(amount, *), group| group.size > 1 && amount == diff.abs }
+                         .flat_map do |_key, group|
+      group.map do |t|
+        Candidate.new(
+          kind: :duplicate, transaction: t,
+          message: "#{t.date} #{t.category&.name || t.direction_label} ¥#{t.amount} — " \
+                   "同額・同カテゴリの取引が#{group.size}件あり、二重登録の可能性があります"
+        )
+      end
+    end
   end
 end
