@@ -1,0 +1,65 @@
+<%= link_to "← 資産管理へ戻る", asset_snapshots_path, class: "back-link" %>
+
+<h1>残高整合性チェックの差分を解消</h1>
+
+<% if @plan.blank? %>
+  <p class="text-muted">現在、直近2回のスナップショット間に差分はありません。実行できる操作はありません。</p>
+  <%= link_to "資産管理へ戻る", asset_snapshots_path, class: "btn" %>
+<% else %>
+  <div class="reconciliation-warning">
+    <p class="reconciliation-warning__title">⚠ この操作について(実行前に必ずお読みください)</p>
+    <p>
+      <strong><%= @previous_snapshot.recorded_on %>(古い方)</strong>のスナップショットの残高を、下表の「変更後」の値に書き換えます。
+      <strong><%= @current_snapshot.recorded_on %>(新しい方、現在の実際の残高として使われている値)は変更しません。</strong>
+    </p>
+    <p>
+      これは記録漏れ・二重登録の<strong>原因を特定するものではなく</strong>、差額を古い方のスナップショットに
+      押し込むことで、以降の整合性チェックを強制的にクリアな状態にするだけの操作です。
+      過去の資産推移グラフの数値がここで変わり、<strong>元に戻すには表の「変更前」の値を自分で控えて
+      手動再入力する必要があります。</strong>
+    </p>
+    <p class="text-muted">
+      実行する前に、資産管理画面の「原因の候補(自動推定)」に心当たりのある取引が無いか、一度確認することをおすすめします。
+    </p>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>口座</th>
+          <th>変更前(<%= @previous_snapshot.recorded_on %>)</th>
+          <th>変更後</th>
+          <th>差額</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @plan.each do |step| %>
+          <tr>
+            <td><%= step.account.name %></td>
+            <td><%= number_to_currency(step.old_value, unit: "¥", precision: 0) %></td>
+            <td><%= number_to_currency(step.new_value, unit: "¥", precision: 0) %></td>
+            <td><%= number_to_currency(step.diff, unit: "¥", precision: 0) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= form_with url: force_align_asset_snapshots_path, method: :patch do |f| %>
+    <%= hidden_field_tag :current_snapshot_id, @current_snapshot.id %>
+    <%= hidden_field_tag :previous_snapshot_id, @previous_snapshot.id %>
+    <%= hidden_field_tag :plan_fingerprint, @fingerprint %>
+    <div class="field">
+      <label>
+        <%= check_box_tag :confirmed, "1", false, required: true %>
+        上記の内容と影響を理解した上で、古いスナップショットの書き換えを実行します。
+      </label>
+    </div>
+    <div class="actions">
+      <%= f.submit "実行する(元に戻せません)", class: "btn-danger",
+            data: { turbo_confirm: "本当に実行しますか?\n#{@previous_snapshot.recorded_on}のスナップショットが書き換わります。この操作は元に戻せません。" } %>
+      <%= link_to "キャンセル", asset_snapshots_path, class: "btn" %>
+    </div>
+  <% end %>
+<% end %>

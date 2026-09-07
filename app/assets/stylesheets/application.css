@@ -450,6 +450,16 @@ main {
   box-shadow: var(--shadow-raised);
 }
 
+.btn-danger {
+  background: var(--color-critical);
+  color: #ffffff;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-block {
   display: flex;
   width: 100%;

@@ -46,6 +46,12 @@
         </li>
       <% end %>
     </ul>
+    <% if @reconciliation_mismatches.present? %>
+      <p class="text-muted">
+        原因の候補を確認しても解消できない場合、内容を確認した上で
+        <%= link_to "差分を強制的に解消する", reconcile_preview_asset_snapshots_path %> こともできます。
+      </p>
+    <% end %>
   </div>
 <% end %>
 

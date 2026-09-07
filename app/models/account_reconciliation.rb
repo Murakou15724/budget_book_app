@@ -40,8 +40,59 @@ class AccountReconciliation
       actual_delta = curr_balance - prev_balance
       next if expected_delta == actual_delta
 
-      new(account: account, expected_delta: expected_delta, actual_delta: actual_delta, period_transactions: transactions)
+      new(
+        account: account, expected_delta: expected_delta, actual_delta: actual_delta,
+        period_transactions: transactions, period: period, payment_account_id: payment_account_id
+      )
     end
+  end
+
+  # 確認画面とforce_align実行時とで内容が変わっていないかの突合に使う指紋。
+  def self.plan_fingerprint(plan)
+    Digest::SHA256.hexdigest(plan.map { |step| [step.account.id, step.old_value, step.new_value] }.to_s)
+  end
+
+  # force_align_plan/force_align! の計算結果1件分(口座・変更前後の値)。
+  AlignmentStep = Struct.new(:account, :old_value, :new_value, :expected_delta, :balance_record, keyword_init: true) do
+    def diff
+      new_value - old_value
+    end
+  end
+
+  # 直近2回のスナップショット間の差分を「強制的に」解消する場合の変更内容を計算するだけで、
+  # 実際の書き換えは行わない(確認画面での表示用)。
+  # 新しい方(直近)のスナップショットは現在の実際の残高として変更せず、
+  # 古い方のスナップショットの値だけを見込み増減から逆算して書き換える対象にする。
+  def self.force_align_plan(current_snapshot, previous_snapshot)
+    curr_balances = current_snapshot.asset_balances.index_by(&:account_id)
+    prev_balances = previous_snapshot.asset_balances.index_by(&:account_id)
+
+    build_for(current_snapshot, previous_snapshot).map do |mismatch|
+      previous_balance_record = prev_balances.fetch(mismatch.account.id)
+
+      AlignmentStep.new(
+        account: mismatch.account,
+        old_value: previous_balance_record.balance,
+        new_value: curr_balances.fetch(mismatch.account.id).balance - mismatch.expected_delta,
+        expected_delta: mismatch.expected_delta,
+        balance_record: previous_balance_record
+      )
+    end
+  end
+
+  # 計算済みのplanをそのままDBへ反映する(確認画面で提示した内容と実際の書き込み内容を
+  # 一致させるため、force_align!のように内部で再計算しない)。
+  def self.apply_plan!(plan)
+    ActiveRecord::Base.transaction do
+      plan.each { |step| step.balance_record.update!(balance: step.new_value) }
+    end
+
+    plan
+  end
+
+  # force_align_planを計算してそのまま反映する(rakeタスク等、確認画面を経由しない用途向け)。
+  def self.force_align!(current_snapshot, previous_snapshot)
+    apply_plan!(force_align_plan(current_snapshot, previous_snapshot))
   end
 
   # クレカ仮置き口座の「スナップショット記録時点の残高」と、現在の未払いクレカ取引合計を比較する。
@@ -59,23 +110,31 @@ class AccountReconciliation
   end
 
   def self.expected_delta_for(account, transactions, payment_account_id, period)
-    transactions.sum do |t|
-      next t.amount if t.account_id == account.id && t.income?
-      next(-t.amount) if t.account_id == account.id && t.expense? && t.not_applicable?
-      next(-t.amount) if t.account_id == account.id && (t.transfer? || t.investment?)
-      next t.amount if t.to_account_id == account.id && (t.transfer? || t.investment?)
-      next(-t.amount) if payment_account_id == account.id && t.paid? && period.cover?(t.updated_at.to_date)
-
-      0
-    end
+    transactions.sum { |t| contribution_for(t, account, payment_account_id, period) }
   end
   private_class_method :expected_delta_for
 
-  def initialize(account:, expected_delta:, actual_delta:, period_transactions:)
+  # 1件の取引が、指定した口座の見込み増減にいくら寄与するか(寄与しなければ0)。
+  # expected_delta_forの集計本体と、candidate_causesの「実際に寄与する取引だけを
+  # 候補にする」フィルタの両方から使う共通ロジック。
+  def self.contribution_for(t, account, payment_account_id, period)
+    return t.amount if t.account_id == account.id && t.income?
+    return(-t.amount) if t.account_id == account.id && t.expense? && t.not_applicable?
+    return(-t.amount) if t.account_id == account.id && (t.transfer? || t.investment?)
+    return t.amount if t.to_account_id == account.id && (t.transfer? || t.investment?)
+    return(-t.amount) if payment_account_id == account.id && t.paid? && period.cover?(t.updated_at.to_date)
+
+    0
+  end
+  private_class_method :contribution_for
+
+  def initialize(account:, expected_delta:, actual_delta:, period_transactions:, period:, payment_account_id:)
     @account = account
     @expected_delta = expected_delta
     @actual_delta = actual_delta
     @period_transactions = period_transactions
+    @period = period
+    @payment_account_id = payment_account_id
   end
 
   def diff
@@ -94,8 +153,10 @@ class AccountReconciliation
 
   # 差額と同じ金額の取引が、同じ期間の別口座に記録されている
   # -> 口座の選び間違いで、本来この口座の取引だったのではないか、という候補。
+  # ただし振替・投資の移動先(to_account_id)としてすでにこの口座の見込み増減に
+  # 計上済みの取引は、そもそも「別口座の取引」ではないため除外する。
   def wrong_account_candidates
-    @period_transactions.select { |t| t.account_id != account.id && t.amount == diff.abs }
+    @period_transactions.select { |t| t.account_id != account.id && t.to_account_id != account.id && t.amount == diff.abs }
                          .map do |t|
       Candidate.new(
         kind: :wrong_account, transaction: t,
@@ -107,8 +168,10 @@ class AccountReconciliation
 
   # 同じ口座・同じ期間に、金額とカテゴリが一致する取引が複数あり、
   # その金額が差額と一致する -> 二重登録の可能性がある候補。
+  # クレカ未払い等、そもそも見込み増減に寄与しない取引(寄与額0)は対象外にする
+  # (二重に登録されていても、この口座の差額の原因にはなり得ないため)。
   def duplicate_candidates
-    @period_transactions.select { |t| t.account_id == account.id }
+    @period_transactions.select { |t| t.account_id == account.id && contribution(t) != 0 }
                          .group_by { |t| [t.amount, t.category_id, t.direction] }
                          .select { |(amount, *), group| group.size > 1 && amount == diff.abs }
                          .flat_map do |_key, group|
@@ -120,5 +183,9 @@ class AccountReconciliation
         )
       end
     end
+  end
+
+  def contribution(transaction)
+    self.class.send(:contribution_for, transaction, account, @payment_account_id, @period)
   end
 end

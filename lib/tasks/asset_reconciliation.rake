@@ -10,25 +10,22 @@
 namespace :asset_reconciliation do
   desc "直近2回のスナップショット間の差分を、古い方の残高を書き換えて解消する(新しい方は変更しない)"
   task force_align: :environment do
-    current, previous = AssetSnapshot.order(recorded_on: :desc, id: :desc).first(2)
+    current, previous = AssetSnapshot.newest_first.first(2)
     abort "資産スナップショットが2件以上登録されている必要があります。" if previous.nil?
 
-    mismatches = AccountReconciliation.build_for(current, previous)
-    if mismatches.empty?
+    plan = AccountReconciliation.force_align_plan(current, previous)
+    if plan.empty?
       puts "#{previous.recorded_on} -> #{current.recorded_on}: 差分はありません。何もしませんでした。"
       next
     end
 
     puts "#{previous.recorded_on}(古い方)のスナップショットを書き換えます。#{current.recorded_on}(新しい方)は変更しません。"
-    mismatches.each do |mismatch|
-      current_balance = current.asset_balances.find_by(account: mismatch.account).balance
-      previous_balance_record = previous.asset_balances.find_by(account: mismatch.account)
-      old_value = previous_balance_record.balance
-      new_value = current_balance - mismatch.expected_delta
-
-      previous_balance_record.update!(balance: new_value)
-      puts "#{mismatch.account.name}: #{old_value}円 -> #{new_value}円 " \
-           "(#{current.recorded_on}時点の残高#{current_balance}円と、見込み増減#{mismatch.expected_delta}円から逆算)"
+    # 表示に使ったplanをそのまま適用する(適用直前に再計算すると、表示内容と
+    # 実際の書き込み内容がズレうるため)。
+    AccountReconciliation.apply_plan!(plan)
+    plan.each do |step|
+      puts "#{step.account.name}: #{step.old_value}円 -> #{step.new_value}円 " \
+           "(見込み増減#{step.expected_delta}円から逆算)"
     end
   end
 end

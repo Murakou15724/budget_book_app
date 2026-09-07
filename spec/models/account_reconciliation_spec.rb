@@ -86,6 +86,41 @@ RSpec.describe AccountReconciliation do
       expect(mismatch.candidate_causes.size).to eq(2)
     end
 
+    it "振替の移動先としてすでに計上済みの取引は、口座選び間違いの候補に出さない" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000, paypay_account => 50_000 })
+      # PayPay -> 銀行への振替(10,000円)。これはすでにbank_accountの見込み増減に正しく計上される。
+      Transaction.create!(
+        date: Date.new(2028, 7, 10), entry_type: :actual, direction: :transfer, amount: 10_000,
+        payment_method: transfer_method, account: paypay_account, to_account: bank_account
+      )
+      # さらに記録漏れ等で10,000円多く増えている(diff.abs がたまたま振替額と一致するケース)
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 120_000, paypay_account => 40_000 })
+
+      mismatches = described_class.build_for(current, previous)
+      bank_mismatch = mismatches.find { |m| m.account == bank_account }
+
+      expect(bank_mismatch.diff).to eq(10_000)
+      expect(bank_mismatch.candidate_causes).to be_empty
+    end
+
+    it "見込み増減に寄与しない取引(クレカ未払い等)は、二重登録の候補に出さない" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      # 支出だがcredit_card_status: unpaidのため、そもそもこの口座の見込み増減には寄与しない
+      2.times do
+        Transaction.create!(
+          date: Date.new(2028, 7, 10), entry_type: :actual, direction: :expense, amount: 3000,
+          category: category, payment_method: cash_method, account: bank_account, credit_card_status: :unpaid
+        )
+      end
+      # 記録漏れ等で3,000円減っている(diff.abs が偶然その取引額と一致するケース)
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 97_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(-3000)
+      expect(mismatch.candidate_causes).to be_empty
+    end
+
     it "該当する取引がなければ空になる(記録漏れの可能性を示唆)" do
       previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
       current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_000 })

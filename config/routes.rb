@@ -18,7 +18,12 @@ Rails.application.routes.draw do
       patch :shift_credit_card_payment_due_on
     end
   end
-  resources :asset_snapshots, except: [:show]
+  resources :asset_snapshots, except: [:show] do
+    collection do
+      get :reconcile_preview
+      patch :force_align
+    end
+  end
   get "credit_card_unpaids", to: "credit_card_unpaids#index"
   get "monthly_summaries", to: "monthly_summaries#index"
   get "monthly_reviews", to: "monthly_reviews#index"
