@@ -8,6 +8,9 @@ class AssetSnapshot < ApplicationRecord
 
   validates :recorded_on, presence: true
 
+  # 新しい順(同日なら新しく登録した順)。「直近のスナップショット」の定義をこの1箇所に集約する。
+  scope :newest_first, -> { order(recorded_on: :desc, id: :desc) }
+
   # asset_balancesがプリロード済みならSQLを発行せずメモリ上で合計する
   def total_balance
     asset_balances.sum(&:balance)

@@ -49,6 +49,88 @@ RSpec.describe AccountReconciliation do
     expect(described_class.build_for(current, previous)).to be_empty
   end
 
+  describe "#candidate_causes" do
+    let!(:cash_account) { Account.create!(name: "現金", kind: :cash, position: 3) }
+
+    it "差額と同額の取引が別口座にあれば、口座の選び間違いの候補として提示する" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      # 本来は銀行の支出だが、誤って現金口座で登録してしまった想定
+      Transaction.create!(
+        date: Date.new(2028, 7, 10), entry_type: :actual, direction: :expense, amount: 4860,
+        category: category, payment_method: cash_method, account: cash_account
+      )
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_140 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(-4860)
+      expect(mismatch.candidate_causes.map(&:kind)).to include(:wrong_account)
+      expect(mismatch.candidate_causes.first.message).to include("現金")
+    end
+
+    it "差額と同額の取引がこの口座内に複数あれば、二重登録の候補として提示する" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      2.times do
+        Transaction.create!(
+          date: Date.new(2028, 7, 10), entry_type: :actual, direction: :expense, amount: 3000,
+          category: category, payment_method: cash_method, account: bank_account
+        )
+      end
+      # 実際には1回分(3,000円)しか引き落とされていない想定
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 97_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(3000)
+      expect(mismatch.candidate_causes.map(&:kind)).to all(eq(:duplicate))
+      expect(mismatch.candidate_causes.size).to eq(2)
+    end
+
+    it "振替の移動先としてすでに計上済みの取引は、口座選び間違いの候補に出さない" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000, paypay_account => 50_000 })
+      # PayPay -> 銀行への振替(10,000円)。これはすでにbank_accountの見込み増減に正しく計上される。
+      Transaction.create!(
+        date: Date.new(2028, 7, 10), entry_type: :actual, direction: :transfer, amount: 10_000,
+        payment_method: transfer_method, account: paypay_account, to_account: bank_account
+      )
+      # さらに記録漏れ等で10,000円多く増えている(diff.abs がたまたま振替額と一致するケース)
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 120_000, paypay_account => 40_000 })
+
+      mismatches = described_class.build_for(current, previous)
+      bank_mismatch = mismatches.find { |m| m.account == bank_account }
+
+      expect(bank_mismatch.diff).to eq(10_000)
+      expect(bank_mismatch.candidate_causes).to be_empty
+    end
+
+    it "見込み増減に寄与しない取引(クレカ未払い等)は、二重登録の候補に出さない" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      # 支出だがcredit_card_status: unpaidのため、そもそもこの口座の見込み増減には寄与しない
+      2.times do
+        Transaction.create!(
+          date: Date.new(2028, 7, 10), entry_type: :actual, direction: :expense, amount: 3000,
+          category: category, payment_method: cash_method, account: bank_account, credit_card_status: :unpaid
+        )
+      end
+      # 記録漏れ等で3,000円減っている(diff.abs が偶然その取引額と一致するケース)
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 97_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(-3000)
+      expect(mismatch.candidate_causes).to be_empty
+    end
+
+    it "該当する取引がなければ空になる(記録漏れの可能性を示唆)" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.candidate_causes).to be_empty
+    end
+  end
+
   describe ".credit_card_pending_diff" do
     let!(:credit_pending_account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 3) }
     let!(:credit_method) { PaymentMethod.create!(name: "クレカ", position: 3) }
