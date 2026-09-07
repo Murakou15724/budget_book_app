@@ -29,7 +29,7 @@ RSpec.describe "credit card unpaids grouped by payment due date", type: :request
     [t1, t2, t3].each { |t| expect(response.body).to include(t.id.to_s) }
   end
 
-  it "marks a whole due-date group as paid with the checkboxes checked by default" do
+  it "marks only the selected transactions as paid" do
     t1 = create_unpaid_transaction(Date.new(2028, 7, 20))
     t2 = create_unpaid_transaction(Date.new(2028, 8, 10))
     other_cycle = create_unpaid_transaction(Date.new(2028, 8, 20))
@@ -41,5 +41,23 @@ RSpec.describe "credit card unpaids grouped by payment due date", type: :request
     expect(t1.reload.credit_card_status).to eq("paid")
     expect(t2.reload.credit_card_status).to eq("paid")
     expect(other_cycle.reload.credit_card_status).to eq("unpaid")
+  end
+
+  it "誤操作で意図しない取引まで支払済にしないよう、チェックボックスは初期状態で未選択にする" do
+    create_unpaid_transaction(Date.new(2028, 7, 20))
+
+    get credit_card_unpaids_path
+
+    expect(response.body).not_to match(/name="select_all_[^"]*" value="1" checked/)
+    expect(response.body).not_to match(/name="transaction_ids\[\]"[^>]*checked/)
+  end
+
+  it "前月/次月ボタンには誤クリック対策の確認ダイアログが付く" do
+    create_unpaid_transaction(Date.new(2028, 7, 20))
+
+    get credit_card_unpaids_path
+
+    expect(response.body).to include('data-turbo-confirm="この取引の支払予定日を前月に変更しますか？"')
+    expect(response.body).to include('data-turbo-confirm="この取引の支払予定日を次月に変更しますか？"')
   end
 end

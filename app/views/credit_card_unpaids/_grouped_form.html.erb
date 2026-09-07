@@ -12,7 +12,7 @@
         </div>
 
         <label class="select-all-toggle">
-          <%= check_box_tag "select_all_#{due_on}", "1", true, data: { action: "select-all#toggle" } %>
+          <%= check_box_tag "select_all_#{due_on}", "1", false, data: { action: "select-all#toggle" } %>
           すべて選択
         </label>
 
@@ -34,14 +34,14 @@
               </div>
               <div class="entry-card__actions">
                 <label>
-                  <%= check_box_tag "transaction_ids[]", transaction.id, true, data: { select_all_target: "checkbox" } %>
+                  <%= check_box_tag "transaction_ids[]", transaction.id, false, data: { select_all_target: "checkbox" } %>
                   支払済にする
                 </label>
                 <span class="due-date-shift">
                   <%= link_to "◀前月", shift_credit_card_payment_due_on_transaction_path(transaction, direction: "prev"),
-                        data: { turbo_method: :patch }, class: "due-date-shift__btn" %>
+                        data: { turbo_method: :patch, turbo_confirm: "この取引の支払予定日を前月に変更しますか？" }, class: "due-date-shift__btn" %>
                   <%= link_to "次月▶", shift_credit_card_payment_due_on_transaction_path(transaction, direction: "next"),
-                        data: { turbo_method: :patch }, class: "due-date-shift__btn" %>
+                        data: { turbo_method: :patch, turbo_confirm: "この取引の支払予定日を次月に変更しますか？" }, class: "due-date-shift__btn" %>
                 </span>
               </div>
             </div>
