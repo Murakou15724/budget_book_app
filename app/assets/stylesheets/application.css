@@ -877,6 +877,7 @@ input.input-compact {
 .chart-body {
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
 }
 
 /* ===== Range switcher (period filter buttons, e.g. asset trend chart) ========== */

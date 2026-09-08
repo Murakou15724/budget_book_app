@@ -16,6 +16,9 @@ module DashboardHelper
   BAR_Y_MIN_SPAN = 20_000
   # 1本の棒が占める幅の割合(残りは前後の棒との間隔になる)
   BAR_FILL_RATIO = 0.6
+  # 回転させたカテゴリ名ラベルが重なり合わずに読める最低限の幅(px)。
+  # カテゴリ数が多く、これを下回る場合は横スクロールさせる(#fluid_svg_style参照)。
+  BAR_MIN_SLOT_WIDTH = 56
 
   # app/assets/stylesheets/application.css のCSSカスタムプロパティを直接参照することで、
   # ダークモード切り替え時にもグラフの配色が自動的に追従する。
@@ -61,6 +64,8 @@ module DashboardHelper
   # カテゴリ別の当月支出を棒グラフ(インラインSVG)で描画する。
   # 折れ線グラフと同様、y軸を固定幅(px)で左端に表示し、グラフ本体はコンテナの
   # 幅いっぱいに追従させる(棒の幅・間隔もコンテナ幅に対する%で計算する)。
+  # ただしカテゴリ数が多くBAR_MIN_SLOT_WIDTHを下回る場合は、棒とラベルが
+  # 潰れて読めなくなるのを避けるため横スクロールさせる(#fluid_svg_style参照)。
   def category_expense_bar_svg(category_expenses)
     return content_tag(:p, "今月は表示できる支出カテゴリがありません。") if category_expenses.empty?
 
@@ -101,7 +106,8 @@ module DashboardHelper
       bar + label
     end.join.html_safe
 
-    body_svg = content_tag(:svg, gridlines + x_axis_line + bars, height: BAR_CHART_HEIGHT, style: FLUID_SVG_STYLE)
+    body_svg = content_tag(:svg, gridlines + x_axis_line + bars, height: BAR_CHART_HEIGHT,
+                            style: fluid_svg_style(min_width_px: count * BAR_MIN_SLOT_WIDTH))
     y_axis_svg = svg_y_axis(width: BAR_Y_AXIS_WIDTH, height: BAR_CHART_HEIGHT, ticks: ticks,
                              value_formatter: ->(v) { v.zero? ? "0" : "#{(v / 10_000).round}万" })
 

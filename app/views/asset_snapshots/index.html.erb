@@ -95,10 +95,15 @@
 <% end %>
 
 <input type="checkbox" id="asset-snapshot-list-toggle" class="detail-toggle-input">
-<label for="asset-snapshot-list-toggle" class="detail-toggle-label">📅 スナップショット一覧(直近1年)を表示</label>
+<label for="asset-snapshot-list-toggle" class="detail-toggle-label">📅 スナップショット一覧(<%= @show_all_snapshots ? "全期間" : "直近1年" %>)を表示</label>
 
 <div class="detail-toggle-section">
-  <h2>スナップショット一覧(直近1年)</h2>
+  <h2>スナップショット一覧(<%= @show_all_snapshots ? "全期間" : "直近1年" %>)</h2>
+  <% if @show_all_snapshots %>
+    <p><%= link_to "直近1年のみ表示に戻す", asset_snapshots_path %></p>
+  <% else %>
+    <p><%= link_to "全期間を表示(1年より古い記録の編集・削除はこちら)", asset_snapshots_path(snapshots: "all") %></p>
+  <% end %>
   <div class="table-scroll">
     <table>
       <thead>

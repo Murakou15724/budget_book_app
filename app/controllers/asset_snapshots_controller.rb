@@ -13,7 +13,10 @@ class AssetSnapshotsController < ApplicationController
   def index
     @asset_snapshots = AssetSnapshot.includes(asset_balances: :account).newest_first.to_a
     @latest_snapshot = @asset_snapshots.first
-    @recent_snapshots = @asset_snapshots.select { |snapshot| snapshot.recorded_on >= 1.year.ago.to_date }
+    # 直近1年より古いスナップショットも、切り替えれば編集・削除に辿り着けるようにする
+    # (でないと1年以上前からの記録を訂正する手段が画面上から失われる)。
+    @show_all_snapshots = params[:snapshots] == "all"
+    @recent_snapshots = @show_all_snapshots ? @asset_snapshots : @asset_snapshots.select { |snapshot| snapshot.recorded_on >= 1.year.ago.to_date }
     @savings_goal = Setting.current.total_savings_goal
     @chart_range = chart_ranges.find { |range| range[:key] == params[:range] } || chart_ranges.first
     @chart_snapshots = chart_snapshots_for(@chart_range[:duration])

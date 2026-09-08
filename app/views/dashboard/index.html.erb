@@ -127,7 +127,7 @@
   <%= monthly_trend_svg(@monthly_summaries) %>
 </div>
 
-<% if @current_month %>
+<% if @current_month && @category_expenses.present? %>
   <h2>カテゴリ別 今月支出(グラフ)</h2>
   <div class="card">
     <%= category_expense_bar_svg(@category_expenses) %>
