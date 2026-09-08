@@ -9,6 +9,16 @@ module SvgLineChartHelper
   # 半端に切れないようにoverflowを可視化し、幅はCSSでコンテナいっぱいに広げる。
   FLUID_SVG_STYLE = "width: 100%; display: block; overflow: visible;"
 
+  # 通常は横スクロール無しでコンテナ幅いっぱいに収まる可変サイズを優先するが、
+  # 項目数・点数が多いときにバー/点が潰れて読めなくなるのを避けるため、
+  # 1項目あたりの最低幅(min-width)を指定できるようにする。項目数が少ない間は
+  # 何も変わらず、min-widthがコンテナ幅を超えた場合だけ横スクロールが発生する。
+  def fluid_svg_style(min_width_px: nil)
+    return FLUID_SVG_STYLE if min_width_px.nil?
+
+    "#{FLUID_SVG_STYLE} min-width: #{min_width_px}px;"
+  end
+
   # 系列(values_listの各配列)のプロット座標を計算する。xはコンテナ幅に対する
   # 割合(0〜100のパーセント数値)、yはpx(数値)。
   # baseline: :zero なら0を起点に、:min なら全系列の最小値を起点にスケーリングする
