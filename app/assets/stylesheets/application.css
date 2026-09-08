@@ -956,6 +956,7 @@ input.input-compact {
 /* ===== Small helpers =========================================================== */
 
 .text-muted { color: var(--color-text-muted); }
+.text-danger { color: var(--color-critical); }
 .text-center { text-align: center; }
 
 .more-list {

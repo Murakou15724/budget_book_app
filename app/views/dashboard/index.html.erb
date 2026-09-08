@@ -48,6 +48,12 @@
       </p>
     </div>
     <div class="stat-tile">
+      <p class="stat-tile__label">残り予算%</p>
+      <p class="stat-tile__value <%= budget_remaining_rate_value_class(@current_summary) %>">
+        <%= "⚠️ " if budget_remaining_rate_warning?(@current_summary) %><%= number_to_percentage(@current_summary.budget_remaining_rate * 100, precision: 1) %>
+      </p>
+    </div>
+    <div class="stat-tile">
       <p class="stat-tile__label">今月の投資</p>
       <p class="stat-tile__value"><%= number_to_currency(@current_summary.investment_actual, unit: "¥", precision: 0) %></p>
     </div>
