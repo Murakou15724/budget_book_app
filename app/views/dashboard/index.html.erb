@@ -28,10 +28,6 @@
   <h2>今月(<%= @current_month %>月)の収支</h2>
   <div class="stat-grid">
     <div class="stat-tile">
-      <p class="stat-tile__label">収入予定込</p>
-      <p class="stat-tile__value"><%= number_to_currency(@current_summary.income_with_planned, unit: "¥", precision: 0) %></p>
-    </div>
-    <div class="stat-tile">
       <p class="stat-tile__label">収入見込み</p>
       <p class="stat-tile__value"><%= number_to_currency(@current_summary.income_estimate, unit: "¥", precision: 0) %></p>
     </div>
