@@ -26,6 +26,8 @@ Rails.application.routes.draw do
   end
   get "credit_card_unpaids", to: "credit_card_unpaids#index"
   get "monthly_summaries", to: "monthly_summaries#index"
+  get "monthly_summaries/:year/:month/actual_balance", to: "monthly_summaries#actual_balance",
+      as: :monthly_summary_actual_balance, constraints: { year: /\d+/, month: /\d+/ }
   get "monthly_reviews", to: "monthly_reviews#index"
   get "monthly_reviews/:year/:month/edit", to: "monthly_reviews#edit", as: :edit_monthly_review, constraints: { year: /\d+/, month: /\d+/ }
   patch "monthly_reviews/:year/:month", to: "monthly_reviews#update", as: :monthly_review, constraints: { year: /\d+/, month: /\d+/ }

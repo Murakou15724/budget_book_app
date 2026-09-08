@@ -32,13 +32,17 @@
       <p class="stat-tile__value"><%= number_to_currency(@current_summary.income_with_planned, unit: "¥", precision: 0) %></p>
     </div>
     <div class="stat-tile">
+      <p class="stat-tile__label">収入見込み</p>
+      <p class="stat-tile__value"><%= number_to_currency(@current_summary.income_estimate, unit: "¥", precision: 0) %></p>
+    </div>
+    <div class="stat-tile">
       <p class="stat-tile__label">支出実績</p>
       <p class="stat-tile__value"><%= number_to_currency(@current_summary.expense_actual, unit: "¥", precision: 0) %></p>
     </div>
     <div class="stat-tile">
-      <p class="stat-tile__label">収支</p>
-      <p class="stat-tile__value <%= @current_summary.actual_balance.negative? ? 'is-negative' : 'is-positive' %>">
-        <%= number_to_currency(@current_summary.actual_balance, unit: "¥", precision: 0) %>
+      <p class="stat-tile__label">収支見込み</p>
+      <p class="stat-tile__value <%= @current_summary.balance_estimate.negative? ? 'is-negative' : 'is-positive' %>">
+        <%= number_to_currency(@current_summary.balance_estimate, unit: "¥", precision: 0) %>
       </p>
     </div>
     <div class="stat-tile">

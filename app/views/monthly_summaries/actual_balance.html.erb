@@ -1,0 +1,3 @@
+<turbo-frame id="actual_balance_<%= @year %>_<%= @month %>">
+  <%= number_to_currency(@summary.actual_balance, unit: "¥", precision: 0) %>
+</turbo-frame>
