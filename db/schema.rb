@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_08_010006) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -39,6 +39,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
     t.index ["recorded_on"], name: "index_asset_snapshots_on_recorded_on"
   end
 
+  create_table "badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "required_xp", null: false
+    t.string "title", null: false
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["required_xp"], name: "index_badges_on_required_xp", unique: true
+  end
+
   create_table "categories", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "kind", default: 0, null: false
     t.string "name", null: false
@@ -59,6 +68,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
     t.datetime "updated_at", null: false
     t.index ["category_id", "year", "month"], name: "index_category_monthly_budgets_on_category_year_month", unique: true
     t.index ["category_id"], name: "index_category_monthly_budgets_on_category_id"
+  end
+
+  create_table "exercises", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "body_part"
+    t.integer "default_sets"
+    t.integer "default_reps"
+    t.decimal "default_weight_kg", precision: 5, scale: 1
+    t.integer "default_duration_min"
+    t.text "memo"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_exercises_on_name", unique: true
   end
 
   create_table "image_import_drafts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -172,6 +194,49 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
     t.index ["to_account_id"], name: "index_transactions_on_to_account_id"
   end
 
+  create_table "weekly_reviews", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "week_start_date", null: false
+    t.text "win_pattern"
+    t.text "next_week_adjustment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["week_start_date"], name: "index_weekly_reviews_on_week_start_date", unique: true
+  end
+
+  create_table "workout_days", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "date", null: false
+    t.integer "status", default: 0, null: false
+    t.string "mood"
+    t.text "memo"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_workout_days_on_date", unique: true
+  end
+
+  create_table "workout_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workout_day_id", null: false
+    t.bigint "exercise_id", null: false
+    t.integer "sets"
+    t.integer "reps"
+    t.decimal "weight_kg", precision: 5, scale: 1
+    t.integer "duration_min"
+    t.integer "rpe"
+    t.integer "xp", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exercise_id"], name: "index_workout_entries_on_exercise_id"
+    t.index ["workout_day_id"], name: "index_workout_entries_on_workout_day_id"
+  end
+
+  create_table "workout_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "start_date", null: false
+    t.integer "weekly_goal_count", default: 5, null: false
+    t.integer "weekly_goal_xp", default: 300, null: false
+    t.string "current_goal_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   add_foreign_key "asset_balances", "accounts"
   add_foreign_key "asset_balances", "asset_snapshots"
   add_foreign_key "category_monthly_budgets", "categories"
@@ -187,4 +252,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
   add_foreign_key "transactions", "accounts", column: "to_account_id"
   add_foreign_key "transactions", "categories"
   add_foreign_key "transactions", "payment_methods"
+  add_foreign_key "workout_entries", "exercises"
+  add_foreign_key "workout_entries", "workout_days"
 end

@@ -1,5 +1,75 @@
-<div class="app-launcher">
-  <h1 class="app-launcher__title">筋トレ記録</h1>
-  <p>準備中です。</p>
-  <%= link_to "ホームへ戻る", root_path %>
+<h1>筋トレ Daily Quest</h1>
+
+<div class="level-card">
+  <div class="level-card__row">
+    <div class="level-badge">
+      <span class="level-badge__label">LV</span>
+      <span class="level-badge__value"><%= @current_level %></span>
+    </div>
+    <div style="flex: 1; min-width: 0;">
+      <p class="level-card__goal">
+        <%= @current_badge&.title || "未称号" %>
+        <% if @next_badge %>
+          （次の称号まで残り<%= @next_badge.required_xp - @total_xp %>XP）
+        <% end %>
+      </p>
+      <div class="meter">
+        <% if @next_badge %>
+          <% span = @next_badge.required_xp - (@current_badge&.required_xp || 0) %>
+          <% progressed = @total_xp - (@current_badge&.required_xp || 0) %>
+          <div class="meter__fill" style="width: <%= span.zero? ? 100 : [[progressed.to_f / span * 100, 0].max, 100].min %>%;"></div>
+        <% else %>
+          <div class="meter__fill" style="width: 100%;"></div>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div>
+
+<div class="stat-grid">
+  <div class="stat-tile">
+    <p class="stat-tile__label">累計XP</p>
+    <p class="stat-tile__value"><%= @total_xp %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">総実施回数</p>
+    <p class="stat-tile__value"><%= @total_workout_count %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">現在の連続日数</p>
+    <p class="stat-tile__value"><%= @current_streak %>日</p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">最高連続日数</p>
+    <p class="stat-tile__value"><%= @longest_streak %>日</p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">今週の実施(目標<%= @setting.weekly_goal_count %>回)</p>
+    <p class="stat-tile__value"><%= @this_week_count %>回 <span style="font-size: 0.75rem; color: var(--color-text-muted);">(<%= number_to_percentage(@weekly_goal_progress_rate * 100, precision: 0) %>)</span></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">今月のXP</p>
+    <p class="stat-tile__value"><%= @this_month_xp %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">平均RPE</p>
+    <p class="stat-tile__value"><%= @average_rpe || "-" %></p>
+  </div>
+  <div class="stat-tile">
+    <p class="stat-tile__label">今日の入力</p>
+    <p class="stat-tile__value" style="font-size: 1rem;"><%= @today_workout_day ? @today_workout_day.status_label : "未記録" %></p>
+  </div>
+</div>
+
+<% if @setting.current_goal_text.present? %>
+  <div class="card">
+    <p style="margin: 0; color: var(--color-text-secondary);">🎯 現在の目標: <%= @setting.current_goal_text %></p>
+  </div>
+<% end %>
+
+<h2>直近14日のXP推移</h2>
+<div class="card">
+  <%= xp_trend_svg(@recent_days_range.to_a, @recent_workout_days) %>
+</div>
+
+<%= link_to "＋ 今日の記録を追加", new_workout_day_path(date: Date.current), class: "btn btn-primary btn-block" %>

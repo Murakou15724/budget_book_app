@@ -1,0 +1,50 @@
+<h1>記録一覧</h1>
+
+<%= link_to "記録を追加", new_workout_day_path, class: "btn-add" %>
+
+<div class="range-switcher">
+  <% period_ranges.each do |range| %>
+    <%= link_to range[:label], workout_days_path(period: range[:key]),
+          class: "range-switcher__item#{' is-active' if @period_range[:key] == range[:key]}" %>
+  <% end %>
+</div>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>日付</th>
+        <th>状態</th>
+        <th>種目</th>
+        <th>XP</th>
+        <th>気分</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @date_rows.each do |date, day| %>
+        <tr>
+          <td><%= date.strftime("%Y-%m-%d (%a)") %></td>
+          <% if day %>
+            <td><%= day.status_label %></td>
+            <td><%= day.workout_entries.map { |e| e.exercise.name }.join("、") %></td>
+            <td><%= day.xp %></td>
+            <td><%= day.mood %></td>
+            <td>
+              <%= link_to "編集", edit_workout_day_path(day) %>
+              <%= link_to "削除", workout_day_path(day), data: { turbo_method: :delete, turbo_confirm: "#{day.date}の記録を削除しますか？" } %>
+            </td>
+          <% else %>
+            <td><span class="badge badge-neutral">未実施</span></td>
+            <td></td>
+            <td>0</td>
+            <td></td>
+            <td>
+              <%= link_to "記録する", new_workout_day_path(date: date) %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

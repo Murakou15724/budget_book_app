@@ -1,0 +1,41 @@
+<h1>週次レビュー</h1>
+
+<div class="range-switcher">
+  <% period_ranges.each do |range| %>
+    <%= link_to range[:label], weekly_reviews_path(period: range[:key]),
+          class: "range-switcher__item#{' is-active' if @period_range[:key] == range[:key]}" %>
+  <% end %>
+</div>
+
+<% @weeks.each do |review| %>
+  <div class="card">
+    <h2 style="margin-top: 0;"><%= review.week_start_date.strftime("%Y-%m-%d") %> 〜 <%= (review.week_start_date + 6).strftime("%m-%d") %></h2>
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <p class="stat-tile__label">実施回数</p>
+        <p class="stat-tile__value"><%= review.workout_count %></p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-tile__label">合計XP</p>
+        <p class="stat-tile__value"><%= review.total_xp %></p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-tile__label">合計時間</p>
+        <p class="stat-tile__value"><%= review.total_duration_min %>分</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-tile__label">平均RPE</p>
+        <p class="stat-tile__value"><%= review.average_rpe&.round(1) || "-" %></p>
+      </div>
+    </div>
+
+    <% if review.win_pattern.present? %>
+      <p><strong>勝ちパターン:</strong> <%= review.win_pattern %></p>
+    <% end %>
+    <% if review.next_week_adjustment.present? %>
+      <p><strong>来週の調整:</strong> <%= review.next_week_adjustment %></p>
+    <% end %>
+
+    <%= link_to "振り返りを編集", edit_weekly_review_path(week_start_date: review.week_start_date) %>
+  </div>
+<% end %>

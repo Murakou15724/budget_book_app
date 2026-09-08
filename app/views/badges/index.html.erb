@@ -1,0 +1,29 @@
+<h1>称号マスタ</h1>
+
+<%= link_to "称号を追加", new_badge_path, class: "btn-add" %>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>必要XP</th>
+        <th>称号</th>
+        <th>説明</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @badges.each do |badge| %>
+        <tr>
+          <td><%= badge.required_xp %></td>
+          <td><%= badge.title %></td>
+          <td><%= badge.description %></td>
+          <td>
+            <%= link_to "編集", edit_badge_path(badge) %>
+            <%= link_to "削除", badge_path(badge), data: { turbo_method: :delete, turbo_confirm: "「#{badge.title}」を削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

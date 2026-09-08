@@ -1,0 +1,48 @@
+<%= form_with model: exercise do |f| %>
+  <% if exercise.errors.any? %>
+    <div class="error-messages">
+      <% exercise.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :name, "種目名" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :body_part, "部位" %>
+    <%= f.text_field :body_part %>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <%= f.label :default_sets, "標準セット" %>
+      <%= f.number_field :default_sets %>
+    </div>
+    <div class="field">
+      <%= f.label :default_reps, "標準回数" %>
+      <%= f.number_field :default_reps %>
+    </div>
+    <div class="field">
+      <%= f.label :default_weight_kg, "標準重量kg" %>
+      <%= f.number_field :default_weight_kg, step: 0.5 %>
+    </div>
+    <div class="field">
+      <%= f.label :default_duration_min, "標準時間分" %>
+      <%= f.number_field :default_duration_min %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :memo, "メモ" %>
+    <%= f.text_area :memo, rows: 2 %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", exercises_path %>
+  </div>
+<% end %>

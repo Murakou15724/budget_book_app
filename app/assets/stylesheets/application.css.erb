@@ -700,6 +700,16 @@ form .field_with_errors {
   display: contents;
 }
 
+form .field-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+form .field-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
 input[type="text"],
 input[type="number"],
 input[type="date"],
@@ -1214,4 +1224,20 @@ input.input-compact {
     grid-template-columns: 1fr;
     max-width: 280px;
   }
+}
+
+/* ===== Workout app theme (red accent) ======================================= */
+
+/* 家計簿(紫/青)と見た目を分けるため、筋トレ記録配下のレイアウトのbodyに
+   このクラスを付け、アクセントカラーのカスタムプロパティだけ赤系に差し替える。
+   header/bottom-nav/level-card/btn-primaryなど既存コンポーネントはそのまま流用する。
+   ダークモードで --color-accent-1 等を再定義している :root:not([data-theme="light"]) や
+   :root[data-theme="dark"] と詳細度が同じ(0,2,0)になるよう `:root .workout-app` にし、
+   ファイル内で最後に書くことでテーマに関わらず後勝ちで赤が適用されるようにしている。 */
+:root .workout-app {
+  --color-accent-1: #d03b3b;
+  --color-accent-2: #a82424;
+  --color-accent-gradient: linear-gradient(135deg, var(--color-accent-1), var(--color-accent-2));
+  --color-accent-contrast: #ffffff;
+  --shadow-raised: 0 8px 24px rgba(208, 59, 59, 0.28);
 }

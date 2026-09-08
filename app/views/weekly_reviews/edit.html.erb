@@ -1,0 +1,26 @@
+<h1><%= @weekly_review.week_start_date.strftime("%Y-%m-%d") %> 〜 <%= (@weekly_review.week_start_date + 6).strftime("%m-%d") %> の振り返り</h1>
+
+<%= form_with model: @weekly_review, url: weekly_review_path(week_start_date: @weekly_review.week_start_date), method: :patch do |f| %>
+  <% if @weekly_review.errors.any? %>
+    <div class="error-messages">
+      <% @weekly_review.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :win_pattern, "今週の勝ちパターン" %>
+    <%= f.text_area :win_pattern, rows: 3 %>
+  </div>
+
+  <div class="field">
+    <%= f.label :next_week_adjustment, "来週の調整" %>
+    <%= f.text_area :next_week_adjustment, rows: 3 %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", weekly_reviews_path %>
+  </div>
+<% end %>

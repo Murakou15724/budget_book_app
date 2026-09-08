@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>筋トレ Daily Quest</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="筋トレ Daily Quest">
+    <meta name="theme-color" content="#a82424">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="workout-app">
+    <header class="app-header">
+      <%= link_to workouts_path, class: "app-header__title" do %>
+        🏋️ 筋トレ Daily Quest
+      <% end %>
+      <%= link_to root_path, class: "app-header__portal" do %>
+        <span class="app-header__portal-icon">⛩️</span>ポータル
+      <% end %>
+    </header>
+
+    <main>
+      <% flash.each do |type, message| %>
+        <div class="flash flash-<%= type %>"><%= message %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <nav class="bottom-nav">
+      <%= link_to workouts_path, class: "bottom-nav__item #{'is-active' if controller_name == 'workouts'}" do %>
+        <span class="bottom-nav__icon">🏠</span>ダッシュボード
+      <% end %>
+      <%= link_to workout_days_path, class: "bottom-nav__item #{'is-active' if controller_name == 'workout_days'}" do %>
+        <span class="bottom-nav__icon">📋</span>記録
+      <% end %>
+      <%= link_to exercises_path, class: "bottom-nav__item #{'is-active' if controller_name == 'exercises'}" do %>
+        <span class="bottom-nav__icon">💪</span>種目
+      <% end %>
+      <%= link_to weekly_reviews_path, class: "bottom-nav__item #{'is-active' if controller_name == 'weekly_reviews'}" do %>
+        <span class="bottom-nav__icon">📅</span>週次
+      <% end %>
+      <%= link_to badges_path, class: "bottom-nav__item #{'is-active' if controller_name == 'badges'}" do %>
+        <span class="bottom-nav__icon">🎖️</span>称号
+      <% end %>
+    </nav>
+  </body>
+</html>
