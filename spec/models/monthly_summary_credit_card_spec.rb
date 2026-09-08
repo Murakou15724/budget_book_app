@@ -29,4 +29,20 @@ RSpec.describe MonthlySummary, ".build_for_month" do
     expect(summary.credit_card_expense).to eq(4000)
     expect(summary.expense_actual).to eq(5000)
   end
+
+  it "credit_card_expense_unpaidはうちクレカ利用額のうち未払いの分だけを合計する" do
+    Transaction.create!(
+      date: Date.new(2028, 7, 10), entry_type: :actual, direction: :expense, amount: 4000,
+      category: category, payment_method: credit, account: credit_account, credit_card_status: :unpaid
+    )
+    Transaction.create!(
+      date: Date.new(2028, 7, 20), entry_type: :actual, direction: :expense, amount: 3000,
+      category: category, payment_method: credit, account: credit_account, credit_card_status: :paid
+    )
+
+    summary = MonthlySummary.build_for_month(2028, 7)
+
+    expect(summary.credit_card_expense).to eq(7000)
+    expect(summary.credit_card_expense_unpaid).to eq(4000)
+  end
 end

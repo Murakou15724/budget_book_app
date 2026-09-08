@@ -14,6 +14,9 @@ module DashboardHelper
   BAR_Y_AXIS_WIDTH = 44
   BAR_Y_TICK_STEP = 10_000
   BAR_Y_MIN_SPAN = 20_000
+  # 残り予算%がこの値以下になったら危険マークを表示する(0%を下回った場合も含む)。
+  BUDGET_REMAINING_DANGER_THRESHOLD = 0.25
+
   # 1本の棒が占める幅の割合(残りは前後の棒との間隔になる)
   BAR_FILL_RATIO = 0.6
   # 回転させたカテゴリ名ラベルが重なり合わずに読める最低限の幅(px)。
@@ -114,5 +117,19 @@ module DashboardHelper
     content_tag(:div, class: "chart-with-fixed-axis") do
       y_axis_svg + content_tag(:div, body_svg, class: "chart-body")
     end
+  end
+
+  # 残り予算%が0%を下回っている(予算オーバー)場合だけ赤字にする。
+  # 予算が未設定(0円)の場合は判定に意味が無いので何も付けない。
+  def budget_remaining_rate_value_class(summary)
+    return "" if summary.monthly_budget.zero?
+
+    summary.budget_remaining_rate.negative? ? "is-negative" : ""
+  end
+
+  # 残り予算%がBUDGET_REMAINING_DANGER_THRESHOLD以下(0%を下回る場合も含む)なら
+  # 危険マークを表示する対象かどうか。予算未設定の場合は対象外。
+  def budget_remaining_rate_warning?(summary)
+    summary.monthly_budget.positive? && summary.budget_remaining_rate <= BUDGET_REMAINING_DANGER_THRESHOLD
   end
 end
