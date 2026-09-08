@@ -10,6 +10,10 @@ Rails.application.routes.draw do
   get "ping", to: "ping#show"
 
   get "dashboard", to: "dashboard#index"
+
+  # 筋トレ記録(仮ルーティング。今後専用のリソースへ置き換える想定)
+  get "workouts", to: "workouts#index"
+
   resources :transactions, except: [:show] do
     collection do
       patch :mark_credit_card_paid
@@ -53,5 +57,5 @@ Rails.application.routes.draw do
   match "/:status_code", to: "errors#show", via: :all, constraints: { status_code: /\d{3}/ }
 
   # Defines the root path route ("/")
-  root "dashboard#index"
+  root "home#index"
 end
