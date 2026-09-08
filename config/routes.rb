@@ -11,8 +11,16 @@ Rails.application.routes.draw do
 
   get "dashboard", to: "dashboard#index"
 
-  # 筋トレ記録(仮ルーティング。今後専用のリソースへ置き換える想定)
+  # 筋トレ記録
   get "workouts", to: "workouts#index"
+  resources :workout_days
+  resources :exercises, except: [:show]
+  resources :badges, except: [:show]
+  get "weekly_reviews", to: "weekly_reviews#index"
+  get "weekly_reviews/:week_start_date/edit", to: "weekly_reviews#edit", as: :edit_weekly_review,
+      constraints: { week_start_date: /\d{4}-\d{2}-\d{2}/ }
+  patch "weekly_reviews/:week_start_date", to: "weekly_reviews#update", as: :weekly_review,
+      constraints: { week_start_date: /\d{4}-\d{2}-\d{2}/ }
 
   resources :transactions, except: [:show] do
     collection do

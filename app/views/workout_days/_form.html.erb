@@ -1,0 +1,73 @@
+<%= form_with model: workout_day do |f| %>
+  <% if workout_day.errors.any? %>
+    <div class="error-messages">
+      <% workout_day.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :date, "日付" %>
+    <%= f.date_field :date, required: true %>
+  </div>
+
+  <div class="field">
+    <%= f.label :status, "状態" %>
+    <%= f.select :status, WorkoutDay.statuses.keys.map { |k| [WorkoutDay::STATUS_LABELS[k], k] } %>
+  </div>
+
+  <div class="field">
+    <%= f.label :mood, "気分" %>
+    <%= f.text_field :mood, placeholder: "良い / 普通 / 最高 など" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :memo, "メモ" %>
+    <%= f.text_area :memo, rows: 3 %>
+  </div>
+
+  <h2>種目(「実施」の場合は1つ以上入力)</h2>
+  <%= f.fields_for :workout_entries do |entry_f| %>
+    <div class="card">
+      <% if entry_f.object.persisted? %>
+        <div class="field">
+          <label><%= entry_f.check_box :_destroy %> この種目を削除</label>
+        </div>
+      <% end %>
+      <div class="field">
+        <%= entry_f.label :exercise_id, "種目" %>
+        <%= entry_f.collection_select :exercise_id, Exercise.order(:name), :id, :name, include_blank: true %>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <%= entry_f.label :sets, "セット" %>
+          <%= entry_f.number_field :sets %>
+        </div>
+        <div class="field">
+          <%= entry_f.label :reps, "回数" %>
+          <%= entry_f.number_field :reps %>
+        </div>
+        <div class="field">
+          <%= entry_f.label :weight_kg, "重量kg" %>
+          <%= entry_f.number_field :weight_kg, step: 0.5 %>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <%= entry_f.label :duration_min, "時間分" %>
+          <%= entry_f.number_field :duration_min %>
+        </div>
+        <div class="field">
+          <%= entry_f.label :rpe, "RPE(1-10)" %>
+          <%= entry_f.number_field :rpe, min: 1, max: 10 %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= f.submit "保存" %>
+    <%= link_to "キャンセル", workout_days_path %>
+  </div>
+<% end %>

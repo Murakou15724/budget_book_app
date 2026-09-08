@@ -1,0 +1,31 @@
+<h1>種目マスタ</h1>
+
+<%= link_to "種目を追加", new_exercise_path, class: "btn-add" %>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>種目名</th>
+        <th>部位</th>
+        <th>標準セット/回数/重量/時間</th>
+        <th>メモ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @exercises.each do |exercise| %>
+        <tr>
+          <td><%= exercise.name %></td>
+          <td><%= exercise.body_part %></td>
+          <td><%= exercise.default_sets %>set / <%= exercise.default_reps %>回 / <%= exercise.default_weight_kg %>kg / <%= exercise.default_duration_min %>分</td>
+          <td><%= exercise.memo %></td>
+          <td>
+            <%= link_to "編集", edit_exercise_path(exercise) %>
+            <%= link_to "削除", exercise_path(exercise), data: { turbo_method: :delete, turbo_confirm: "「#{exercise.name}」を削除しますか？" } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
