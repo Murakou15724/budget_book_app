@@ -27,6 +27,7 @@ module Gemini
         required: %w[date direction amount]
       }
     }.freeze
+    REQUIRED_ITEM_KEYS = %w[date direction amount].freeze
 
     def initialize(image_bytes:, mime_type:)
       @image_bytes = image_bytes
@@ -108,10 +109,22 @@ module Gemini
       items = JSON.parse(text)
       return ExtractionResult.failure("Gemini APIから予期しない形式の応答が返されました。") unless items.is_a?(Array)
 
-      ExtractionResult.success(items)
+      # responseSchemaで指定した形式(Hash・必須キー)を満たさない要素は、そのまま渡すと
+      # ImageImportDraftBuilderで中身の無いドラフトが静かに作られてしまうため除外する。
+      valid_items = items.select { |item| valid_item?(item) }
+      if items.any? && valid_items.empty?
+        Rails.logger.error("Gemini response items did not match the expected schema: #{items.inspect}")
+        return ExtractionResult.failure("Gemini APIから予期しない形式の応答が返されました。")
+      end
+
+      ExtractionResult.success(valid_items)
     rescue JSON::ParserError => e
       Rails.logger.error("Gemini response parse error: #{e.message}")
       ExtractionResult.failure("Gemini APIの応答の解析に失敗しました。")
+    end
+
+    def valid_item?(item)
+      item.is_a?(Hash) && REQUIRED_ITEM_KEYS.all? { |key| item.key?(key) }
     end
   end
 end

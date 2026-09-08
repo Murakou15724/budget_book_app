@@ -6,9 +6,14 @@
 <% if @drafts.empty? %>
   <p class="text-muted">レビュー待ちの候補はありません。</p>
 <% else %>
-  <% reject_button = button_to "選択した候補をまとめて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
+  <%# チェックボックスは承認フォーム(bulk_approve)専用で、この却下ボタンは選択状態に
+      関わらず表示中の候補を全件却下する。個別に却下したい場合は各候補の
+      「この候補を却下」リンクを使うこと。ボタン名を実際の挙動に合わせておく
+      (「選択した候補」ではなく「表示中の候補」)ことで、選択を残したつもりが
+      全部消える事故を防ぐ。 %>
+  <% reject_button = button_to "表示中の候補をすべて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
         method: :delete, params: { draft_ids: @drafts.map(&:id) },
-        form: { data: { turbo_confirm: "表示中の候補をすべて却下しますか？" } }, class: "btn" %>
+        form: { data: { turbo_confirm: "表示中の候補(#{@drafts.size}件)をすべて却下しますか？チェックボックスの選択状態は関係なく全件が対象です。" } }, class: "btn" %>
 
   <%= reject_button %>
 
@@ -22,6 +27,7 @@
       すべて選択
     </label>
 
+    <% category_options = [["支出", @expense_categories.pluck(:name, :id)], ["収入", @income_categories.pluck(:name, :id)]] %>
     <div class="entry-list">
       <% @drafts.each do |draft| %>
         <div class="entry-card">
@@ -43,10 +49,7 @@
           <div class="field">
             <%= label_tag nil, "カテゴリ" %>
             <%= select_tag "drafts[#{draft.id}][category_id]",
-                  grouped_options_for_select(
-                    [["支出", @expense_categories.pluck(:name, :id)], ["収入", @income_categories.pluck(:name, :id)]],
-                    draft.category_id
-                  ),
+                  grouped_options_for_select(category_options, draft.category_id),
                   include_blank: draft.category_id ? false : (draft.suggested_category_name.presence || "選択してください") %>
             <% if draft.category_id.nil? && draft.suggested_category_name.present? %>
               <span class="badge badge-neutral">AI推定: <%= draft.suggested_category_name %>(未一致)</span>

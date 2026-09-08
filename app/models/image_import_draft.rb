@@ -11,6 +11,7 @@ class ImageImportDraft < ApplicationRecord
   validates :batch_id, presence: true
 
   def resolved?
-    (category_id.present? || transfer? || investment?) && payment_method_id.present? && account_id.present?
+    (category_id.present? || transfer? || investment?) && payment_method_id.present? && account_id.present? &&
+      amount.to_i.positive?
   end
 end

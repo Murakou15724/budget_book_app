@@ -43,6 +43,14 @@ RSpec.describe "image imports with multiple files", type: :request do
     expect(ImageImportDraft.count).to eq(1)
   end
 
+  it "returns a friendly error instead of a 500 when images param is not an uploaded file" do
+    post image_imports_path, params: { images: ["not a file"] }
+
+    expect(response).to redirect_to(new_image_imports_path)
+    follow_redirect!
+    expect(response.body).to include("読み取れませんでした")
+  end
+
   it "shows an alert when no image is selected" do
     post image_imports_path, params: {}
     expect(response).to redirect_to(new_image_imports_path)

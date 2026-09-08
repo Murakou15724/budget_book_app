@@ -16,7 +16,7 @@ class ImageImportsController < ApplicationController
     images.each do |image|
       validation_error = validate_image(image)
       if validation_error
-        errors << "#{image.original_filename}: #{validation_error}"
+        errors << "#{image_label(image)}: #{validation_error}"
         next
       end
 
@@ -24,7 +24,7 @@ class ImageImportsController < ApplicationController
       if result.success?
         items.concat(result.items)
       else
-        errors << "#{image.original_filename}: #{result.error_message}"
+        errors << "#{image_label(image)}: #{result.error_message}"
       end
     end
 
@@ -49,10 +49,17 @@ class ImageImportsController < ApplicationController
   private
 
   def validate_image(image)
+    return "アップロードされたファイルを読み取れませんでした。" unless image.respond_to?(:content_type) && image.respond_to?(:size)
     return "対応していないファイル形式です(jpeg/png/webpのみ)。" unless ALLOWED_CONTENT_TYPES.include?(image.content_type)
     return "ファイルサイズが大きすぎます(8MBまで)。" if image.size > MAX_FILE_SIZE
 
     nil
+  end
+
+  # 通常のファイル選択では起きないが、不正な送信でparams[:images]の要素が
+  # アップロードファイルでない(original_filenameを持たない)場合に備える。
+  def image_label(image)
+    image.respond_to?(:original_filename) ? image.original_filename : "(不明なファイル)"
   end
 
   # 承認不要設定の場合、マスタ突合が完全なドラフトのみその場でTransaction化する。
