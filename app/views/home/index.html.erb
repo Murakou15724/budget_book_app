@@ -1,0 +1,15 @@
+<div class="app-launcher">
+  <h1 class="app-launcher__title">アプリを選択</h1>
+
+  <div class="app-launcher__grid">
+    <%= link_to dashboard_path, class: "app-launcher__tile app-launcher__tile--budget" do %>
+      <span class="app-launcher__icon">💰</span>
+      <span class="app-launcher__label">家計簿</span>
+    <% end %>
+
+    <%= link_to workouts_path, class: "app-launcher__tile app-launcher__tile--workout" do %>
+      <span class="app-launcher__icon">🏋️</span>
+      <span class="app-launcher__label">筋トレ記録</span>
+    <% end %>
+  </div>
+</div>
