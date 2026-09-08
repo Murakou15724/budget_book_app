@@ -6,7 +6,7 @@
   <%= link_to "#{@year + 1}年 →", edit_budget_plan_path(year: @year + 1) %>
 </div>
 <%= render "application/info_note", icon: "💡",
-      text: "カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算が使われます。基本月予算もここから変更できます。" %>
+      text: "カテゴリごとに1〜12月の予算を個別に設定できます。空欄の月は基本月予算が使われます。基本月予算もここから変更できます。「収入見込み」はダッシュボードの収支見込みの計算に使われます。" %>
 
 <%= form_with url: budget_plan_path, method: :patch do %>
   <%= hidden_field_tag :year, @year %>
@@ -22,6 +22,16 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>収入見込み(基本手取り月収)</strong></td>
+          <td><%= number_field_tag "income_estimate_base", @income_estimate_base, class: "input-compact" %></td>
+          <% (1..12).each do |month| %>
+            <% existing = @income_estimate_overrides[month] %>
+            <td>
+              <%= number_field_tag "income_estimate_budgets[#{month}]", existing&.amount || @income_estimate_base, class: "input-compact" %>
+            </td>
+          <% end %>
+        </tr>
         <% @categories.each do |category| %>
           <tr>
             <td><%= category.name %></td>

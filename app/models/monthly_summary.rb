@@ -2,15 +2,17 @@
 class MonthlySummary
   attr_reader :year, :month, :income_with_planned, :income_actual, :expense_actual,
               :monthly_budget, :monthly_savings_goal, :credit_card_expense, :credit_card_expense_unpaid,
-              :investment_actual
+              :investment_actual, :income_estimate
   attr_accessor :cumulative_balance
 
-  # 対象年の1〜12月分をまとめて計算する。年単位でTransaction/CategoryMonthlyBudgetを
-  # 一括取得してからメモリ上で集計することでN+1を避ける。
+  # 対象年の1〜12月分をまとめて計算する。年単位でTransaction/CategoryMonthlyBudget/
+  # IncomeMonthlyEstimateを一括取得してからメモリ上で集計することでN+1を避ける。
   def self.build_for_year(year)
     savings_goal = Setting.current.monthly_savings_goal || 0
+    income_estimate_base = Setting.current.monthly_income_estimate || 0
     expense_categories = Category.expense.to_a
     overrides_by_category = CategoryMonthlyBudget.where(year: year).group_by(&:category_id)
+    income_estimate_overrides = IncomeMonthlyEstimate.where(year: year).index_by(&:month)
 
     transactions_by_month = Transaction
                              .where(date: Date.new(year, 1, 1)..Date.new(year, 12, -1))
@@ -20,7 +22,8 @@ class MonthlySummary
     (1..12).map do |month|
       summary = for_month(
         year: year, month: month, month_transactions: transactions_by_month[month] || [],
-        expense_categories: expense_categories, overrides_by_category: overrides_by_category, savings_goal: savings_goal
+        expense_categories: expense_categories, overrides_by_category: overrides_by_category, savings_goal: savings_goal,
+        income_estimate_base: income_estimate_base, income_estimate_override: income_estimate_overrides[month]
       )
       cumulative += summary.actual_balance
       summary.cumulative_balance = cumulative
@@ -36,17 +39,21 @@ class MonthlySummary
       month_transactions: Transaction.where(date: Date.new(year, month, 1)..Date.new(year, month, -1)),
       expense_categories: Category.expense.to_a,
       overrides_by_category: CategoryMonthlyBudget.where(year: year, month: month).group_by(&:category_id),
-      savings_goal: Setting.current.monthly_savings_goal || 0
+      savings_goal: Setting.current.monthly_savings_goal || 0,
+      income_estimate_base: Setting.current.monthly_income_estimate || 0,
+      income_estimate_override: IncomeMonthlyEstimate.find_by(year: year, month: month)
     )
   end
 
-  def self.for_month(year:, month:, month_transactions:, expense_categories:, overrides_by_category:, savings_goal:)
+  def self.for_month(year:, month:, month_transactions:, expense_categories:, overrides_by_category:, savings_goal:,
+                      income_estimate_base:, income_estimate_override:)
     monthly_budget = expense_categories.sum do |category|
       override = overrides_by_category[category.id]&.find { |b| b.month == month }
       override&.budget || category.monthly_budget || 0
     end
 
     new(
+      income_estimate: income_estimate_override&.amount || income_estimate_base,
       year: year,
       month: month,
       income_with_planned: month_transactions.select(&:income?).sum(&:amount),
@@ -72,7 +79,7 @@ class MonthlySummary
   private_class_method :for_month
 
   def initialize(year:, month:, income_with_planned:, income_actual:, expense_actual:, monthly_budget:, monthly_savings_goal:,
-                 credit_card_expense:, credit_card_expense_unpaid:, investment_actual:)
+                 credit_card_expense:, credit_card_expense_unpaid:, investment_actual:, income_estimate:)
     @year = year
     @month = month
     @income_with_planned = income_with_planned
@@ -83,10 +90,23 @@ class MonthlySummary
     @credit_card_expense = credit_card_expense
     @credit_card_expense_unpaid = credit_card_expense_unpaid
     @investment_actual = investment_actual
+    @income_estimate = income_estimate
   end
 
   def actual_balance
     income_actual - expense_actual
+  end
+
+  # ダッシュボードの「収支見込み」用。収入見込み(budget_planで設定)を基準にすることで、
+  # 給与日を待たずに「今月はこのくらいの収支になりそうか」を早い段階で見られるようにする。
+  def balance_estimate
+    income_estimate - expense_actual
+  end
+
+  # その月がまだ終わっていない(=実績がまだ確定していない)かどうか。
+  # 月別集計画面で、進行中の月の実績収支を「未確定」として隠す判定に使う。
+  def ended?
+    Date.new(year, month, -1) < Date.current
   end
 
   def budget_remaining

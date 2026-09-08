@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_04_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_08_000002) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -83,6 +83,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_04_000002) do
     t.index ["payment_method_id"], name: "index_image_import_drafts_on_payment_method_id"
   end
 
+  create_table "income_monthly_estimates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "year", null: false
+    t.integer "month", null: false
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["year", "month"], name: "index_income_monthly_estimates_on_year_and_month", unique: true
+  end
+
   create_table "monthly_reviews", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "year", null: false
     t.integer "month", null: false
@@ -135,6 +144,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_04_000002) do
     t.integer "credit_card_closing_day", default: 31, null: false
     t.integer "credit_card_payment_day", default: 26, null: false
     t.bigint "credit_card_payment_account_id"
+    t.integer "monthly_income_estimate"
     t.index ["credit_card_payment_account_id"], name: "index_settings_on_credit_card_payment_account_id"
   end
 
