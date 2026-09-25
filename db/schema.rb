@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_08_010006) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_25_000001) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -186,8 +186,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_08_010006) do
     t.datetime "updated_at", null: false
     t.date "credit_card_payment_due_on_override"
     t.bigint "to_account_id"
+    t.date "credit_card_paid_on"
     t.index ["account_id"], name: "index_transactions_on_account_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
+    t.index ["credit_card_paid_on"], name: "index_transactions_on_credit_card_paid_on"
     t.index ["date"], name: "index_transactions_on_date"
     t.index ["direction", "entry_type"], name: "index_transactions_on_direction_and_entry_type"
     t.index ["payment_method_id"], name: "index_transactions_on_payment_method_id"

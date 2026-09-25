@@ -29,6 +29,8 @@ class Transaction < ApplicationRecord
   validates :credit_card_status, exclusion: { in: %w[unpaid paid], message: "はクレジットカード利用(支出)以外では設定できません" }, unless: :expense?
   validate :to_account_must_differ_from_account
 
+  before_save :sync_credit_card_paid_on
+
   scope :in_month, ->(year, month) { where(date: Date.new(year, month, 1)..Date.new(year, month, -1)) }
 
   # 予算対象: 収支区分・入力区分から導出する（DBには保持しない）
@@ -64,6 +66,19 @@ class Transaction < ApplicationRecord
   end
 
   private
+
+  # 支払予定日を引落日とみなし、引落による口座残高の減少を計上する日として保持する。
+  def sync_credit_card_paid_on
+    if paid?
+      return if will_save_change_to_credit_card_paid_on?
+      return unless will_save_change_to_credit_card_status? || will_save_change_to_date? ||
+                    will_save_change_to_credit_card_payment_due_on_override?
+
+      self.credit_card_paid_on = credit_card_payment_due_on
+    else
+      self.credit_card_paid_on = nil
+    end
+  end
 
   def to_account_must_differ_from_account
     return if to_account_id.blank? || to_account_id != account_id
