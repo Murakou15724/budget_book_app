@@ -20,7 +20,7 @@
   <div class="field">
     <%= f.label :direction, "取引種別" %>
     <%= f.select :direction, Transaction.directions.keys.map { |k| [Transaction::DIRECTION_LABELS[k], k] }, include_blank: true %>
-    <p class="text-muted">「振替」「投資」は口座間の資金移動で、消費ではないため支出合計には含まれません(例: クレカ引落・電子マネーへのチャージ・証券口座への入金)。</p>
+    <p class="text-muted">「振替」「投資」は口座間の資金移動で、消費ではないため支出合計には含まれません(例: 電子マネーへのチャージ・証券口座への入金)。クレカの引落は、クレカ未払い一覧で支払済にすると口座に反映されるため、振替として登録しないでください。</p>
   </div>
 
   <div class="field">
