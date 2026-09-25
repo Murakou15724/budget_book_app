@@ -47,4 +47,54 @@ RSpec.describe Transaction, type: :model do
 
     expect(transaction).to be_valid
   end
+
+  describe "クレカ引落日(credit_card_paid_on)" do
+    it "支払済に変更すると支払予定日を引落日として記録する" do
+      Setting.current.update!(credit_card_closing_day: 15, credit_card_payment_day: 26)
+      transaction = build_transaction(date: Date.new(2028, 7, 20), credit_card_status: :unpaid)
+      transaction.save!
+
+      transaction.update!(credit_card_status: :paid)
+
+      expect(transaction.reload.credit_card_paid_on).to eq(Date.new(2028, 9, 26))
+    end
+
+    it "支払済のまま他の項目を編集しても変更しない" do
+      transaction = build_transaction(credit_card_status: :paid, credit_card_paid_on: Date.new(2028, 9, 26))
+      transaction.save!
+
+      transaction.update!(memo: "修正")
+
+      expect(transaction.reload.credit_card_paid_on).to eq(Date.new(2028, 9, 26))
+    end
+
+    it "支払済のまま支払予定日を補正した場合は追従する" do
+      Setting.current.update!(credit_card_closing_day: 15, credit_card_payment_day: 26)
+      transaction = build_transaction(date: Date.new(2028, 7, 20), credit_card_status: :paid)
+      transaction.save!
+
+      transaction.update!(credit_card_payment_due_on_override: Date.new(2028, 10, 26))
+
+      expect(transaction.reload.credit_card_paid_on).to eq(Date.new(2028, 10, 26))
+    end
+
+    it "支払済のまま利用日を修正した場合は追従する" do
+      Setting.current.update!(credit_card_closing_day: 15, credit_card_payment_day: 26)
+      transaction = build_transaction(date: Date.new(2028, 7, 20), credit_card_status: :paid)
+      transaction.save!
+
+      transaction.update!(date: Date.new(2028, 8, 20))
+
+      expect(transaction.reload.credit_card_paid_on).to eq(Date.new(2028, 10, 26))
+    end
+
+    it "支払済以外に戻した場合はクリアする" do
+      transaction = build_transaction(credit_card_status: :paid, credit_card_paid_on: Date.new(2028, 9, 26))
+      transaction.save!
+
+      transaction.update!(credit_card_status: :unpaid)
+
+      expect(transaction.reload.credit_card_paid_on).to be_nil
+    end
+  end
 end

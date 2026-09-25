@@ -49,6 +49,132 @@ RSpec.describe AccountReconciliation do
     expect(described_class.build_for(current, previous)).to be_empty
   end
 
+  describe "クレカ引落による残高減少" do
+    let!(:credit_pending_account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 3) }
+    let!(:credit_method) { PaymentMethod.create!(name: "クレカ", position: 3) }
+
+    def create_credit_card_transaction(date:, account:, credit_card_status:, credit_card_paid_on: nil, amount: 5000)
+      Transaction.create!(
+        date: date, entry_type: :actual, direction: :expense, amount: amount,
+        category: category, payment_method: credit_method, account: account,
+        credit_card_status: credit_card_status, credit_card_paid_on: credit_card_paid_on
+      )
+    end
+
+    it "利用日が期間外でも、引落日が期間内であれば、引落元口座の減少として計上する" do
+      create_credit_card_transaction(
+        date: Date.new(2028, 7, 20), account: bank_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 95_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+
+    it "設定のクレカ引落元口座と異なる口座を選択した場合も、選択した口座の減少として計上する" do
+      Setting.current.update!(credit_card_payment_account: paypay_account)
+      create_credit_card_transaction(
+        date: Date.new(2028, 7, 20), account: bank_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000, paypay_account => 10_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 95_000, paypay_account => 10_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+
+    it "引落日が期間外であれば計上しない" do
+      create_credit_card_transaction(
+        date: Date.new(2028, 8, 5), account: bank_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 9, 26)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 100_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+
+    it "未払いのクレカ取引は計上しない" do
+      create_credit_card_transaction(date: Date.new(2028, 8, 5), account: credit_pending_account, credit_card_status: :unpaid)
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 100_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+
+    it "口座がクレカ仮置きのまま支払済の取引は、設定のクレカ引落元口座の減少として計上する" do
+      Setting.current.update!(credit_card_payment_account: bank_account)
+      create_credit_card_transaction(
+        date: Date.new(2028, 8, 5), account: credit_pending_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 95_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+
+    it "設定のクレカ引落元口座へ計上済みの取引は、口座選び間違いの候補に出さない" do
+      Setting.current.update!(credit_card_payment_account: bank_account)
+      create_credit_card_transaction(
+        date: Date.new(2028, 7, 20), account: credit_pending_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      # 記録漏れ等で、引落額(5,000円)と同額がさらに減っている
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 90_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(-5000)
+      expect(mismatch.candidate_causes).to be_empty
+    end
+
+    it "引落日が期間内のクレカ支払済取引が別の銀行口座にあれば、引落元口座の選び間違いの候補として提示する" do
+      other_bank = Account.create!(name: "ネット銀行", kind: :bank, position: 4)
+      payment = create_credit_card_transaction(
+        date: Date.new(2028, 7, 20), account: other_bank, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      # 実際は銀行から引き落とされたが、引落元口座にネット銀行を選んでしまった想定
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 95_000 })
+
+      candidate = described_class.build_for(current, previous).first.candidate_causes.first
+
+      expect(candidate.kind).to eq(:wrong_account)
+      expect(candidate.transaction).to eq(payment)
+      expect(candidate.message).to include("2028-08-28引落")
+    end
+
+    it "引落日が期間外のクレカ支払済取引は、口座選び間違いの候補に出さない" do
+      paypay_payment = create_credit_card_transaction(
+        date: Date.new(2028, 8, 5), account: paypay_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 9, 26)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      # 記録漏れ等で、上記の取引と同額(5,000円)が減っている
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 95_000 })
+
+      mismatch = described_class.build_for(current, previous).first
+
+      expect(mismatch.diff).to eq(-5000)
+      expect(mismatch.candidate_causes.map(&:transaction)).not_to include(paypay_payment)
+    end
+
+    it "口座がクレカ仮置きのまま支払済の取引は、設定のクレカ引落元口座が未設定なら計上しない" do
+      create_credit_card_transaction(
+        date: Date.new(2028, 8, 5), account: credit_pending_account, credit_card_status: :paid,
+        credit_card_paid_on: Date.new(2028, 8, 28)
+      )
+      previous = snapshot_with(recorded_on: Date.new(2028, 8, 1), balances: { bank_account => 100_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 100_000 })
+
+      expect(described_class.build_for(current, previous)).to be_empty
+    end
+  end
+
   describe "#candidate_causes" do
     let!(:cash_account) { Account.create!(name: "現金", kind: :cash, position: 3) }
 

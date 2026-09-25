@@ -58,11 +58,24 @@ class TransactionsController < ApplicationController
     end
   end
 
+  # 実際に引き落とされた銀行口座を取引の口座に反映し、資産スナップショットの残高と揃える。
   def mark_credit_card_paid
-    ids = Array(params[:transaction_ids])
-    updated = Transaction.unpaid.where(id: ids)
-                          .update_all(credit_card_status: Transaction.credit_card_statuses[:paid], updated_at: Time.current)
-    redirect_to credit_card_unpaids_path, notice: "#{updated}件の取引を支払済にしました。"
+    payment_account = Account.bank.find_by(id: params[:payment_account_id])
+    if payment_account.nil?
+      redirect_to credit_card_unpaids_path, alert: "引落元口座を選択してください。"
+      return
+    end
+
+    transactions = Transaction.unpaid.where(id: Array(params[:transaction_ids])).to_a
+    ActiveRecord::Base.transaction do
+      transactions.each { |transaction| transaction.update!(credit_card_status: :paid, account: payment_account) }
+    end
+    redirect_to credit_card_unpaids_path,
+                notice: "#{transactions.size}件の取引を支払済にしました(引落元: #{payment_account.name})。"
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to credit_card_unpaids_path,
+                alert: "#{e.record.date} ¥#{e.record.amount}の取引を更新できなかったため、支払済にしませんでした" \
+                       "(#{e.record.errors.full_messages.to_sentence})。"
   end
 
   # クレカ未払い一覧から、個別の取引だけ支払予定日を1サイクル前後にずらす

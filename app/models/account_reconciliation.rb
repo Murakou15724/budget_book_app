@@ -7,10 +7,11 @@
 # 制約(いずれもベストエフォート。完全な複式簿記ではない):
 # - kind: credit_pending(クレカ仮置き)の口座は対象外。現金ではなく「今後の支払義務」
 #   を表す特殊な口座のため、別途 .credit_card_pending_diff で扱う。
-# - クレジットカードの引落による口座残高の減少は、設定でクレカ引落元口座
-#   (Setting#credit_card_payment_account)が指定されている場合のみ考慮する。
-#   支払済への変更日時の履歴は保持していないため、updated_atが対象期間内かどうかで
-#   近似する(期間内に無関係な編集をした場合は誤差の原因になりうる)。
+# - クレジットカードの引落による口座残高の減少は、支払済にした取引の口座
+#   (クレカ未払い一覧で選択した引落元口座)から、引落日(credit_card_paid_on。支払予定日)
+#   の属する期間に計上する。利用日が期間外の取引も対象にする。
+#   口座がクレカ仮置きのまま支払済になっている取引は、設定のクレカ引落元口座
+#   (Setting#credit_card_payment_account)が指定されている場合のみ、その口座の減少として考慮する。
 class AccountReconciliation
   RECONCILABLE_KINDS = %w[bank e_money securities cash].freeze
 
@@ -26,7 +27,9 @@ class AccountReconciliation
     return [] if current_snapshot.nil? || previous_snapshot.nil?
 
     period = (previous_snapshot.recorded_on + 1)..current_snapshot.recorded_on
-    transactions = Transaction.actual.includes(:account, :category).where(date: period).to_a
+    transactions = Transaction.actual.where(date: period)
+                              .or(Transaction.actual.where(credit_card_paid_on: period))
+                              .includes(:account, :category).to_a
     payment_account_id = Setting.current.credit_card_payment_account_id
     prev_balances = previous_snapshot.asset_balances.index_by(&:account_id)
     curr_balances = current_snapshot.asset_balances.index_by(&:account_id)
@@ -122,11 +125,22 @@ class AccountReconciliation
     return(-t.amount) if t.account_id == account.id && t.expense? && t.not_applicable?
     return(-t.amount) if t.account_id == account.id && (t.transfer? || t.investment?)
     return t.amount if t.to_account_id == account.id && (t.transfer? || t.investment?)
-    return(-t.amount) if payment_account_id == account.id && t.paid? && period.cover?(t.updated_at.to_date)
+    return(-t.amount) if t.paid? && credit_card_debit_account_id(t, payment_account_id) == account.id &&
+                         credit_card_debited_in?(t, period)
 
     0
   end
   private_class_method :contribution_for
+
+  def self.credit_card_debit_account_id(transaction, payment_account_id)
+    transaction.account.credit_pending? ? payment_account_id : transaction.account_id
+  end
+  private_class_method :credit_card_debit_account_id
+
+  def self.credit_card_debited_in?(transaction, period)
+    transaction.credit_card_paid_on.present? && period.cover?(transaction.credit_card_paid_on)
+  end
+  private_class_method :credit_card_debited_in?
 
   def initialize(account:, expected_delta:, actual_delta:, period_transactions:, period:, payment_account_id:)
     @account = account
@@ -153,15 +167,19 @@ class AccountReconciliation
 
   # 差額と同じ金額の取引が、同じ期間の別口座に記録されている
   # -> 口座の選び間違いで、本来この口座の取引だったのではないか、という候補。
-  # ただし振替・投資の移動先(to_account_id)としてすでにこの口座の見込み増減に
+  # ただし振替・投資の移動先やクレカの引落元として、すでにこの口座の見込み増減に
   # 計上済みの取引は、そもそも「別口座の取引」ではないため除外する。
+  # 引落日が期間外のクレカ支払済取引も、口座を直しても今期の見込み増減が変わらないため除外する。
   def wrong_account_candidates
-    @period_transactions.select { |t| t.account_id != account.id && t.to_account_id != account.id && t.amount == diff.abs }
-                         .map do |t|
+    @period_transactions.select do |t|
+      t.account_id != account.id && contribution(t).zero? && t.amount == diff.abs &&
+        (!t.paid? || self.class.send(:credit_card_debited_in?, t, @period))
+    end.map do |t|
       Candidate.new(
         kind: :wrong_account, transaction: t,
         message: "#{t.date} #{t.account.name}の#{t.direction_label}¥#{t.amount}" \
-                 "(#{t.category&.name || t.direction_label}) — 本来#{account.name}の取引だった可能性はありませんか?"
+                 "(#{t.category&.name || t.direction_label}#{"、#{t.credit_card_paid_on}引落" if t.paid?})" \
+                 " — 本来#{account.name}の取引だった可能性はありませんか?"
       )
     end
   end
