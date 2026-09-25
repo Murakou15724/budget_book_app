@@ -6,6 +6,14 @@
       <h2><%= due_on.strftime("%-m月%-d日") %>払い分（<%= number_to_currency(transactions.sum(&:amount), unit: "¥", precision: 0) %> / <%= transactions.size %>件）</h2>
 
       <%= form_with url: mark_credit_card_paid_transactions_path, method: :patch do %>
+        <div class="field">
+          <%= label_tag "payment_account_id_#{due_on}", "引落元口座" %>
+          <%= select_tag :payment_account_id,
+                options_from_collection_for_select(payment_accounts, :id, :name, default_payment_account_id),
+                include_blank: "選択してください", required: true, id: "payment_account_id_#{due_on}" %>
+          <p class="text-muted">支払済にした取引の口座は、ここで選択した口座に変更されます。</p>
+        </div>
+
         <div class="actions">
           <%= submit_tag "この#{transactions.size}件を支払済にする",
                 data: { turbo_confirm: "#{transactions.size}件(#{number_to_currency(transactions.sum(&:amount), unit: '¥', precision: 0)})を支払済にしますか？" } %>

@@ -51,7 +51,7 @@
   <div class="field">
     <%= f.label :credit_card_payment_account_id, "クレジットカードの引落元口座(任意)" %>
     <%= f.collection_select :credit_card_payment_account_id, Account.order(:position, :name), :id, :name, include_blank: "未設定" %>
-    <p class="text-muted">設定すると、資産管理画面の残高整合性チェックで、クレカの支払済への変更をこの口座の残高減少として考慮します。</p>
+    <p class="text-muted">種別が「銀行」の口座を設定した場合、クレカ未払い一覧で支払済にする際の引落元口座の初期値になります。また、口座がクレカ仮置きのまま支払済になっている取引を、資産管理画面の残高整合性チェックでこの口座の残高減少として考慮します。</p>
   </div>
 
   <div class="actions">

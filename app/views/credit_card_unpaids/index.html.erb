@@ -13,4 +13,9 @@
   </div>
 </div>
 
-<%= render "grouped_form", grouped_transactions: @grouped_transactions %>
+<% if @grouped_transactions.any? && @payment_accounts.empty? %>
+  <p class="text-muted">支払済にするには引落元となる銀行口座が必要です。<%= link_to "口座マスタ", accounts_path %>で種別「銀行」の口座を登録してください。</p>
+<% end %>
+
+<%= render "grouped_form", grouped_transactions: @grouped_transactions,
+      payment_accounts: @payment_accounts, default_payment_account_id: @default_payment_account_id %>
