@@ -1,3 +1,7 @@
 <h1>資産スナップショットを追加</h1>
+<% if @latest_snapshot&.asset_balances&.any? %>
+  <%= render "application/info_note", icon: "📝",
+        text: "前回(#{@latest_snapshot.recorded_on})の残高を初期表示しています。実際の口座残高を確認して修正してください。" %>
+<% end %>
 
 <%= render "form", asset_snapshot: @asset_snapshot %>

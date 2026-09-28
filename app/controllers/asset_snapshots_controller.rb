@@ -28,7 +28,8 @@ class AssetSnapshotsController < ApplicationController
   def new
     @accounts = Account.order(:position, :name)
     @asset_snapshot = AssetSnapshot.new(recorded_on: Date.current)
-    build_missing_balances(@asset_snapshot)
+    @latest_snapshot = AssetSnapshot.includes(:asset_balances).newest_first.first
+    build_missing_balances(@asset_snapshot, prefill_from: @latest_snapshot)
   end
 
   def create
@@ -140,13 +141,15 @@ class AssetSnapshotsController < ApplicationController
     params.require(:asset_snapshot).permit(:recorded_on, :memo, asset_balances_attributes: [:id, :account_id, :balance])
   end
 
-  # 新規/編集フォームで全口座分の入力欄を表示するため、未入力の口座には空のAssetBalanceをビルドする
-  def build_missing_balances(asset_snapshot)
+  # 新規/編集フォームで全口座分の入力欄を表示するため、未入力の口座には空のAssetBalanceをビルドする。
+  # prefill_fromを渡すと、そのスナップショットに記録のある口座は記録済みの残高を初期値にする。
+  def build_missing_balances(asset_snapshot, prefill_from: nil)
     existing_account_ids = asset_snapshot.asset_balances.map(&:account_id)
+    prefill_balances = prefill_from ? prefill_from.asset_balances.index_by(&:account_id) : {}
     @accounts.each do |account|
       next if existing_account_ids.include?(account.id)
 
-      asset_snapshot.asset_balances.build(account: account)
+      asset_snapshot.asset_balances.build(account: account, balance: prefill_balances[account.id]&.balance)
     end
   end
 end
