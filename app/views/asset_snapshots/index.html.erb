@@ -49,7 +49,7 @@
     <% if @reconciliation_mismatches.present? %>
       <p class="text-muted">
         原因の候補を確認しても解消できない場合、内容を確認した上で
-        <%= link_to "差分を強制的に解消する", reconcile_preview_asset_snapshots_path %> こともできます。
+        <%= link_to "最新の残高を起点に集計し直す", baseline_preview_asset_snapshots_path %> こともできます。
       </p>
     <% end %>
   </div>
@@ -69,6 +69,11 @@
         <div class="stat-tile">
           <p class="stat-tile__label"><%= account.name %></p>
           <p class="stat-tile__value"><%= number_to_currency(balance.balance, unit: "¥", precision: 0) %></p>
+          <% if balance.reconciliation_baseline? %>
+            <span class="badge badge-neutral">集計の起点</span>
+            <%= link_to "解除", unmark_baseline_asset_snapshot_path(@latest_snapshot, account_id: account.id),
+                  data: { turbo_method: :patch, turbo_confirm: "#{account.name}の集計の起点を解除しますか？前回スナップショットとの差分が再び表示されます。" } %>
+          <% end %>
         </div>
       <% end %>
       <div class="stat-tile">
@@ -124,7 +129,14 @@
           <tr>
             <td><%= snapshot.recorded_on %></td>
             <% accounts.each do |account| %>
-              <td><%= number_to_currency(balances_by_account[account.id]&.balance, unit: "¥", precision: 0) if balances_by_account[account.id] %></td>
+              <td>
+                <% if balances_by_account[account.id] %>
+                  <%= number_to_currency(balances_by_account[account.id].balance, unit: "¥", precision: 0) %>
+                  <% if balances_by_account[account.id].reconciliation_baseline? %>
+                    <span class="badge badge-neutral">起点</span>
+                  <% end %>
+                <% end %>
+              </td>
             <% end %>
             <td><%= number_to_currency(snapshot.total_balance, unit: "¥", precision: 0) %></td>
             <td><%= number_to_currency(snapshot.goal_diff(@savings_goal), unit: "¥", precision: 0) %></td>

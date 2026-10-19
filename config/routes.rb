@@ -32,8 +32,11 @@ Rails.application.routes.draw do
   end
   resources :asset_snapshots, except: [:show] do
     collection do
-      get :reconcile_preview
-      patch :force_align
+      get :baseline_preview
+      patch :mark_baseline
+    end
+    member do
+      patch :unmark_baseline
     end
   end
   get "credit_card_unpaids", to: "credit_card_unpaids#index"
