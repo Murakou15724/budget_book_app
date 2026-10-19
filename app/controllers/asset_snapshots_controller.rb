@@ -66,55 +66,41 @@ class AssetSnapshotsController < ApplicationController
     end
   end
 
-  # 残高整合性チェックの差分を強制的に解消する前の確認画面。
-  # 実際の書き換えは行わず、変更前後の値を提示するだけ(警告1段階目)。
-  # スナップショットのidと内容の指紋(fingerprint)をhidden fieldで持たせ、
-  # force_align実行時に「確認画面を見てから内容が変わっていないか」を検証する。
-  def reconcile_preview
+  # 残高整合性チェックで差分の出ている口座を、最新スナップショットの残高を起点に集計し直すための確認画面。
+  def baseline_preview
     @current_snapshot, @previous_snapshot = latest_snapshot_pair
-    @plan = @previous_snapshot ? AccountReconciliation.force_align_plan(@current_snapshot, @previous_snapshot) : []
-    @fingerprint = AccountReconciliation.plan_fingerprint(@plan)
+    @mismatches = AccountReconciliation.build_for(@current_snapshot, @previous_snapshot)
   end
 
-  # 確認画面のチェックボックス同意(警告1段階目)とturbo_confirm(警告2段階目)の両方を
-  # 経てここに届く想定。confirmedパラメータが無い直接アクセスは、対策として拒否する。
-  # さらに、確認画面の表示後にスナップショット構成や取引内容が変わっていないかを
-  # snapshot id・fingerprintの突合で検証し、食い違えば実行せず確認をやり直させる。
-  def force_align
-    if params[:confirmed] != "1"
-      redirect_to reconcile_preview_asset_snapshots_path,
-                  alert: "内容を確認し、チェックボックスにチェックの上で実行してください。"
-      return
-    end
-
+  def mark_baseline
     current_snapshot, previous_snapshot = latest_snapshot_pair
-    if previous_snapshot.nil?
-      redirect_to asset_snapshots_path, alert: "資産スナップショットが2件以上登録されている必要があります。"
+    if current_snapshot.nil? || current_snapshot.id.to_s != params[:snapshot_id]
+      redirect_to baseline_preview_asset_snapshots_path,
+                  alert: "確認画面の表示後に最新のスナップショットが変更されました。内容を再確認してください。"
       return
     end
 
-    if current_snapshot.id.to_s != params[:current_snapshot_id] || previous_snapshot.id.to_s != params[:previous_snapshot_id]
-      redirect_to reconcile_preview_asset_snapshots_path,
-                  alert: "確認画面の表示後にスナップショットが変更されました。内容を再確認してください。"
+    account_ids = Array(params[:account_ids])
+    if account_ids.empty?
+      redirect_to baseline_preview_asset_snapshots_path, alert: "起点にする口座を選択してください。"
       return
     end
 
-    plan = AccountReconciliation.force_align_plan(current_snapshot, previous_snapshot)
-    if AccountReconciliation.plan_fingerprint(plan) != params[:plan_fingerprint]
-      redirect_to reconcile_preview_asset_snapshots_path,
-                  alert: "確認画面の表示後に取引などの内容が変わりました。もう一度内容を確認してください。"
+    marked = AccountReconciliation.mark_baseline!(current_snapshot, previous_snapshot, account_ids)
+    if marked.empty?
+      redirect_to asset_snapshots_path, alert: "選択した口座に差分が無いため、起点にしませんでした。"
       return
     end
 
-    if plan.empty?
-      redirect_to asset_snapshots_path, notice: "差分はありませんでした。"
-      return
-    end
-
-    AccountReconciliation.apply_plan!(plan)
-    summary = plan.map { |step| "#{step.account.name}: #{step.old_value}円→#{step.new_value}円" }.join(" / ")
     redirect_to asset_snapshots_path,
-                notice: "#{previous_snapshot.recorded_on}のスナップショットを書き換えました。#{summary}"
+                notice: "#{current_snapshot.recorded_on}の残高を集計の起点にしました(#{marked.map { |mismatch| mismatch.account.name }.join('、')})。"
+  end
+
+  def unmark_baseline
+    asset_snapshot = AssetSnapshot.find(params[:id])
+    asset_balance = asset_snapshot.asset_balances.find_by!(account_id: params[:account_id])
+    asset_balance.update!(reconciliation_baseline: false)
+    redirect_to asset_snapshots_path, notice: "#{asset_balance.account.name}の集計の起点を解除しました。"
   end
 
   private

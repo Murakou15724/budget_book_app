@@ -1,0 +1,55 @@
+<%= link_to "← 資産管理へ戻る", asset_snapshots_path, class: "back-link" %>
+
+<h1>残高を集計の起点にする</h1>
+
+<% if @mismatches.blank? %>
+  <p class="text-muted">現在、直近2回のスナップショット間に差分はありません。実行できる操作はありません。</p>
+  <%= link_to "資産管理へ戻る", asset_snapshots_path, class: "btn" %>
+<% else %>
+  <div class="reconciliation-warning">
+    <p class="reconciliation-warning__title">⚠ この操作について</p>
+    <p>
+      選択した口座について、<strong><%= @current_snapshot.recorded_on %>(最新)</strong>の残高を集計の起点にし、
+      <%= @previous_snapshot.recorded_on %>との差分をチェック対象から外します。次回以降のスナップショットは、この残高から集計し直してチェックします。
+    </p>
+    <p>
+      記録漏れ・二重登録の<strong>原因を特定するものではありません</strong>。過去のスナップショットの残高は変更しません。
+      起点は資産管理画面からいつでも解除でき、解除すると差分が再び表示されます。
+    </p>
+    <p class="text-muted">
+      実行する前に、資産管理画面の「原因の候補(自動推定)」に心当たりのある取引が無いか、一度確認することをおすすめします。
+    </p>
+  </div>
+
+  <%= form_with url: mark_baseline_asset_snapshots_path, method: :patch do |f| %>
+    <%= hidden_field_tag :snapshot_id, @current_snapshot.id %>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>起点にする</th>
+            <th>口座</th>
+            <th>見込み増減</th>
+            <th>実際の増減</th>
+            <th>差額</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @mismatches.each do |mismatch| %>
+            <tr>
+              <td><%= check_box_tag "account_ids[]", mismatch.account.id, true, id: "account_ids_#{mismatch.account.id}" %></td>
+              <td><label for="account_ids_<%= mismatch.account.id %>"><%= mismatch.account.name %></label></td>
+              <td><%= number_to_currency(mismatch.expected_delta, unit: "¥", precision: 0) %></td>
+              <td><%= number_to_currency(mismatch.actual_delta, unit: "¥", precision: 0) %></td>
+              <td><%= number_to_currency(mismatch.diff, unit: "¥", precision: 0) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <%= f.submit "選択した口座を起点にする", class: "btn-primary" %>
+      <%= link_to "キャンセル", asset_snapshots_path, class: "btn" %>
+    </div>
+  <% end %>
+<% end %>

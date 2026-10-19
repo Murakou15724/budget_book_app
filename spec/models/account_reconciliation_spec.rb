@@ -257,6 +257,56 @@ RSpec.describe AccountReconciliation do
     end
   end
 
+  describe "集計の起点" do
+    it "新しい方のスナップショットで起点にした口座は、前回との差分を報告しない" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000, paypay_account => 10_000 })
+      current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_000, paypay_account => 8000 })
+      current.asset_balances.find_by!(account: bank_account).update!(reconciliation_baseline: true)
+
+      expect(described_class.build_for(current.reload, previous).map(&:account)).to eq([paypay_account])
+    end
+
+    it "起点にした残高の次のスナップショットは、起点の残高からの増減で差分を判定する" do
+      previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+      baseline = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_000 })
+      described_class.mark_baseline!(baseline, previous, [bank_account.id])
+      Transaction.create!(
+        date: Date.new(2028, 8, 10), entry_type: :actual, direction: :expense, amount: 3000,
+        category: category, payment_method: cash_method, account: bank_account
+      )
+      latest = snapshot_with(recorded_on: Date.new(2028, 8, 31), balances: { bank_account => 92_000 })
+
+      expect(described_class.build_for(latest, baseline.reload)).to be_empty
+
+      latest.asset_balances.first.update!(balance: 90_000)
+      expect(described_class.build_for(latest.reload, baseline).first.diff).to eq(-2000)
+    end
+
+    describe ".mark_baseline!" do
+      it "差分のある口座のうち指定した口座だけを起点にし、過去のスナップショットは書き換えない" do
+        previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000, paypay_account => 10_000 })
+        current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 95_000, paypay_account => 8000 })
+
+        marked = described_class.mark_baseline!(current, previous, [bank_account.id.to_s])
+
+        expect(marked.map(&:account)).to eq([bank_account])
+        expect(current.asset_balances.find_by!(account: bank_account).reconciliation_baseline).to be(true)
+        expect(current.asset_balances.find_by!(account: paypay_account).reconciliation_baseline).to be(false)
+        previous_balances = previous.asset_balances.map(&:reload)
+        expect(previous_balances.map(&:balance)).to contain_exactly(100_000, 10_000)
+        expect(previous_balances.map(&:reconciliation_baseline)).to all(be(false))
+      end
+
+      it "差分の無い口座を指定しても起点にしない" do
+        previous = snapshot_with(recorded_on: Date.new(2028, 7, 1), balances: { bank_account => 100_000 })
+        current = snapshot_with(recorded_on: Date.new(2028, 7, 31), balances: { bank_account => 100_000 })
+
+        expect(described_class.mark_baseline!(current, previous, [bank_account.id])).to be_empty
+        expect(current.asset_balances.first.reload.reconciliation_baseline).to be(false)
+      end
+    end
+  end
+
   describe ".credit_card_pending_diff" do
     let!(:credit_pending_account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 3) }
     let!(:credit_method) { PaymentMethod.create!(name: "クレカ", position: 3) }
