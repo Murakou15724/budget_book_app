@@ -12,6 +12,8 @@
 #   の属する期間に計上する。利用日が期間外の取引も対象にする。
 #   口座がクレカ仮置きのまま支払済になっている取引は、設定のクレカ引落元口座
 #   (Setting#credit_card_payment_account)が指定されている場合のみ、その口座の減少として考慮する。
+# - 新しい方のスナップショットで集計の起点(AssetBalance#reconciliation_baseline)にした口座は、
+#   前回スナップショットとの比較をしない。以降はその残高から集計し直す。
 class AccountReconciliation
   RECONCILABLE_KINDS = %w[bank e_money securities cash].freeze
 
@@ -22,7 +24,7 @@ class AccountReconciliation
 
   attr_reader :account, :expected_delta, :actual_delta
 
-  # 直近2回のスナップショット間で、残高の記録があり見込みと食い違う口座だけを返す。
+  # 直近2回のスナップショット間で、残高の記録があり見込みと食い違う口座だけを返す(起点にした口座は除く)。
   def self.build_for(current_snapshot, previous_snapshot)
     return [] if current_snapshot.nil? || previous_snapshot.nil?
 
@@ -36,11 +38,11 @@ class AccountReconciliation
 
     Account.where(kind: RECONCILABLE_KINDS).filter_map do |account|
       prev_balance = prev_balances[account.id]&.balance
-      curr_balance = curr_balances[account.id]&.balance
-      next if prev_balance.nil? || curr_balance.nil?
+      curr_balance_record = curr_balances[account.id]
+      next if prev_balance.nil? || curr_balance_record.nil? || curr_balance_record.reconciliation_baseline?
 
       expected_delta = expected_delta_for(account, transactions, payment_account_id, period)
-      actual_delta = curr_balance - prev_balance
+      actual_delta = curr_balance_record.balance - prev_balance
       next if expected_delta == actual_delta
 
       new(
@@ -50,52 +52,18 @@ class AccountReconciliation
     end
   end
 
-  # 確認画面とforce_align実行時とで内容が変わっていないかの突合に使う指紋。
-  def self.plan_fingerprint(plan)
-    Digest::SHA256.hexdigest(plan.map { |step| [step.account.id, step.old_value, step.new_value] }.to_s)
-  end
-
-  # force_align_plan/force_align! の計算結果1件分(口座・変更前後の値)。
-  AlignmentStep = Struct.new(:account, :old_value, :new_value, :expected_delta, :balance_record, keyword_init: true) do
-    def diff
-      new_value - old_value
-    end
-  end
-
-  # 直近2回のスナップショット間の差分を「強制的に」解消する場合の変更内容を計算するだけで、
-  # 実際の書き換えは行わない(確認画面での表示用)。
-  # 新しい方(直近)のスナップショットは現在の実際の残高として変更せず、
-  # 古い方のスナップショットの値だけを見込み増減から逆算して書き換える対象にする。
-  def self.force_align_plan(current_snapshot, previous_snapshot)
+  # 新しい方のスナップショットで差分が出ている口座のうち、account_idsで指定された口座の残高を
+  # 集計の起点にする(過去のスナップショットは書き換えない)。起点にした口座の差分を返す。
+  def self.mark_baseline!(current_snapshot, previous_snapshot, account_ids)
+    account_ids = account_ids.map(&:to_i)
+    targets = build_for(current_snapshot, previous_snapshot).select { |mismatch| account_ids.include?(mismatch.account.id) }
     curr_balances = current_snapshot.asset_balances.index_by(&:account_id)
-    prev_balances = previous_snapshot.asset_balances.index_by(&:account_id)
 
-    build_for(current_snapshot, previous_snapshot).map do |mismatch|
-      previous_balance_record = prev_balances.fetch(mismatch.account.id)
-
-      AlignmentStep.new(
-        account: mismatch.account,
-        old_value: previous_balance_record.balance,
-        new_value: curr_balances.fetch(mismatch.account.id).balance - mismatch.expected_delta,
-        expected_delta: mismatch.expected_delta,
-        balance_record: previous_balance_record
-      )
-    end
-  end
-
-  # 計算済みのplanをそのままDBへ反映する(確認画面で提示した内容と実際の書き込み内容を
-  # 一致させるため、force_align!のように内部で再計算しない)。
-  def self.apply_plan!(plan)
     ActiveRecord::Base.transaction do
-      plan.each { |step| step.balance_record.update!(balance: step.new_value) }
+      targets.each { |mismatch| curr_balances.fetch(mismatch.account.id).update!(reconciliation_baseline: true) }
     end
 
-    plan
-  end
-
-  # force_align_planを計算してそのまま反映する(rakeタスク等、確認画面を経由しない用途向け)。
-  def self.force_align!(current_snapshot, previous_snapshot)
-    apply_plan!(force_align_plan(current_snapshot, previous_snapshot))
+    targets
   end
 
   # クレカ仮置き口座の「スナップショット記録時点の残高」と、現在の未払いクレカ取引合計を比較する。

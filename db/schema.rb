@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_25_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_19_000001) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -26,6 +26,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_25_000001) do
     t.integer "balance", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "reconciliation_baseline", default: false, null: false
     t.index ["account_id"], name: "index_asset_balances_on_account_id"
     t.index ["asset_snapshot_id", "account_id"], name: "index_asset_balances_on_snapshot_and_account", unique: true
     t.index ["asset_snapshot_id"], name: "index_asset_balances_on_asset_snapshot_id"
