@@ -1,0 +1,25 @@
+<section class="entry-card">
+  <h2><%= "画像#{image_number} / " if local_assigns[:image_number] %><%= link_to "取込文書 ##{document.id}", import_document_path(document) %></h2>
+  <p>取込元: <%= document.import_source.name %> / <%= document.import_source.service_key %> /
+    元口座: <%= document.import_source.account&.name || "不明（移行前）" %></p>
+  <p>受付日時: <%= l document.received_at, format: :short %> / 入力種別: <%= document.channel %></p>
+  <p>初回指定日: <%= document.manual_date || "指定なし" %> / 初回受付日: <%= document.fallback_date %>（再送では初回条件を維持します。変更は未処理候補を編集してください）</p>
+  <% if document.state == "extracted" %>
+    <% entries = document.import_entries.to_a %>
+    <% counts = entries.group_by(&:summary_classification).transform_values(&:size) %>
+    <p>解析完了 <%= entries.size %>行 / 新規 <%= counts.fetch("new", 0) %>件 / 重複 <%= counts.fetch("duplicate", 0) %>件 /
+      訂正 <%= counts.fetch("correction", 0) %>件 / 保留 <%= counts.fetch("hold", 0) %>件</p>
+    <% entries.group_by { |entry| entry.effective_entry.state }.each do |state, group| %>
+      <span><%= import_state_label(state) %>: <%= group.size %>件 / 金額 <%= group.sum { |entry| entry.image_import_draft&.amount.to_i } %>円</span>
+    <% end %>
+    <% entries.each do |entry| %>
+      <p>行<%= entry.row_number %>: <%= link_to "候補 ##{entry.id}", import_entry_path(entry) %>
+        <%= import_state_label(entry.effective_entry.state) %> / <%= import_reason_label(entry.effective_entry.reason_code) %>
+        <% if entry.reference_entry_id %> / 代表候補 <%= link_to "##{entry.reference_entry_id}", import_entry_path(entry.reference_entry_id) %><% end %>
+        <% if entry.effective_entry.target_transaction_id %> / 対応取引 #<%= entry.effective_entry.target_transaction_id %><% end %>
+      </p>
+    <% end %>
+  <% else %>
+    <p><%= document.state == "failed" ? "解析失敗" : "解析未完了" %>（取引行数不明） / <%= document.error_code %>。元画像を再アップロードして再試行できます。</p>
+  <% end %>
+</section>

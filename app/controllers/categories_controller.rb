@@ -36,7 +36,7 @@ class CategoriesController < ApplicationController
     if @category.destroy
       redirect_to categories_path, notice: "カテゴリ「#{name}」を削除しました。"
     else
-      redirect_to categories_path, alert: @category.errors.full_messages.to_sentence
+      redirect_to categories_path, alert: @category.errors.full_messages.to_sentence + "（取込候補・履歴で使用中のマスタは削除できません）"
     end
   end
 

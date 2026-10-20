@@ -1,0 +1,56 @@
+<h1>取込候補 #<%= @entry.id %></h1>
+<p><%= link_to "文書 ##{@entry.import_document_id}", import_document_path(@entry.import_document_id) %> / 行<%= @entry.row_number %> /
+  <%= @entry.import_document.import_source.name %> / 反映口座: <%= @draft.account&.name || "未選択" %></p>
+<p><%= import_state_label(@effective.state) %> / <%= import_reason_label(@effective.reason_code) %></p>
+<h2>元の候補（編集前）</h2><%= render "values", snapshot: @entry.payload %>
+<p>まとめ入力: 未導入（部分金額の配分は専用機能の対象です）</p>
+<% if @entry.reference_entry_id %>
+  <p>同じ外部ID・同じ内容です。<%= link_to "代表候補 ##{@effective.id} の結果・確認", import_entry_path(@effective) %></p>
+<% end %>
+<% if @effective.target_transaction_id %>
+  <p>対応取引 #<%= @effective.target_transaction_id %>（削除後も歴史IDを保持）</p>
+  <%= render "values", snapshot: @effective.target_snapshot %>
+  <% if Transaction.exists?(@effective.target_transaction_id) %><%= link_to "現在の取引を編集", edit_transaction_path(@effective.target_transaction_id) %><% end %>
+<% end %>
+<% unless @entry.reference_entry_id || @entry.terminal? %>
+  <%= render "comparison" %>
+  <h2>既存取引・予定を検索</h2>
+  <%= form_with url: import_entry_path(@entry), method: :get do %>
+    <%= label_tag "search_id", "取引ID" %><%= number_field_tag "search[id]", params.dig(:search, :id) %>
+    <%= label_tag "search_account_id", "口座" %><%= select_tag "search[account_id]", options_from_collection_for_select(Account.order(:name), :id, :name, params.dig(:search, :account_id)), include_blank: "すべて" %>
+    <%= label_tag "search_amount", "金額" %><%= number_field_tag "search[amount]", params.dig(:search, :amount) %>
+    <%= date_field_tag "search[from_date]", params.dig(:search, :from_date) %> ～ <%= date_field_tag "search[to_date]", params.dig(:search, :to_date) %>
+    <%= submit_tag "検索" %>
+  <% end %>
+  <% @targets.each do |target| %><p>取引 #<%= target.id %>: <%= target.date %> / <%= target.amount %>円 / <%= target.entry_type_label %> / <%= target.memo %></p><% end %>
+  <h2>候補を編集・判断</h2>
+  <%= form_with url: preview_import_entry_path(@entry), method: :post do %>
+    <%= fields_for :draft, @draft do |f| %>
+      <div class="field"><%= f.label :date, "日付" %><%= f.date_field :date %></div>
+      <div class="field"><%= f.label :direction, "収支" %><%= f.select :direction, Transaction::DIRECTION_LABELS.map { |k,v| [v,k] } %></div>
+      <div class="field"><%= f.label :amount, "金額" %><%= f.number_field :amount %></div>
+      <div class="field"><%= f.label :category_id, "カテゴリ" %><%= f.collection_select :category_id, Category.order(:name), :id, :name, include_blank: true %></div>
+      <div class="field"><%= f.label :payment_method_id, "支払方法" %><%= f.collection_select :payment_method_id, PaymentMethod.order(:name), :id, :name, include_blank: true %></div>
+      <div class="field"><%= f.label :account_id, "反映口座" %><%= f.collection_select :account_id, Account.order(:name), :id, :name, include_blank: true %></div>
+      <div class="field"><%= f.label :memo, "メモ" %><%= f.text_field :memo %></div>
+      <%= f.hidden_field :credit_card_status %><%= f.hidden_field :credit_card_payment_due_on_override %>
+    <% end %>
+    <%= label_tag :target_id, "同一と判断する取引ID（予定も選択可能）" %><%= number_field_tag :target_id, @target&.id %>
+    <%= select_tag :decision, options_for_select([["別取引として登録", "distinct"], ["既存取引・予定と同一", "link"], ["この訂正版を初回採用", "adopt_revision"], ["現在の取引内容を確認して対応を維持", "acknowledge_current"], ["削除を確認して再登録しない", "acknowledge_deleted"]], @action) %>
+    <%= submit_tag "編集値を保存して差分をプレビュー" %>
+  <% end %>
+  <% if @review_token %>
+    <h2>確認する差分</h2>
+    <p>操作: <%= ImportsHelper::ACTIONS.fetch(@action) %> / 対応先: <%= @target&.id || @entry.target_transaction_id %></p>
+    <%= render "values", snapshot: Imports::Fingerprint.draft_snapshot(@draft), comparison: @target && Imports::Fingerprint.transaction_snapshot(@target), label: "候補の編集値" %>
+    <% if @target %>
+      <% if @target.planned? && @action == "link" %><p>予定 → 実績: 取引ID #<%= @target.id %>を維持し、入力区分のみ実績へ変更。他の項目は維持します。</p><% end %>
+    <% end %>
+    <%= button_to "差分・比較候補を確認して実行", resolve_import_entry_path(@entry), method: :patch,
+      params: { decision: @action, target_id: @target&.id, review_token: @review_token } %>
+  <% end %>
+  <%= button_to "保留", resolve_import_entry_path(@entry), method: :patch, params: { decision: "hold" } %>
+  <%= button_to "却下", resolve_import_entry_path(@entry), method: :patch, params: { decision: "reject" } %>
+<% end %>
+<h2>処理履歴</h2>
+<% @events.each do |event| %><p><%= event.created_at %> / <%= event.kind %> / <%= import_reason_label(event.reason_code) %></p><pre><%= JSON.pretty_generate(event.details) %></pre><% end %>

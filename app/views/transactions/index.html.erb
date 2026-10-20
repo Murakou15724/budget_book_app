@@ -103,6 +103,9 @@
       </div>
       <div class="entry-card__actions">
         <%= link_to "編集", edit_transaction_path(transaction) %>
+        <% transaction.import_entries.each do |entry| %>
+          <%= link_to(entry.state == "conflict" ? "取込との対応を再確認" : "取込の出所", import_entry_path(entry)) %>
+        <% end %>
         <%= link_to "削除", transaction_path(transaction), data: { turbo_method: :delete, turbo_confirm: "この取引を削除しますか？" } %>
       </div>
     </div>

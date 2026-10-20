@@ -8,7 +8,7 @@ RSpec.describe "image import draft payment due override carries through to the t
   let!(:account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 1) }
 
   it "レビュー画面で支払予定日を手動で変更すると、登録された取引にも反映される" do
-    draft = ImageImportDraft.create!(
+    draft = tracked_draft(
       batch_id: "b1", date: Date.new(2028, 7, 25), direction: :expense, amount: 1000,
       category: category, payment_method: payment_method, account: account, credit_card_status: :unpaid
     )
@@ -31,7 +31,7 @@ RSpec.describe "image import draft payment due override carries through to the t
   end
 
   it "手動で変更しなかった(自動計算値のまま送信された)場合は上書きが残らない" do
-    draft = ImageImportDraft.create!(
+    draft = tracked_draft(
       batch_id: "b2", date: Date.new(2028, 7, 25), direction: :expense, amount: 1000,
       category: category, payment_method: payment_method, account: account, credit_card_status: :unpaid
     )

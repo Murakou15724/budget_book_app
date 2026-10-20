@@ -1,0 +1,10 @@
+<h1>取込履歴と処理結果</h1>
+<%= link_to "画像から取引を登録", new_image_imports_path %>
+<%= form_with url: import_documents_path, method: :get do %>
+  <%= label_tag :source_id, "取込元" %><%= select_tag :source_id, options_from_collection_for_select(ImportSource.order(:name), :id, :name, params[:source_id]), include_blank: "すべて" %>
+  <%= label_tag :state, "解析状態" %><%= select_tag :state, options_for_select([["解析完了", "extracted"], ["解析失敗", "failed"], ["未完了", "received"]], params[:state]), include_blank: "すべて" %>
+  <%= date_field_tag :from_date, params[:from_date] %> ～ <%= date_field_tag :to_date, params[:to_date] %><%= submit_tag "絞り込む" %>
+<% end %>
+<% @documents.each do |document| %><%= render "summary", document: document %><% end %>
+<%= link_to "前の50件", import_documents_path(request.query_parameters.merge(page: @page - 1)) if @page > 1 %>
+<%= link_to "次の50件", import_documents_path(request.query_parameters.merge(page: @page + 1)) if @documents.size == 50 %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_19_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -100,10 +100,98 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.date "credit_card_payment_due_on_override"
+    t.bigint "import_entry_id", null: false
+    t.index ["account_id", "direction", "amount", "date"], name: "index_image_import_drafts_on_import_match"
     t.index ["account_id"], name: "index_image_import_drafts_on_account_id"
     t.index ["batch_id"], name: "index_image_import_drafts_on_batch_id"
     t.index ["category_id"], name: "index_image_import_drafts_on_category_id"
+    t.index ["import_entry_id"], name: "index_image_import_drafts_on_import_entry_id", unique: true
     t.index ["payment_method_id"], name: "index_image_import_drafts_on_payment_method_id"
+  end
+
+  create_table "import_documents", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_source_id", null: false
+    t.string "channel", null: false
+    t.string "content_digest", limit: 64, null: false
+    t.string "batch_id", null: false
+    t.string "state", null: false
+    t.datetime "received_at", null: false
+    t.string "mime_type"
+    t.bigint "byte_size"
+    t.date "manual_date"
+    t.date "fallback_date"
+    t.string "pipeline_version"
+    t.string "error_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["batch_id"], name: "index_import_documents_on_batch_id"
+    t.index ["import_source_id", "channel", "content_digest"], name: "index_import_documents_on_input", unique: true
+    t.index ["import_source_id"], name: "index_import_documents_on_import_source_id"
+  end
+
+  create_table "import_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_document_id", null: false
+    t.integer "row_number", null: false
+    t.bigint "import_identity_id"
+    t.bigint "reference_entry_id"
+    t.json "payload", null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "classification", null: false
+    t.string "state", null: false
+    t.string "reason_code"
+    t.bigint "target_transaction_id"
+    t.json "target_snapshot"
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["import_document_id", "row_number"], name: "index_import_entries_on_document_row", unique: true
+    t.index ["import_document_id"], name: "index_import_entries_on_import_document_id"
+    t.index ["import_identity_id", "payload_digest"], name: "index_import_entries_on_identity_payload"
+    t.index ["import_identity_id"], name: "index_import_entries_on_import_identity_id"
+    t.index ["reference_entry_id"], name: "index_import_entries_on_reference_entry_id"
+    t.index ["target_transaction_id"], name: "index_import_entries_on_target_transaction_id"
+  end
+
+  create_table "import_events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_document_id", null: false
+    t.bigint "import_entry_id"
+    t.string "kind", null: false
+    t.string "reason_code"
+    t.json "details", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["import_document_id"], name: "index_import_events_on_import_document_id"
+    t.index ["import_entry_id"], name: "index_import_events_on_import_entry_id"
+  end
+
+  create_table "import_guards", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_import_guards_on_name", unique: true
+  end
+
+  create_table "import_identities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_source_id", null: false
+    t.text "external_id", null: false
+    t.string "external_id_digest", limit: 64, null: false
+    t.bigint "bound_entry_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bound_entry_id"], name: "index_import_identities_on_bound_entry_id"
+    t.index ["import_source_id", "external_id_digest"], name: "index_import_identities_on_external_key", unique: true
+    t.index ["import_source_id"], name: "index_import_identities_on_import_source_id"
+  end
+
+  create_table "import_sources", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "service_key", limit: 64, null: false
+    t.bigint "account_id"
+    t.string "name", null: false
+    t.boolean "legacy", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_import_sources_on_account_id"
+    t.index ["service_key", "account_id"], name: "index_import_sources_on_service_key_and_account_id", unique: true
   end
 
   create_table "income_monthly_estimates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -188,6 +276,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000001) do
     t.date "credit_card_payment_due_on_override"
     t.bigint "to_account_id"
     t.date "credit_card_paid_on"
+    t.index ["account_id", "direction", "amount", "date"], name: "index_transactions_on_import_match"
     t.index ["account_id"], name: "index_transactions_on_account_id"
     t.index ["category_id"], name: "index_transactions_on_category_id"
     t.index ["credit_card_paid_on"], name: "index_transactions_on_credit_card_paid_on"
@@ -245,7 +334,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000001) do
   add_foreign_key "category_monthly_budgets", "categories"
   add_foreign_key "image_import_drafts", "accounts"
   add_foreign_key "image_import_drafts", "categories"
+  add_foreign_key "image_import_drafts", "import_entries"
   add_foreign_key "image_import_drafts", "payment_methods"
+  add_foreign_key "import_documents", "import_sources"
+  add_foreign_key "import_entries", "import_documents"
+  add_foreign_key "import_entries", "import_entries", column: "reference_entry_id"
+  add_foreign_key "import_entries", "import_identities"
+  add_foreign_key "import_events", "import_documents"
+  add_foreign_key "import_events", "import_entries"
+  add_foreign_key "import_identities", "import_entries", column: "bound_entry_id"
+  add_foreign_key "import_identities", "import_sources"
+  add_foreign_key "import_sources", "accounts"
   add_foreign_key "quick_entry_templates", "accounts"
   add_foreign_key "quick_entry_templates", "accounts", column: "to_account_id"
   add_foreign_key "quick_entry_templates", "categories"

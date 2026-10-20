@@ -1,6 +1,15 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像取込レビュー</h1>
+<%= link_to "取込履歴", import_documents_path %>
+<p>対象文書 <%= @total_documents %>件 / <%= @page %> / <%= @total_pages %>ページ</p>
+<nav aria-label="レビュー対象文書のページ送り">
+  <%= link_to "前の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page - 1)) if @page > 1 %>
+  <%= link_to "次の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page + 1)) if @page < @total_pages %>
+</nav>
+<% @documents.each do |document| %>
+  <%= render "import_documents/summary", document: document, image_number: import_image_number(document) %>
+<% end %>
 <%= render "application/info_note", icon: "🔍", text: "AIが画像から読み取った内容です。必要に応じて修正してから登録してください。" %>
 
 <% if @drafts.empty? %>
@@ -11,13 +20,13 @@
       「この候補を却下」リンクを使うこと。ボタン名を実際の挙動に合わせておく
       (「選択した候補」ではなく「表示中の候補」)ことで、選択を残したつもりが
       全部消える事故を防ぐ。 %>
-  <% reject_button = button_to "表示中の候補をすべて却下", bulk_reject_image_import_drafts_path(batch_id: params[:batch_id]),
+  <% reject_button = button_to "表示中の候補をすべて却下", bulk_reject_image_import_drafts_path(draft_filter_params),
         method: :delete, params: { draft_ids: @drafts.map(&:id) },
         form: { data: { turbo_confirm: "表示中の候補(#{@drafts.size}件)をすべて却下しますか？チェックボックスの選択状態は関係なく全件が対象です。" } }, class: "btn" %>
 
   <%= reject_button %>
 
-  <%= form_with url: bulk_approve_image_import_drafts_path(batch_id: params[:batch_id]), method: :patch, data: { controller: "select-all" } do %>
+  <%= form_with url: bulk_approve_image_import_drafts_path(draft_filter_params), method: :patch, data: { controller: "select-all" } do %>
     <div class="actions">
       <%= submit_tag "選択した候補を承認して登録" %>
     </div>
@@ -31,6 +40,8 @@
     <div class="entry-list">
       <% @drafts.each do |draft| %>
         <div class="entry-card">
+          <%= link_to "候補 ##{draft.import_entry_id} の判定・同一／別取引の確認", import_entry_path(draft.import_entry) %>
+          <p><%= draft.import_entry.classification %> / <%= draft.import_entry.state %> / <%= import_reason_label(draft.import_entry.reason_code) %></p>
           <div class="field">
             <label><%= check_box_tag "draft_ids[]", draft.id, false, data: { select_all_target: "checkbox" } %> この候補を登録する</label>
           </div>
@@ -102,7 +113,7 @@
           <% end %>
 
           <div class="entry-card__actions">
-            <%= link_to "この候補を却下", image_import_draft_path(draft, batch_id: params[:batch_id]),
+            <%= link_to "この候補を却下", image_import_draft_path(draft, draft_filter_params),
                   data: { turbo_method: :delete, turbo_confirm: "この候補を却下しますか？" } %>
           </div>
         </div>
