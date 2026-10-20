@@ -51,6 +51,14 @@ Rails.application.routes.draw do
   resources :payment_methods, except: [:show]
   resources :quick_entry_templates, except: [:show]
   resource :image_imports, only: [:new, :create]
+  resources :import_sources, except: [:show, :destroy]
+  resources :import_documents, only: [:index, :show]
+  resources :import_entries, only: [:show] do
+    member do
+      post :preview
+      patch :resolve
+    end
+  end
   resources :image_import_drafts, only: [:index, :destroy] do
     collection do
       patch :bulk_approve

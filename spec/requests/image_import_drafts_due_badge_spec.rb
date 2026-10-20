@@ -6,11 +6,11 @@ RSpec.describe "image import drafts payment due date field", type: :request do
   end
 
   it "常に(現在のクレカ支払状況の選択に関わらず)支払予定日を編集できるフィールドを表示する" do
-    unpaid_draft = ImageImportDraft.create!(
+    unpaid_draft = tracked_draft(
       batch_id: "b1", date: Date.new(2028, 8, 20), direction: :expense, amount: 1000,
       credit_card_status: :unpaid
     )
-    cash_draft = ImageImportDraft.create!(
+    cash_draft = tracked_draft(
       batch_id: "b1", date: Date.new(2028, 8, 20), direction: :expense, amount: 500,
       credit_card_status: :not_applicable
     )
@@ -24,7 +24,7 @@ RSpec.describe "image import drafts payment due date field", type: :request do
   end
 
   it "日付が未確定のドラフトにはフィールドを表示しない" do
-    ImageImportDraft.create!(batch_id: "b1", date: nil, direction: :expense, amount: 1000, credit_card_status: :unpaid)
+    tracked_draft(batch_id: "b1", date: nil, direction: :expense, amount: 1000, credit_card_status: :unpaid)
 
     get image_import_drafts_path(batch_id: "b1")
 

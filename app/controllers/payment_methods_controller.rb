@@ -34,7 +34,7 @@ class PaymentMethodsController < ApplicationController
     if @payment_method.destroy
       redirect_to payment_methods_path, notice: "支払方法「#{name}」を削除しました。"
     else
-      redirect_to payment_methods_path, alert: @payment_method.errors.full_messages.to_sentence
+      redirect_to payment_methods_path, alert: @payment_method.errors.full_messages.to_sentence + "（取込候補・履歴で使用中のマスタは削除できません）"
     end
   end
 

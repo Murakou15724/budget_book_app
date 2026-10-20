@@ -4,6 +4,7 @@ class Category < ApplicationRecord
   KIND_LABELS = { "expense" => "支出", "income" => "収入" }.freeze
 
   has_many :category_monthly_budgets, dependent: :destroy
+  has_many :image_import_drafts, dependent: :restrict_with_error
   has_many :transactions, dependent: :restrict_with_error
   has_many :quick_entry_templates, dependent: :restrict_with_error
 

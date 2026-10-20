@@ -1,0 +1,6 @@
+<h1>文書の出所と結果</h1>
+<%= render "summary", document: @document %>
+<p>元ファイル SHA-256: <%= @document.content_digest %> / <%= @document.byte_size %> bytes</p>
+<p>元画像は保存していません。移行前の候補は現在値のみを引き継ぎ、真の抽出値・元画像・元口座は不明です。</p>
+<%= link_to "この文書の未処理候補を編集", image_import_drafts_path(document_ids: [@document.id]) %>
+<%= link_to "取込履歴", import_documents_path %>

@@ -1,5 +1,8 @@
 class Transaction < ApplicationRecord
   include CreditCardPaymentCycle
+  include ImportTargetTracking
+
+  has_many :import_entries, foreign_key: :target_transaction_id
 
   enum :entry_type, { actual: 0, planned: 1 }
   # 収入/支出に加え、振替(transfer)・投資(investment)を区別する。

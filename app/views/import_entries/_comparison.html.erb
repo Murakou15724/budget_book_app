@@ -1,0 +1,18 @@
+<h2>比較対象（自動検索: 同一口座・収支・金額・日付±7日）</h2>
+<% @match.transactions.each do |target| %>
+  <p>取引 #<%= target.id %> / <%= target.entry_type_label %> / <%= target.date %> / <%= target.amount %>円 /
+    <%= target.memo %> / <%= link_to "取引を編集", edit_transaction_path(target) %></p>
+  <%= render "values", snapshot: Imports::Fingerprint.transaction_snapshot(target), comparison: Imports::Fingerprint.draft_snapshot(@draft), label: "比較する取引の内容" %>
+<% end %>
+<% @match.drafts.each do |draft| %>
+  <p>未処理の比較候補: <%= link_to "##{draft.import_entry_id}", import_entry_path(draft.import_entry_id) %> / <%= draft.date %> / <%= draft.amount %>円 / <%= draft.memo %>。同一なら先に代表候補を登録してください。</p>
+  <%= render "values", snapshot: Imports::Fingerprint.draft_snapshot(draft), comparison: Imports::Fingerprint.draft_snapshot(@draft), label: "比較する未処理候補の内容" %>
+<% end %>
+<% if @entry.import_identity_id %>
+  <h3>同じ外部IDの版</h3>
+  <% @entry.import_identity.import_entries.where(reference_entry_id: nil).order(:id).each do |version| %>
+    <p><%= link_to "候補 ##{version.id}", import_entry_path(version) %> / <%= import_state_label(version.state) %>
+      <% if version.target_transaction_id %> / 対応取引 #<%= version.target_transaction_id %><% end %></p>
+    <%= render "values", snapshot: version.payload, comparison: @entry.payload, label: "この版の元明細" %>
+  <% end %>
+<% end %>

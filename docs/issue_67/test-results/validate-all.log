@@ -1,0 +1,823 @@
+検証対象: mysql2 / 127.0.0.1:33467 / budget_book_app_test_67
+Dropped database 'budget_book_app_test_67'
+Created database 'budget_book_app_test_67'
+== 20260813025621 CreateCategories: migrating =================================
+-- create_table(:categories)
+   -> 0.0060s
+-- add_index(:categories, [:kind, :name], {:unique=>true})
+   -> 0.0094s
+== 20260813025621 CreateCategories: migrated (0.0156s) ========================
+
+== 20260813025622 CreateAccounts: migrating ===================================
+-- create_table(:accounts)
+   -> 0.0059s
+-- add_index(:accounts, :name, {:unique=>true})
+   -> 0.0065s
+== 20260813025622 CreateAccounts: migrated (0.0125s) ==========================
+
+== 20260813025623 CreatePaymentMethods: migrating =============================
+-- create_table(:payment_methods)
+   -> 0.0061s
+-- add_index(:payment_methods, :name, {:unique=>true})
+   -> 0.0118s
+== 20260813025623 CreatePaymentMethods: migrated (0.0181s) ====================
+
+== 20260813025624 CreateSettings: migrating ===================================
+-- create_table(:settings)
+   -> 0.0061s
+== 20260813025624 CreateSettings: migrated (0.0062s) ==========================
+
+== 20260813025634 CreateCategoryMonthlyBudgets: migrating =====================
+-- create_table(:category_monthly_budgets)
+   -> 0.0073s
+-- add_index(:category_monthly_budgets, [:category_id, :year, :month], {:unique=>true, :name=>"index_category_monthly_budgets_on_category_year_month"})
+   -> 0.0069s
+== 20260813025634 CreateCategoryMonthlyBudgets: migrated (0.0144s) ============
+
+== 20260813025635 CreateTransactions: migrating ===============================
+-- create_table(:transactions)
+   -> 0.0205s
+-- add_index(:transactions, :date)
+   -> 0.0087s
+-- add_index(:transactions, [:direction, :entry_type])
+   -> 0.0082s
+== 20260813025635 CreateTransactions: migrated (0.0376s) ======================
+
+== 20260813025636 CreateAssetSnapshots: migrating =============================
+-- create_table(:asset_snapshots)
+   -> 0.0106s
+-- add_index(:asset_snapshots, :recorded_on)
+   -> 0.0062s
+== 20260813025636 CreateAssetSnapshots: migrated (0.0169s) ====================
+
+== 20260813025637 CreateAssetBalances: migrating ==============================
+-- create_table(:asset_balances)
+   -> 0.0092s
+-- add_index(:asset_balances, [:asset_snapshot_id, :account_id], {:unique=>true, :name=>"index_asset_balances_on_snapshot_and_account"})
+   -> 0.0080s
+== 20260813025637 CreateAssetBalances: migrated (0.0173s) =====================
+
+== 20260813025638 CreateMonthlyReviews: migrating =============================
+-- create_table(:monthly_reviews)
+   -> 0.0060s
+-- add_index(:monthly_reviews, [:year, :month], {:unique=>true})
+   -> 0.0081s
+== 20260813025638 CreateMonthlyReviews: migrated (0.0142s) ====================
+
+== 20260828031521 CreateQuickEntryTemplates: migrating ========================
+-- create_table(:quick_entry_templates)
+   -> 0.0116s
+-- add_index(:quick_entry_templates, :name, {:unique=>true})
+   -> 0.0081s
+== 20260828031521 CreateQuickEntryTemplates: migrated (0.0198s) ===============
+
+== 20260828035557 CreateImageImportDrafts: migrating ==========================
+-- create_table(:image_import_drafts)
+   -> 0.0099s
+-- add_index(:image_import_drafts, :batch_id)
+   -> 0.0126s
+== 20260828035557 CreateImageImportDrafts: migrated (0.0226s) =================
+
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrating =========
+-- add_column(:settings, :image_import_requires_approval, :boolean, {:null=>false, :default=>true})
+   -> 0.0124s
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrated (0.0124s)
+
+== 20260902033240 AddCreditCardCycleToSettings: migrating =====================
+-- add_column(:settings, :credit_card_closing_day, :integer, {:default=>15, :null=>false})
+   -> 0.0090s
+-- add_column(:settings, :credit_card_payment_day, :integer, {:default=>26, :null=>false})
+   -> 0.0095s
+== 20260902033240 AddCreditCardCycleToSettings: migrated (0.0187s) ============
+
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrating ======
+-- change_column_default(:settings, :credit_card_closing_day, {:from=>15, :to=>31})
+   -> 0.0103s
+-- execute("UPDATE settings SET credit_card_closing_day = 31 WHERE credit_card_closing_day = 15")
+   -> 0.0008s
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrated (0.0116s)
+
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrating
+-- add_column(:transactions, :credit_card_payment_due_on_override, :date)
+   -> 0.0139s
+-- add_column(:image_import_drafts, :credit_card_payment_due_on_override, :date)
+   -> 0.0105s
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrated (0.0245s)
+
+== 20260904000001 AddTransferSupportToTransactions: migrating =================
+-- change_column_null(:transactions, :category_id, true)
+   -> 0.0132s
+-- change_column_null(:quick_entry_templates, :category_id, true)
+   -> 0.0156s
+-- add_reference(:transactions, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0502s
+-- add_reference(:quick_entry_templates, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0351s
+== 20260904000001 AddTransferSupportToTransactions: migrated (0.1144s) ========
+
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrating ============
+-- add_reference(:settings, :credit_card_payment_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0304s
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrated (0.0305s) ===
+
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrating ===============
+-- add_column(:settings, :monthly_income_estimate, :integer)
+   -> 0.0112s
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrated (0.0113s) ======
+
+== 20260908000002 CreateIncomeMonthlyEstimates: migrating =====================
+-- create_table(:income_monthly_estimates)
+   -> 0.0058s
+-- add_index(:income_monthly_estimates, [:year, :month], {:unique=>true})
+   -> 0.0074s
+== 20260908000002 CreateIncomeMonthlyEstimates: migrated (0.0133s) ============
+
+== 20260908010001 CreateExercises: migrating ==================================
+-- create_table(:exercises)
+   -> 0.0086s
+-- add_index(:exercises, :name, {:unique=>true})
+   -> 0.0086s
+== 20260908010001 CreateExercises: migrated (0.0174s) =========================
+
+== 20260908010002 CreateWorkoutDays: migrating ================================
+-- create_table(:workout_days)
+   -> 0.0047s
+-- add_index(:workout_days, :date, {:unique=>true})
+   -> 0.0063s
+== 20260908010002 CreateWorkoutDays: migrated (0.0112s) =======================
+
+== 20260908010003 CreateWorkoutEntries: migrating =============================
+-- create_table(:workout_entries)
+   -> 0.0101s
+== 20260908010003 CreateWorkoutEntries: migrated (0.0102s) ====================
+
+== 20260908010004 CreateWeeklyReviews: migrating ==============================
+-- create_table(:weekly_reviews)
+   -> 0.0068s
+-- add_index(:weekly_reviews, :week_start_date, {:unique=>true})
+   -> 0.0069s
+== 20260908010004 CreateWeeklyReviews: migrated (0.0138s) =====================
+
+== 20260908010005 CreateBadges: migrating =====================================
+-- create_table(:badges)
+   -> 0.0057s
+-- add_index(:badges, :required_xp, {:unique=>true})
+   -> 0.0060s
+== 20260908010005 CreateBadges: migrated (0.0118s) ============================
+
+== 20260908010006 CreateWorkoutSettings: migrating ============================
+-- create_table(:workout_settings)
+   -> 0.0084s
+== 20260908010006 CreateWorkoutSettings: migrated (0.0085s) ===================
+
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrating ================
+-- add_column(:transactions, :credit_card_paid_on, :date)
+   -> 0.0154s
+-- add_index(:transactions, :credit_card_paid_on)
+   -> 0.0087s
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrated (0.0526s) =======
+
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrating =========
+-- add_column(:asset_balances, :reconciliation_baseline, :boolean, {:default=>false, :null=>false})
+   -> 0.0104s
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrated (0.0105s)
+
+旧候補3件・既存取引1件の移行fixtureを準備しました
+== 20261019000002 CreateImportTracking: migrating =============================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0179s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0079s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0076s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0106s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0018s
+-- add_foreign_key(:import_entries, :import_entries, {:column=>:reference_entry_id})
+   -> 0.0220s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0020s
+-- add_foreign_key(:import_identities, :import_entries, {:column=>:bound_entry_id})
+   -> 0.0141s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0188s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0042s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0020s
+-- add_column(:image_import_drafts, :import_entry_id, :bigint)
+   -> 0.0064s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0138s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0014s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0157s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0137s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0118s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0209s
+== 20261019000002 CreateImportTracking: migrated (0.3038s) ====================
+
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0013s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0009s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0009s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0009s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0021s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0009s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0009s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0007s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0011s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0011s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0009s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0009s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0008s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0076s
+==  CreateImportTracking: migrated (0.0484s) ==================================
+
+旧候補移行・再実行・旧取引不変・NOT NULL: OK
+移行fixtureを後片付けしました
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0019s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0011s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0012s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0022s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0015s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0010s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0011s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0008s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0013s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0125s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0014s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0187s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0016s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0011s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0173s
+==  CreateImportTracking: migrated (0.0872s) ==================================
+
+migration中断復旧: カラムのみ → unique/FK/NOT NULL OK
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0010s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0014s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0010s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0023s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0011s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0008s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0009s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0007s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0012s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0009s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0008s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0143s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0021s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0011s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0117s
+==  CreateImportTracking: migrated (0.0665s) ==================================
+
+migration中断復旧: カラム＋index → unique/FK/NOT NULL OK
+...........................***....**........................*...........*......*................................./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..............................................................................................................................................
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Account add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/account_spec.rb
+     # Not yet implemented
+     # ./spec/models/account_spec.rb:4
+
+  2) AssetBalance add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_balance_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_balance_spec.rb:4
+
+  3) AssetSnapshot add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_snapshot_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_snapshot_spec.rb:4
+
+  4) CategoryMonthlyBudget add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_monthly_budget_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_monthly_budget_spec.rb:4
+
+  5) Category add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_spec.rb:4
+
+  6) MonthlyReview add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/monthly_review_spec.rb
+     # Not yet implemented
+     # ./spec/models/monthly_review_spec.rb:4
+
+  7) PaymentMethod add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/payment_method_spec.rb
+     # Not yet implemented
+     # ./spec/models/payment_method_spec.rb:4
+
+  8) Setting add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/setting_spec.rb
+     # Not yet implemented
+     # ./spec/models/setting_spec.rb:4
+
+Finished in 14.57 seconds (files took 2.17 seconds to load)
+255 examples, 0 failures, 8 pending
+
+検証対象: postgresql / 127.0.0.1:55467 / budget_book_app_test_67
+Dropped database 'budget_book_app_test_67'
+Created database 'budget_book_app_test_67'
+== 20260813025621 CreateCategories: migrating =================================
+-- create_table(:categories)
+   -> 0.0042s
+-- add_index(:categories, [:kind, :name], {:unique=>true})
+   -> 0.0009s
+== 20260813025621 CreateCategories: migrated (0.0052s) ========================
+
+== 20260813025622 CreateAccounts: migrating ===================================
+-- create_table(:accounts)
+   -> 0.0028s
+-- add_index(:accounts, :name, {:unique=>true})
+   -> 0.0005s
+== 20260813025622 CreateAccounts: migrated (0.0034s) ==========================
+
+== 20260813025623 CreatePaymentMethods: migrating =============================
+-- create_table(:payment_methods)
+   -> 0.0020s
+-- add_index(:payment_methods, :name, {:unique=>true})
+   -> 0.0005s
+== 20260813025623 CreatePaymentMethods: migrated (0.0025s) ====================
+
+== 20260813025624 CreateSettings: migrating ===================================
+-- create_table(:settings)
+   -> 0.0015s
+== 20260813025624 CreateSettings: migrated (0.0015s) ==========================
+
+== 20260813025634 CreateCategoryMonthlyBudgets: migrating =====================
+-- create_table(:category_monthly_budgets)
+   -> 0.0045s
+-- add_index(:category_monthly_budgets, [:category_id, :year, :month], {:unique=>true, :name=>"index_category_monthly_budgets_on_category_year_month"})
+   -> 0.0012s
+== 20260813025634 CreateCategoryMonthlyBudgets: migrated (0.0058s) ============
+
+== 20260813025635 CreateTransactions: migrating ===============================
+-- create_table(:transactions)
+   -> 0.0046s
+-- add_index(:transactions, :date)
+   -> 0.0005s
+-- add_index(:transactions, [:direction, :entry_type])
+   -> 0.0005s
+== 20260813025635 CreateTransactions: migrated (0.0057s) ======================
+
+== 20260813025636 CreateAssetSnapshots: migrating =============================
+-- create_table(:asset_snapshots)
+   -> 0.0013s
+-- add_index(:asset_snapshots, :recorded_on)
+   -> 0.0005s
+== 20260813025636 CreateAssetSnapshots: migrated (0.0019s) ====================
+
+== 20260813025637 CreateAssetBalances: migrating ==============================
+-- create_table(:asset_balances)
+   -> 0.0043s
+-- add_index(:asset_balances, [:asset_snapshot_id, :account_id], {:unique=>true, :name=>"index_asset_balances_on_snapshot_and_account"})
+   -> 0.0009s
+== 20260813025637 CreateAssetBalances: migrated (0.0053s) =====================
+
+== 20260813025638 CreateMonthlyReviews: migrating =============================
+-- create_table(:monthly_reviews)
+   -> 0.0022s
+-- add_index(:monthly_reviews, [:year, :month], {:unique=>true})
+   -> 0.0015s
+== 20260813025638 CreateMonthlyReviews: migrated (0.0038s) ====================
+
+== 20260828031521 CreateQuickEntryTemplates: migrating ========================
+-- create_table(:quick_entry_templates)
+   -> 0.0067s
+-- add_index(:quick_entry_templates, :name, {:unique=>true})
+   -> 0.0005s
+== 20260828031521 CreateQuickEntryTemplates: migrated (0.0073s) ===============
+
+== 20260828035557 CreateImageImportDrafts: migrating ==========================
+-- create_table(:image_import_drafts)
+   -> 0.0052s
+-- add_index(:image_import_drafts, :batch_id)
+   -> 0.0005s
+== 20260828035557 CreateImageImportDrafts: migrated (0.0057s) =================
+
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrating =========
+-- add_column(:settings, :image_import_requires_approval, :boolean, {:null=>false, :default=>true})
+   -> 0.0015s
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrated (0.0016s)
+
+== 20260902033240 AddCreditCardCycleToSettings: migrating =====================
+-- add_column(:settings, :credit_card_closing_day, :integer, {:default=>15, :null=>false})
+   -> 0.0009s
+-- add_column(:settings, :credit_card_payment_day, :integer, {:default=>26, :null=>false})
+   -> 0.0007s
+== 20260902033240 AddCreditCardCycleToSettings: migrated (0.0016s) ============
+
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrating ======
+-- change_column_default(:settings, :credit_card_closing_day, {:from=>15, :to=>31})
+   -> 0.0033s
+-- execute("UPDATE settings SET credit_card_closing_day = 31 WHERE credit_card_closing_day = 15")
+   -> 0.0006s
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrated (0.0040s)
+
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrating
+-- add_column(:transactions, :credit_card_payment_due_on_override, :date)
+   -> 0.0007s
+-- add_column(:image_import_drafts, :credit_card_payment_due_on_override, :date)
+   -> 0.0004s
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrated (0.0011s)
+
+== 20260904000001 AddTransferSupportToTransactions: migrating =================
+-- change_column_null(:transactions, :category_id, true)
+   -> 0.0006s
+-- change_column_null(:quick_entry_templates, :category_id, true)
+   -> 0.0003s
+-- add_reference(:transactions, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0034s
+-- add_reference(:quick_entry_templates, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0018s
+== 20260904000001 AddTransferSupportToTransactions: migrated (0.0062s) ========
+
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrating ============
+-- add_reference(:settings, :credit_card_payment_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0029s
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrated (0.0030s) ===
+
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrating ===============
+-- add_column(:settings, :monthly_income_estimate, :integer)
+   -> 0.0010s
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrated (0.0010s) ======
+
+== 20260908000002 CreateIncomeMonthlyEstimates: migrating =====================
+-- create_table(:income_monthly_estimates)
+   -> 0.0015s
+-- add_index(:income_monthly_estimates, [:year, :month], {:unique=>true})
+   -> 0.0006s
+== 20260908000002 CreateIncomeMonthlyEstimates: migrated (0.0021s) ============
+
+== 20260908010001 CreateExercises: migrating ==================================
+-- create_table(:exercises)
+   -> 0.0022s
+-- add_index(:exercises, :name, {:unique=>true})
+   -> 0.0006s
+== 20260908010001 CreateExercises: migrated (0.0028s) =========================
+
+== 20260908010002 CreateWorkoutDays: migrating ================================
+-- create_table(:workout_days)
+   -> 0.0024s
+-- add_index(:workout_days, :date, {:unique=>true})
+   -> 0.0005s
+== 20260908010002 CreateWorkoutDays: migrated (0.0030s) =======================
+
+== 20260908010003 CreateWorkoutEntries: migrating =============================
+-- create_table(:workout_entries)
+   -> 0.0030s
+== 20260908010003 CreateWorkoutEntries: migrated (0.0031s) ====================
+
+== 20260908010004 CreateWeeklyReviews: migrating ==============================
+-- create_table(:weekly_reviews)
+   -> 0.0015s
+-- add_index(:weekly_reviews, :week_start_date, {:unique=>true})
+   -> 0.0005s
+== 20260908010004 CreateWeeklyReviews: migrated (0.0021s) =====================
+
+== 20260908010005 CreateBadges: migrating =====================================
+-- create_table(:badges)
+   -> 0.0014s
+-- add_index(:badges, :required_xp, {:unique=>true})
+   -> 0.0005s
+== 20260908010005 CreateBadges: migrated (0.0019s) ============================
+
+== 20260908010006 CreateWorkoutSettings: migrating ============================
+-- create_table(:workout_settings)
+   -> 0.0021s
+== 20260908010006 CreateWorkoutSettings: migrated (0.0022s) ===================
+
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrating ================
+-- add_column(:transactions, :credit_card_paid_on, :date)
+   -> 0.0006s
+-- add_index(:transactions, :credit_card_paid_on)
+   -> 0.0005s
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrated (0.0185s) =======
+
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrating =========
+-- add_column(:asset_balances, :reconciliation_baseline, :boolean, {:default=>false, :null=>false})
+   -> 0.0020s
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrated (0.0020s)
+
+旧候補3件・既存取引1件の移行fixtureを準備しました
+== 20261019000002 CreateImportTracking: migrating =============================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0049s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0057s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0049s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0159s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0021s
+-- add_foreign_key(:import_entries, :import_entries, {:column=>:reference_entry_id})
+   -> 0.0012s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0013s
+-- add_foreign_key(:import_identities, :import_entries, {:column=>:bound_entry_id})
+   -> 0.0010s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0025s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0020s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0026s
+-- add_column(:image_import_drafts, :import_entry_id, :bigint)
+   -> 0.0008s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0014s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0014s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0011s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0007s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0005s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0016s
+== 20261019000002 CreateImportTracking: migrated (0.1333s) ====================
+
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0023s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0021s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0018s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0028s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0037s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0016s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0014s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0098s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0013s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0006s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0015s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0004s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0004s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0005s
+==  CreateImportTracking: migrated (0.0444s) ==================================
+
+旧候補移行・再実行・旧取引不変・NOT NULL: OK
+移行fixtureを後片付けしました
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0022s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0026s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0021s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0030s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0013s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0011s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0012s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0007s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0009s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0008s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0011s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0009s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0004s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0006s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0007s
+==  CreateImportTracking: migrated (0.0409s) ==================================
+
+migration中断復旧: カラムのみ → unique/FK/NOT NULL OK
+==  CreateImportTracking: migrating ===========================================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0020s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0017s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0012s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0023s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0013s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0010s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0012s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0011s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0012s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0004s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0012s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0035s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0004s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0003s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0006s
+==  CreateImportTracking: migrated (0.0343s) ==================================
+
+migration中断復旧: カラム＋index → unique/FK/NOT NULL OK
+...........................***....**........................*...........*......*................................./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..............................................................................................................................................
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Account add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/account_spec.rb
+     # Not yet implemented
+     # ./spec/models/account_spec.rb:4
+
+  2) AssetBalance add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_balance_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_balance_spec.rb:4
+
+  3) AssetSnapshot add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_snapshot_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_snapshot_spec.rb:4
+
+  4) CategoryMonthlyBudget add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_monthly_budget_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_monthly_budget_spec.rb:4
+
+  5) Category add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_spec.rb:4
+
+  6) MonthlyReview add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/monthly_review_spec.rb
+     # Not yet implemented
+     # ./spec/models/monthly_review_spec.rb:4
+
+  7) PaymentMethod add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/payment_method_spec.rb
+     # Not yet implemented
+     # ./spec/models/payment_method_spec.rb:4
+
+  8) Setting add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/setting_spec.rb
+     # Not yet implemented
+     # ./spec/models/setting_spec.rb:4
+
+Finished in 11.05 seconds (files took 1.71 seconds to load)
+255 examples, 0 failures, 8 pending
+
+検証対象: mysql2 / 127.0.0.1:33467 / budget_book_app_test_67
+Dropped database 'budget_book_app_test_67'
+Created database 'budget_book_app_test_67'
+schemaロード直後: Guard 0件 / migration version OK
+...........................***....**........................*...........*......*................................./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..............................................................................................................................................
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Account add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/account_spec.rb
+     # Not yet implemented
+     # ./spec/models/account_spec.rb:4
+
+  2) AssetBalance add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_balance_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_balance_spec.rb:4
+
+  3) AssetSnapshot add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_snapshot_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_snapshot_spec.rb:4
+
+  4) CategoryMonthlyBudget add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_monthly_budget_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_monthly_budget_spec.rb:4
+
+  5) Category add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_spec.rb:4
+
+  6) MonthlyReview add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/monthly_review_spec.rb
+     # Not yet implemented
+     # ./spec/models/monthly_review_spec.rb:4
+
+  7) PaymentMethod add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/payment_method_spec.rb
+     # Not yet implemented
+     # ./spec/models/payment_method_spec.rb:4
+
+  8) Setting add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/setting_spec.rb
+     # Not yet implemented
+     # ./spec/models/setting_spec.rb:4
+
+Finished in 11.58 seconds (files took 0.92256 seconds to load)
+255 examples, 0 failures, 8 pending
+
+検証対象: postgresql / 127.0.0.1:55467 / budget_book_app_test_67
+Dropped database 'budget_book_app_test_67'
+Created database 'budget_book_app_test_67'
+schemaロード直後: Guard 0件 / migration version OK
+...........................***....**........................*...........*......*................................./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+..............................................................................................................................................
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Account add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/account_spec.rb
+     # Not yet implemented
+     # ./spec/models/account_spec.rb:4
+
+  2) AssetBalance add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_balance_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_balance_spec.rb:4
+
+  3) AssetSnapshot add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_snapshot_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_snapshot_spec.rb:4
+
+  4) CategoryMonthlyBudget add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_monthly_budget_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_monthly_budget_spec.rb:4
+
+  5) Category add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_spec.rb:4
+
+  6) MonthlyReview add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/monthly_review_spec.rb
+     # Not yet implemented
+     # ./spec/models/monthly_review_spec.rb:4
+
+  7) PaymentMethod add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/payment_method_spec.rb
+     # Not yet implemented
+     # ./spec/models/payment_method_spec.rb:4
+
+  8) Setting add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/setting_spec.rb
+     # Not yet implemented
+     # ./spec/models/setting_spec.rb:4
+
+Finished in 13.1 seconds (files took 0.7673 seconds to load)
+255 examples, 0 failures, 8 pending
+
+全検証完了: 両DBの旧候補移行・中断復旧・migration/schema構築後RSpec OK

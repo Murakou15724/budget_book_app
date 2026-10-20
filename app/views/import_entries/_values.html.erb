@@ -1,0 +1,14 @@
+<% comparison = local_assigns[:comparison] %>
+<table>
+  <thead><tr><th>項目</th><th><%= local_assigns[:label] || "内容" %></th><% if comparison %><th>比較する内容</th><% end %></tr></thead>
+  <tbody>
+    <% (snapshot.keys + (comparison&.keys || [])).uniq.each do |key| %>
+      <% next unless ImportsHelper::FIELDS.key?(key) %>
+      <tr>
+        <th><%= ImportsHelper::FIELDS.fetch(key) %></th>
+        <td><%= import_value(key, snapshot[key], snapshot) %></td>
+        <% if comparison %><td><%= "変更: " if snapshot[key] != comparison[key] %><%= import_value(key, comparison[key], comparison) %></td><% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

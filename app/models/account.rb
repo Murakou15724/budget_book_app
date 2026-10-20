@@ -9,6 +9,8 @@ class Account < ApplicationRecord
     "credit_pending" => "未払管理"
   }.freeze
 
+  has_many :image_import_drafts, dependent: :restrict_with_error
+  has_many :import_sources, dependent: :restrict_with_error
   has_many :transactions, dependent: :restrict_with_error
   has_many :incoming_transfers, class_name: "Transaction", foreign_key: :to_account_id, inverse_of: :to_account,
                                  dependent: :restrict_with_error

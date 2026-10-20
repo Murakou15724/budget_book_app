@@ -1,0 +1,7 @@
+<h1>取込元の設定</h1>
+<%= link_to "取込元を追加", new_import_source_path %>
+<%= link_to "画像から取引を登録", new_image_imports_path %>
+<% @sources.each do |source| %>
+  <p><%= source.name %> / <%= source.service_key %> / 元口座: <%= source.account.name %>
+    <%= link_to "表示名を編集", edit_import_source_path(source) %></p>
+<% end %>

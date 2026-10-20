@@ -1,5 +1,5 @@
 class TransactionsController < ApplicationController
-  before_action :set_transaction, only: [:edit, :update, :destroy, :shift_credit_card_payment_due_on]
+  before_action :set_transaction, only: [:edit]
 
   # 表示期間の切り替えボタン。表示順もこの並びに従う。
   DATE_RANGES = [
@@ -12,7 +12,7 @@ class TransactionsController < ApplicationController
   def index
     @date_range_key = resolve_date_range_key
     @from_date, @to_date = date_bounds_for(@date_range_key)
-    @transactions = filtered_transactions.includes(:category, :payment_method, :account).order(date: :desc, id: :desc)
+    @transactions = filtered_transactions.includes(:category, :payment_method, :account, :import_entries).order(date: :desc, id: :desc)
     @quick_entry_templates = QuickEntryTemplate.order(:position, :name)
   end
 
@@ -32,7 +32,7 @@ class TransactionsController < ApplicationController
 
   def create
     @transaction = Transaction.new(transaction_params)
-    if @transaction.save
+    if ImportGuard.synchronize { @transaction.save }
       redirect_to transactions_path, notice: "取引を登録しました。"
     else
       render :new, status: :unprocessable_entity
@@ -43,7 +43,7 @@ class TransactionsController < ApplicationController
   end
 
   def update
-    if @transaction.update(transaction_params)
+    if ImportGuard.synchronize { set_transaction; @transaction.update(transaction_params) }
       redirect_to transactions_path, notice: "取引を更新しました。"
     else
       render :edit, status: :unprocessable_entity
@@ -51,7 +51,7 @@ class TransactionsController < ApplicationController
   end
 
   def destroy
-    if @transaction.destroy
+    if ImportGuard.synchronize { set_transaction; @transaction.destroy }
       redirect_to transactions_path, notice: "取引を削除しました。"
     else
       redirect_to transactions_path, alert: @transaction.errors.full_messages.to_sentence
@@ -66,8 +66,9 @@ class TransactionsController < ApplicationController
       return
     end
 
-    transactions = Transaction.unpaid.where(id: Array(params[:transaction_ids])).to_a
-    ActiveRecord::Base.transaction do
+    transactions = []
+    ImportGuard.synchronize do
+      transactions = Transaction.unpaid.where(id: Array(params[:transaction_ids])).order(:id).lock.to_a
       transactions.each { |transaction| transaction.update!(credit_card_status: :paid, account: payment_account) }
     end
     redirect_to credit_card_unpaids_path,
@@ -81,9 +82,12 @@ class TransactionsController < ApplicationController
   # クレカ未払い一覧から、個別の取引だけ支払予定日を1サイクル前後にずらす
   # (取込日と処理日のズレ等で、自動計算通りにならない例外に対応するため)。
   def shift_credit_card_payment_due_on
-    months = params[:direction] == "prev" ? -1 : 1
-    target_month = @transaction.credit_card_payment_due_on.advance(months: months).beginning_of_month
-    @transaction.update!(credit_card_payment_due_on_override: Transaction.resolve_payment_due_date(target_month))
+    ImportGuard.synchronize do
+      set_transaction
+      months = params[:direction] == "prev" ? -1 : 1
+      target_month = @transaction.credit_card_payment_due_on.advance(months: months).beginning_of_month
+      @transaction.update!(credit_card_payment_due_on_override: Transaction.resolve_payment_due_date(target_month))
+    end
     redirect_to credit_card_unpaids_path,
                 notice: "支払予定日を#{@transaction.credit_card_payment_due_on.strftime('%-m/%-d')}に変更しました。"
   end

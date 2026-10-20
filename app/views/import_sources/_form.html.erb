@@ -1,0 +1,12 @@
+<%= form_with model: @source do |f| %>
+  <p><%= @source.errors.full_messages.to_sentence %></p>
+  <div class="field"><%= f.label :name, "表示名" %><%= f.text_field :name, required: true %></div>
+  <% if @source.new_record? %>
+    <div class="field"><%= f.label :service_key, "サービスキー（半角小文字・数字・_.-）" %><%= f.text_field :service_key, required: true %></div>
+    <div class="field"><%= f.label :account_id, "元口座" %><%= f.collection_select :account_id, Account.order(:position, :name), :id, :name, { include_blank: "選択してください" }, required: true %></div>
+    <p>同じサービス・元口座の取込元は再利用します。設定後にサービス・元口座は変更できません。</p>
+  <% else %>
+    <p><%= @source.service_key %> / <%= @source.account.name %></p>
+  <% end %>
+  <%= f.submit "保存" %>
+<% end %>

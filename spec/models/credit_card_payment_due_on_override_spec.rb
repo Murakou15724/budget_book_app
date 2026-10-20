@@ -58,7 +58,7 @@ RSpec.describe "ImageImportDraft credit_card_payment_due_on_override" do
   before { Setting.current.update!(credit_card_closing_day: 31, credit_card_payment_day: 26) }
 
   it "ImageImportDraftでも同じ上書きルールが適用される(Transactionと同じconcernを共用)" do
-    draft = ImageImportDraft.new(date: Date.new(2028, 7, 25), direction: :expense, amount: 1000, batch_id: "b1")
+    draft = tracked_draft(date: Date.new(2028, 7, 25), direction: :expense, amount: 1000, batch_id: "b1")
     calculated = draft.calculated_credit_card_payment_due_on
 
     draft.credit_card_payment_due_on_override = calculated

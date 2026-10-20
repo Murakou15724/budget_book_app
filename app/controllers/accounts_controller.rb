@@ -34,7 +34,7 @@ class AccountsController < ApplicationController
     if @account.destroy
       redirect_to accounts_path, notice: "口座「#{name}」を削除しました。"
     else
-      redirect_to accounts_path, alert: @account.errors.full_messages.to_sentence
+      redirect_to accounts_path, alert: @account.errors.full_messages.to_sentence + "（取込候補・履歴で使用中のマスタは削除できません）"
     end
   end
 

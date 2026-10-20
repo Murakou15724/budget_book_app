@@ -42,7 +42,7 @@ module Gemini
     rescue Net::OpenTimeout, Net::ReadTimeout
       ExtractionResult.failure("Gemini APIへの接続がタイムアウトしました。時間をおいて再試行してください。")
     rescue StandardError => e
-      Rails.logger.error("Gemini::TransactionExtractor failed: #{e.class}: #{e.message}")
+      Rails.logger.error("Gemini::TransactionExtractor failed: #{e.class}")
       ExtractionResult.failure("画像の解析に失敗しました。")
     end
 
@@ -98,7 +98,7 @@ module Gemini
 
     def parse_response(response)
       unless response.is_a?(Net::HTTPSuccess)
-        Rails.logger.error("Gemini API error: #{response.code} #{response.body}")
+        Rails.logger.error("Gemini API error: #{response.code}")
         return ExtractionResult.failure("Gemini APIの呼び出しに失敗しました(#{response.code})。")
       end
 
@@ -113,13 +113,13 @@ module Gemini
       # ImageImportDraftBuilderで中身の無いドラフトが静かに作られてしまうため除外する。
       valid_items = items.select { |item| valid_item?(item) }
       if items.any? && valid_items.empty?
-        Rails.logger.error("Gemini response items did not match the expected schema: #{items.inspect}")
+        Rails.logger.error("Gemini response schema mismatch")
         return ExtractionResult.failure("Gemini APIから予期しない形式の応答が返されました。")
       end
 
       ExtractionResult.success(valid_items)
     rescue JSON::ParserError => e
-      Rails.logger.error("Gemini response parse error: #{e.message}")
+      Rails.logger.error("Gemini response parse error")
       ExtractionResult.failure("Gemini APIの応答の解析に失敗しました。")
     end
 
