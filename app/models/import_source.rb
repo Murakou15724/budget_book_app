@@ -1,4 +1,6 @@
 class ImportSource < ApplicationRecord
+  include ImportConfigurationGuard
+  has_many :import_classification_rules, dependent: :restrict_with_error
   belongs_to :account, optional: true
   has_many :import_documents, dependent: :restrict_with_error
   has_many :import_identities, dependent: :restrict_with_error

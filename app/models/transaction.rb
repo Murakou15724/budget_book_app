@@ -68,6 +68,11 @@ class Transaction < ApplicationRecord
           .to_h
   end
 
+  def normalize_import_payment_values
+    clear_redundant_credit_card_payment_due_on_override
+    sync_credit_card_paid_on
+  end
+
   private
 
   # 支払予定日を引落日とみなし、引落による口座残高の減少を計上する日として保持する。

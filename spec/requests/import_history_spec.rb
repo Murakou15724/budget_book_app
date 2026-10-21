@@ -28,7 +28,7 @@ RSpec.describe "import history", type: :request do
   it "処理済み・却下済みでも出所・元候補・理由・歴史取引IDを辿れる" do
     account = Account.create!(name: "履歴口座", kind: :bank)
     category = Category.create!(name: "食費", kind: :expense)
-    payment = PaymentMethod.create!(name: "現金")
+    payment = PaymentMethod.create!(import_kind: "bank", name: "銀行振込")
     draft = tracked_draft(account: account, category: category, payment_method: payment,
       date: Date.new(2026, 10, 1), amount: 500, direction: :expense, memo: "履歴テスト")
     entry = draft.import_entry

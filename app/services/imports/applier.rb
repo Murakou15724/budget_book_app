@@ -1,7 +1,7 @@
 module Imports
   class Applier
-    Result = Struct.new(:status, :entry, :reason, keyword_init: true)
-    ACTIONS = %w[approve distinct link adopt_revision hold reject acknowledge_current acknowledge_deleted].freeze
+    Result = Struct.new(:status, :entry, :reason, :reason_codes, :target_id, keyword_init: true)
+    ACTIONS = %w[auto_apply approve distinct link adopt_revision hold reject acknowledge_current acknowledge_deleted].freeze
     REVIEWED_ACTIONS = %w[distinct link adopt_revision acknowledge_current acknowledge_deleted].freeze
     TRANSIENT_ERRORS = [ActiveRecord::RecordNotUnique, ActiveRecord::Deadlocked, ActiveRecord::LockWaitTimeout].freeze
 
@@ -9,8 +9,10 @@ module Imports
       new(**arguments).call
     end
 
-    def initialize(entry_id:, action:, attributes: {}, target_id: nil, review_token: nil)
+    def initialize(entry_id:, action:, attributes: {}, target_id: nil, review_token: nil, confirmation: {})
       @entry_id, @action, @target_id, @token = entry_id, action.to_s, target_id, review_token
+      @confirmation = confirmation
+      @automatic_arguments_invalid = @action == "auto_apply" && (attributes.present? || target_id.present? || review_token.present?)
       @attributes = attributes.to_h.stringify_keys.slice(*ImageImportDraft::EDITABLE_ATTRIBUTES)
     end
 
@@ -32,7 +34,7 @@ module Imports
     private
 
     def process
-      raise ArgumentError unless ACTIONS.include?(@action)
+      return Result.new(status: :failed, reason: "invalid_action") unless ACTIONS.include?(@action) && !@automatic_arguments_invalid
 
       # Guardが先行するため、全て最新のlocking readで取得できる。
       document_id = ImportEntry.where(id: @entry_id).pick(:import_document_id)
@@ -58,12 +60,24 @@ module Imports
       end
 
       draft = ImageImportDraft.lock.find_by!(import_entry_id: @entry.id)
-      draft.assign_attributes(@attributes)
+      if @action == "approve"
+        CandidateConfirmation.apply(draft, attributes: @attributes, confirmation: @confirmation)
+      else
+        draft.assign_attributes(@attributes)
+      end
       @entry.reload
       if REVIEWED_ACTIONS.include?(@action) && (draft.changed? || !ReviewToken.valid?(@token, entry: @entry, action: @action, target_id: @target_id))
         return result(:held, "review_expired")
       end
+      if @action == "link"
+        failure = planned_target_failure(draft)
+        return failure if failure
+      end
+      before = Fingerprint.draft_snapshot(ImageImportDraft.find(draft.id))
       draft.save!
+      if @action == "approve"
+        @entry.event!("edited", details: { "before" => before, "after" => Fingerprint.draft_snapshot(draft), "confirmation" => draft.confirmation_metadata })
+      end
 
       case @action
       when "reject"
@@ -87,7 +101,22 @@ module Imports
       return result(:held, "identity_already_bound") if bound
 
       match = Matcher.classify!(@entry)
-      if @action == "approve"
+      reasons = if @action == "auto_apply"
+        RuleResolver.automatic_reasons(@entry, draft)
+      else
+        CandidateValidator.call(draft: draft).reason_codes
+      end
+      if @action == "approve" && draft.account_id != @entry.import_document.import_source.account_id && !@entry.import_document.import_source.legacy?
+        reasons << "source_account_mismatch"
+      end
+      unless reasons.empty?
+        draft.update!(rule_decision: draft.rule_decision.merge("reason_codes" => reasons.uniq))
+        if @entry.reason_code.blank? || @entry.classification == "new"
+          @entry.update!(state: "held", reason_code: reasons.first)
+        end
+        return result(:held, reasons.first)
+      end
+      if %w[approve auto_apply].include?(@action)
         return result(:held) unless @entry.classification == "new" && @entry.state == "pending"
       elsif @action == "distinct"
         return result(:held, "external_id_changed") if @entry.classification == "correction"
@@ -101,8 +130,30 @@ module Imports
       transaction = Transaction.create!(draft.transaction_attributes)
       bind!(transaction, "applied", identity)
       @entry.event!("applied", details: { "after" => @entry.target_snapshot,
-        "transaction_ids" => match&.transactions&.map(&:id) || [], "entry_ids" => match&.drafts&.map(&:import_entry_id) || [], "selection" => @action })
+        "transaction_ids" => match&.transactions&.map(&:id) || [], "entry_ids" => match&.drafts&.map(&:import_entry_id) || [], "selection" => @action, "mode" => @action == "auto_apply" ? "automatic" : "manual",
+        "amount" => transaction.amount, "direction" => transaction.direction, "rule_decision" => draft.rule_decision,
+        "date_origin" => draft.date_origin, "confirmation" => draft.confirmation_metadata })
       result(:applied)
+    end
+
+    def planned_target_failure(draft)
+      target = Transaction.where(id: @target_id).lock.first
+      return unless target&.planned?
+
+      projection = target.dup
+      projection.clear_changes_information
+      projection.entry_type = "actual"
+      reasons = CandidateValidator.transaction_reasons(transaction: projection, context: :planned_promotion)
+      confirmed_move = %w[transfer investment].include?(draft.transaction_kind) && draft.transaction_kind == target.direction &&
+        draft.confirmation_metadata["confirmed_values"] == Fingerprint.draft_snapshot(draft) &&
+        CandidateValidator.call(draft: draft).reason_codes.empty?
+      reasons << "special_transaction" unless (draft.transaction_kind == "normal" && !target.transfer? && !target.investment?) || confirmed_move
+      origin = draft.confirmation_metadata["source_kind"]
+      move_origin = confirmed_move && %w[transfer charge investment unknown].include?(origin)
+      reasons << "special_transaction" if origin.present? && origin != "normal" && !move_origin
+      unless reasons.empty?
+        Result.new(status: :held, entry: @entry, reason: "invalid_planned_target", reason_codes: reasons.uniq, target_id: target.id)
+      end
     end
 
     def link(identity, bound)
@@ -156,7 +207,8 @@ module Imports
 
         draft = @entry.image_import_draft
         begin
-          draft.update!(@attributes)
+          CandidateConfirmation.apply(draft, attributes: @attributes, confirmation: @confirmation,
+            confirm_values: @action == "approve").save!
         rescue ActiveRecord::RecordInvalid, ArgumentError
           # 不正なenum等は元の候補を残して修正を案内する。
         end

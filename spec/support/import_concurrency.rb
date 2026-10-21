@@ -26,7 +26,7 @@ module ImportConcurrency
   end
 
   def record_fixture_ids
-    skip "並行検証は専用使い捨てDBでのみ実行します" unless ActiveRecord::Base.connection_db_config.database == "budget_book_app_test_67"
+    skip "並行検証は専用使い捨てDBでのみ実行します" unless %w[budget_book_app_test_67 budget_book_app_test_68].include?(ActiveRecord::Base.connection_db_config.database)
 
     @fixture_ids = cleanup_models.to_h { |model| [model, model.pluck(:id)] }
   end
@@ -40,7 +40,7 @@ module ImportConcurrency
   end
 
   def cleanup_models
-    [ImportEvent, ImageImportDraft, ImportEntry, ImportIdentity, ImportDocument, ImportSource,
+    [ImportEvent, ImportClassificationRule, ImageImportDraft, ImportEntry, ImportIdentity, ImportDocument, ImportSource,
       Transaction, Category, PaymentMethod, Account, Setting]
   end
 end

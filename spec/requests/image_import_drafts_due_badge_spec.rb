@@ -5,7 +5,7 @@ RSpec.describe "image import drafts payment due date field", type: :request do
     Setting.current.update!(credit_card_closing_day: 15, credit_card_payment_day: 26)
   end
 
-  it "常に(現在のクレカ支払状況の選択に関わらず)支払予定日を編集できるフィールドを表示する" do
+  it "未払候補だけに支払予定日の自動計算値を表示し非クレカへ送信しない" do
     unpaid_draft = tracked_draft(
       batch_id: "b1", date: Date.new(2028, 8, 20), direction: :expense, amount: 1000,
       credit_card_status: :unpaid
@@ -17,10 +17,9 @@ RSpec.describe "image import drafts payment due date field", type: :request do
 
     get image_import_drafts_path(batch_id: "b1")
 
-    [unpaid_draft, cash_draft].each do |draft|
-      expect(response.body).to include("name=\"drafts[#{draft.id}][credit_card_payment_due_on_override]\"")
-    end
-    expect(response.body.scan('value="2028-10-26"').size).to eq(2)
+    expect(response.body).to include("name=\"drafts[#{unpaid_draft.id}][credit_card_payment_due_on_override]\"")
+    expect(response.body).not_to include("name=\"drafts[#{cash_draft.id}][credit_card_payment_due_on_override]\"")
+    expect(response.body.scan('value="2028-10-26"').size).to eq(1)
   end
 
   it "日付が未確定のドラフトにはフィールドを表示しない" do

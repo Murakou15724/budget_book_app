@@ -1,4 +1,5 @@
 class Setting < ApplicationRecord
+  include ImportConfigurationGuard
   # クレカ未払い一覧で支払済にする際の引落元口座の初期値(任意)。
   # 口座がクレカ仮置きのまま支払済になっている取引を、資産スナップショットの
   # 整合性チェック(AccountReconciliation)でどの口座の残高減少として扱うかにも使う。

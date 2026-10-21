@@ -1,0 +1,9 @@
+<h1>日付の一括指定 <%= @result.entries.size %>件</h1>
+<p><%= { preview: "以下の全対象を確認して確定してください。まだ保存していません。", updated: "指定結果を保存しました。自動登録は行いません。", already_processed: "保存済みの日付指定結果です。今回の再送による更新はありません。" }.fetch(@result.status) %></p>
+<% @result.entries.each do |entry| %>
+  <p><%= link_to "候補 ##{entry.id}", import_entry_path(entry) %> / <%= entry.import_document.import_source.name %> / 元口座 <%= entry.import_document.import_source.account&.name %> /
+    文書 #<%= entry.import_document_id %> / 行<%= entry.row_number %> / 店名 <%= entry.payload["merchant"] %> /
+    <%= entry.image_import_draft.date || "未確定" %>（<%= entry.image_import_draft.date_origin %>） → <%= @result.after %></p>
+<% end %>
+<% if @result.token %><%= button_to "全対象の日付を確定", import_draft_dates_path, method: :patch, params: { token: @result.token } %><% end %>
+<%= link_to "レビューへ戻る", image_import_drafts_path %>

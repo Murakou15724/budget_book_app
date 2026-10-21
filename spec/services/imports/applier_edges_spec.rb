@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "import decision boundaries", type: :model do
   let!(:account) { Account.create!(name: "境界口座", kind: :bank) }
   let!(:category) { Category.create!(name: "境界カテゴリ", kind: :expense) }
-  let!(:payment_method) { PaymentMethod.create!(name: "境界方法") }
+  let!(:payment_method) { PaymentMethod.create!(import_kind: "bank", name: "境界方法") }
   let(:attrs) { { account: account, category: category, payment_method: payment_method, date: Date.new(2026, 12, 31), amount: 500, memo: "境界" } }
   let(:entry) { tracked_draft(**attrs).import_entry }
 

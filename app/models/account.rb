@@ -1,4 +1,6 @@
 class Account < ApplicationRecord
+  include ImportConfigurationGuard
+  has_many :import_classification_rules, dependent: :restrict_with_error
   enum :kind, { bank: 0, e_money: 1, securities: 2, cash: 3, credit_pending: 4 }
 
   KIND_LABELS = {
@@ -9,6 +11,7 @@ class Account < ApplicationRecord
     "credit_pending" => "未払管理"
   }.freeze
 
+  has_many :incoming_image_import_drafts, class_name: "ImageImportDraft", foreign_key: :to_account_id, dependent: :restrict_with_error
   has_many :image_import_drafts, dependent: :restrict_with_error
   has_many :import_sources, dependent: :restrict_with_error
   has_many :transactions, dependent: :restrict_with_error

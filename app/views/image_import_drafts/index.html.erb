@@ -1,7 +1,7 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
 <h1>画像取込レビュー</h1>
-<%= link_to "取込履歴", import_documents_path %>
+<%= link_to "取込履歴", import_documents_path %> / <%= link_to "要確認", image_import_drafts_path(filter: "pending") %> / <%= link_to "処理済み", image_import_drafts_path(filter: "processed") %> / <%= link_to "確認済みルール", import_classification_rules_path %>
 <p>対象文書 <%= @total_documents %>件 / <%= @page %> / <%= @total_pages %>ページ</p>
 <nav aria-label="レビュー対象文書のページ送り">
   <%= link_to "前の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page - 1)) if @page > 1 %>
@@ -28,6 +28,8 @@
 
   <%= form_with url: bulk_approve_image_import_drafts_path(draft_filter_params), method: :patch, data: { controller: "select-all" } do %>
     <div class="actions">
+      <%= date_field_tag :date %>
+      <%= button_tag "選択した候補の日付を一括プレビュー", formaction: preview_import_draft_dates_path, formmethod: :post, name: "_method", value: "post" %>
       <%= submit_tag "選択した候補を承認して登録" %>
     </div>
 
@@ -43,20 +45,29 @@
           <%= link_to "候補 ##{draft.import_entry_id} の判定・同一／別取引の確認", import_entry_path(draft.import_entry) %>
           <p><%= draft.import_entry.classification %> / <%= draft.import_entry.state %> / <%= import_reason_label(draft.import_entry.reason_code) %></p>
           <div class="field">
+            <%= check_box_tag "entry_ids[]", draft.import_entry_id, false, aria: { label: "日付一括指定の対象" } %> 日付一括指定の対象
             <label><%= check_box_tag "draft_ids[]", draft.id, false, data: { select_all_target: "checkbox" } %> この候補を登録する</label>
           </div>
 
           <div class="field">
             <%= label_tag nil, "日付" %>
             <%= date_field_tag "drafts[#{draft.id}][date]", draft.date %>
+            <span>日付の出典: <%= draft.date_origin %></span>
+            <label><%= check_box_tag "drafts[#{draft.id}][date_confirmed]", "1", false %>この日付を確認</label>
           </div>
 
           <div class="field">
             <%= label_tag nil, "取引種別" %>
             <%= select_tag "drafts[#{draft.id}][direction]",
-                  options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, draft.direction) %>
+                  options_for_select(Transaction::DIRECTION_LABELS.map { |k, v| [v, k] }, draft.direction), include_blank: "未確定" %>
           </div>
 
+          <p>取引種別（原文と確認値）: <%= draft.confirmation_metadata["source_kind"] %></p>
+          <%= select_tag "drafts[#{draft.id}][transaction_kind]", options_for_select(ImportsHelper::KIND_LABELS.map { |key, label| [label, key] }, draft.transaction_kind), include_blank: "種別を選択" %>
+          <%= select_tag "drafts[#{draft.id}][to_account_id]", options_from_collection_for_select(@accounts, :id, :name, draft.to_account_id), include_blank: "移動先を選択" %>
+          <label><%= check_box_tag "drafts[#{draft.id}][kind_correction]", "1", false %>原文の特殊種別を通常取引へ訂正する</label>
+          <%= text_field_tag "drafts[#{draft.id}][kind_correction_reason]", nil, placeholder: "種別訂正の理由" %>
+          <%= render "import_entries/decision", draft: draft %>
           <div class="field">
             <%= label_tag nil, "カテゴリ" %>
             <%= select_tag "drafts[#{draft.id}][category_id]",
@@ -103,12 +114,12 @@
                   options_for_select(Transaction::CREDIT_CARD_STATUS_LABELS.map { |k, v| [v, k] }, draft.credit_card_status) %>
           </div>
 
-          <% if draft.credit_card_payment_due_on %>
+          <% if (draft.unpaid? && draft.credit_card_payment_due_on) || draft.credit_card_payment_due_on_override.present? %>
             <div class="field">
               <%= label_tag nil, "未払で登録した場合の支払予定日(通常は自動算出。例外的にズレる場合はここで修正できます)" %>
               <%= render "application/credit_card_due_date_field",
                     field_name: "drafts[#{draft.id}][credit_card_payment_due_on_override]",
-                    value: draft.credit_card_payment_due_on %>
+                    value: draft.unpaid? ? draft.credit_card_payment_due_on : draft.credit_card_payment_due_on_override %>
             </div>
           <% end %>
 

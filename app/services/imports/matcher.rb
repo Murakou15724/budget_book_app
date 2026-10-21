@@ -27,6 +27,12 @@ module Imports
           @draft.account_id != @entry.import_document.import_source.account_id
         classification, reason = "hold", "source_account_mismatch"
       end
+      if classification == "new"
+        confirmed = @draft.confirmation_metadata["confirmed_values"] == Fingerprint.draft_snapshot(@draft)
+        reasons = CandidateValidator.call(draft: @draft).reason_codes
+        reasons += Array(@draft.rule_decision["reason_codes"]) unless confirmed
+        classification, reason = "hold", reasons.first if reasons.any?
+      end
       Match.new(classification: classification, reason_code: reason, transactions: transactions, drafts: drafts)
     end
 

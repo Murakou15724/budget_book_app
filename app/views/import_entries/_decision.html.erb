@@ -1,0 +1,13 @@
+<p>日付の出典: <%= { "source" => "原文の完全日付", "user" => "利用者指定・確認", "unresolved" => "未確定" }[draft.date_origin] %> /
+  取引種別: <%= ImportsHelper::KIND_LABELS[draft.transaction_kind] %>。AIの名称一致は確認済み分類を意味しません。</p>
+<% if draft.transaction_kind == "card_settlement" || draft.confirmation_metadata["source_kind"] == "card_settlement" %>
+  <p>カード引落は新しい支出を登録せず、<%= link_to "クレカ未払い一覧で対応する取引を確認", credit_card_unpaids_path %>してください。</p>
+<% end %>
+<% (Array(draft.rule_decision["reason_codes"]) + Imports::CandidateValidator.call(draft: draft).reason_codes).uniq.each do |reason| %>
+  <p><%= import_reason_label(reason) %></p>
+<% end %>
+<% Array(draft.rule_decision["matched_rules"]).each do |rule| %>
+  <p>一致ルール #<%= rule["id"] %> / version <%= rule["version"] %> / 優先順位 <%= rule["priority"] %> /
+    <%= rule.dig("master_names", "import_source") %> / <%= rule["merchant_key"] %> / <%= rule.dig("master_names", "category") %> /
+    <%= rule.dig("master_names", "payment_method") %> / <%= rule.dig("master_names", "account") %></p>
+<% end %>

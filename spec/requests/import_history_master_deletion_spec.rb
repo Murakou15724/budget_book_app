@@ -7,7 +7,7 @@ RSpec.describe "import history master deletion", type: :request do
       account = Account.create!(name: "反映口座", kind: :cash)
       category = Category.create!(name: "食費", kind: :expense)
       budget = category.category_monthly_budgets.create!(year: 2026, month: 10, budget: 1000)
-      payment = PaymentMethod.create!(name: "現金")
+      payment = PaymentMethod.create!(import_kind: "cash", name: "現金")
       document = import_document(account: source_account)
       draft = tracked_draft(document: document, account: account, category: category, payment_method: payment,
         date: Date.new(2026, 10, 1), amount: 500)

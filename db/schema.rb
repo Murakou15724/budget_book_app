@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -87,7 +87,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
   create_table "image_import_drafts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "batch_id", null: false
     t.date "date"
-    t.integer "direction", default: 1, null: false
+    t.integer "direction"
     t.integer "amount"
     t.string "memo"
     t.bigint "category_id"
@@ -101,12 +101,45 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
     t.datetime "updated_at", null: false
     t.date "credit_card_payment_due_on_override"
     t.bigint "import_entry_id", null: false
+    t.string "date_origin", default: "unresolved", null: false
+    t.string "transaction_kind", default: "unknown", null: false
+    t.json "confirmation_metadata", null: false
+    t.json "rule_decision", null: false
+    t.bigint "to_account_id"
     t.index ["account_id", "direction", "amount", "date"], name: "index_image_import_drafts_on_import_match"
     t.index ["account_id"], name: "index_image_import_drafts_on_account_id"
     t.index ["batch_id"], name: "index_image_import_drafts_on_batch_id"
     t.index ["category_id"], name: "index_image_import_drafts_on_category_id"
     t.index ["import_entry_id"], name: "index_image_import_drafts_on_import_entry_id", unique: true
     t.index ["payment_method_id"], name: "index_image_import_drafts_on_payment_method_id"
+    t.index ["to_account_id"], name: "index_image_import_drafts_on_to_account_id"
+  end
+
+  create_table "import_classification_rules", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_source_id", null: false
+    t.string "channel", limit: 32, null: false
+    t.string "merchant_key", null: false
+    t.string "direction", limit: 16, null: false
+    t.bigint "category_id", null: false
+    t.bigint "payment_method_id", null: false
+    t.bigint "account_id", null: false
+    t.string "credit_card_status", limit: 32, null: false
+    t.boolean "enabled", default: false, null: false
+    t.integer "priority", default: 100, null: false
+    t.integer "version", default: 1, null: false
+    t.bigint "confirmation_entry_id"
+    t.datetime "confirmed_at", null: false
+    t.string "creation_nonce", limit: 36, null: false
+    t.string "creation_request_digest", limit: 64, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_import_classification_rules_on_account_id"
+    t.index ["category_id"], name: "index_import_classification_rules_on_category_id"
+    t.index ["confirmation_entry_id"], name: "index_import_classification_rules_on_confirmation_entry_id"
+    t.index ["creation_nonce"], name: "index_import_classification_rules_on_creation_nonce", unique: true
+    t.index ["import_source_id", "channel", "enabled"], name: "index_import_rules_on_scope"
+    t.index ["import_source_id"], name: "index_import_classification_rules_on_import_source_id"
+    t.index ["payment_method_id"], name: "index_import_classification_rules_on_payment_method_id"
   end
 
   create_table "import_documents", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -190,6 +223,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
     t.boolean "legacy", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "image_auto_apply_enabled", default: false, null: false
     t.index ["account_id"], name: "index_import_sources_on_account_id"
     t.index ["service_key", "account_id"], name: "index_import_sources_on_service_key_and_account_id", unique: true
   end
@@ -223,6 +257,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "import_kind", default: "unknown", null: false
     t.index ["name"], name: "index_payment_methods_on_name", unique: true
   end
 
@@ -333,9 +368,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_19_000002) do
   add_foreign_key "asset_balances", "asset_snapshots"
   add_foreign_key "category_monthly_budgets", "categories"
   add_foreign_key "image_import_drafts", "accounts"
+  add_foreign_key "image_import_drafts", "accounts", column: "to_account_id"
   add_foreign_key "image_import_drafts", "categories"
   add_foreign_key "image_import_drafts", "import_entries"
   add_foreign_key "image_import_drafts", "payment_methods"
+  add_foreign_key "import_classification_rules", "accounts"
+  add_foreign_key "import_classification_rules", "categories"
+  add_foreign_key "import_classification_rules", "import_entries", column: "confirmation_entry_id"
+  add_foreign_key "import_classification_rules", "import_sources"
+  add_foreign_key "import_classification_rules", "payment_methods"
   add_foreign_key "import_documents", "import_sources"
   add_foreign_key "import_entries", "import_documents"
   add_foreign_key "import_entries", "import_entries", column: "reference_entry_id"

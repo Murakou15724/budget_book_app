@@ -8,7 +8,7 @@ class ImportSourcesController < ApplicationController
   end
 
   def create
-    @source = ImportSource.new(params.require(:import_source).permit(:name, :service_key, :account_id))
+    @source = ImportSource.new(params.require(:import_source).permit(:name, :service_key, :account_id, :image_auto_apply_enabled))
     if @source.save
       redirect_to import_sources_path, notice: "取込元を設定しました。"
     else
@@ -22,7 +22,7 @@ class ImportSourcesController < ApplicationController
 
   def update
     @source = ImportSource.available.find(params[:id])
-    if @source.update(params.require(:import_source).permit(:name))
+    if @source.update(params.require(:import_source).permit(:name, :image_auto_apply_enabled))
       redirect_to import_sources_path, notice: "表示名を更新しました。"
     else
       render :edit, status: :unprocessable_entity

@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "import entry resolution", type: :request do
   let(:category) { Category.create!(name: "食費", kind: :expense) }
-  let(:payment) { PaymentMethod.create!(name: "現金") }
+  let(:payment) { PaymentMethod.create!(import_kind: "cash", name: "現金") }
   let(:account) { Account.create!(name: "財布", kind: :cash) }
   let(:draft) { tracked_draft(category: category, payment_method: payment, account: account, date: Date.new(2026, 9, 30), amount: 500, memo: "店") }
 

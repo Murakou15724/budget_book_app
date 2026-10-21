@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe Imports::Applier do
   include ActiveSupport::Testing::TimeHelpers
   let!(:category) { Category.create!(name: "食費", kind: :expense) }
-  let!(:payment) { PaymentMethod.create!(name: "現金") }
+  let!(:payment) { PaymentMethod.create!(import_kind: "cash", name: "現金") }
   let!(:account) { Account.create!(name: "財布", kind: :cash) }
   let(:attributes) { { account: account, category: category, payment_method: payment, date: Date.new(2026, 10, 1), direction: :expense, amount: 1000, memo: "店" } }
   let(:draft) { tracked_draft(**attributes) }

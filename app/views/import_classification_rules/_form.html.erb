@@ -1,0 +1,16 @@
+<p>このフォームの取込元・元口座・image経路・取引先・収支がすべて一致した通常取引だけが対象です。ルールの変更は将来の新しい画像に適用します。</p>
+<%= form_with model: @rule do |f| %>
+  <%= hidden_field_tag :token, @token %>
+  <p><%= f.label :import_source_id, "取込元（サービス・元口座）" %><%= f.collection_select :import_source_id, ImportSource.available.includes(:account).order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :channel, "入力経路" %><%= f.select :channel, [["画像", "image"]] %></p>
+  <p><%= f.label :merchant_key, "取引先（正規化した完全一致）" %><%= f.text_field :merchant_key, maxlength: 255 %></p>
+  <p><%= f.label :direction, "収支" %><%= f.select :direction, [["収入", "income"], ["支出", "expense"]], include_blank: true %></p>
+  <p><%= f.label :category_id, "カテゴリ" %><%= f.collection_select :category_id, Category.order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :payment_method_id, "支払方法" %><%= f.collection_select :payment_method_id, PaymentMethod.order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :account_id, "反映口座（元口座と一致必須）" %><%= f.collection_select :account_id, Account.order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :credit_card_status, "クレカ状態" %><%= f.select :credit_card_status, [["対象外", "not_applicable"], ["未払", "unpaid"]] %></p>
+  <p><%= f.label :priority, "優先順位（表示順・小さい数が先）" %><%= f.number_field :priority, min: 0, max: 9999 %></p>
+  <p><%= f.check_box :enabled %><%= f.label :enabled, "このルールを有効にする" %></p>
+  <p><%= check_box_tag :confirmed, "1", false, required: true %><%= label_tag :confirmed, "上記の適用範囲と出力を確認し、この内容を今後再利用する" %></p>
+  <%= f.submit "確認した内容を保存" %>
+<% end %>

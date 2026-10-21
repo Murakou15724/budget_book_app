@@ -1,6 +1,6 @@
 class ImageImportDraftsController < ApplicationController
   def index
-    @documents = ImportDocument.includes(import_entries: [:image_import_draft, :reference_entry], import_source: :account).order(id: :desc)
+    @documents = ImportDocument.includes(:import_events, import_entries: [:image_import_draft, :reference_entry], import_source: :account).order(id: :desc)
     @documents = @documents.where(batch_id: params[:batch_id]) if params[:batch_id].present?
     @documents = @documents.where(id: params[:document_ids]) if params[:document_ids].present?
     if params[:document_ids].present?
@@ -8,7 +8,7 @@ class ImageImportDraftsController < ApplicationController
       @documents = @documents.reorder(nil).in_order_of(:id, order)
     elsif params[:batch_id].blank?
       pending_documents = @documents.where(id: ImportEntry.where(state: ImportEntry::UNRESOLVED_STATES).select(:import_document_id))
-      @documents = pending_documents if pending_documents.exists?
+      @documents = params[:filter] == "processed" ? @documents.where.not(id: ImportEntry.where(state: ImportEntry::UNRESOLVED_STATES).select(:import_document_id)) : pending_documents
     end
     @total_documents = @documents.count
     @total_pages = [(@total_documents + 49) / 50, 1].max
@@ -17,7 +17,7 @@ class ImageImportDraftsController < ApplicationController
     Imports::TargetIntegrity.refresh!(@documents.flat_map(&:import_entries))
     @documents.each { |document| document.import_entries.reset }
     ActiveRecord::Associations::Preloader.new(records: @documents, associations: { import_entries: [:image_import_draft, :reference_entry] }).call
-    @drafts = ImageImportDraft.pending.where(import_entries: { import_document_id: @documents.map(&:id) }).includes(:import_entry).order(:id)
+    @drafts = ImageImportDraft.pending.where(import_entries: { import_document_id: @documents.map(&:id) }).includes(:import_entry, :category, :payment_method, :account, :to_account).order(:id)
     @expense_categories = Category.expense.order(:position, :name)
     @income_categories = Category.income.order(:position, :name)
     @payment_methods = PaymentMethod.order(:position, :name)
@@ -31,7 +31,8 @@ class ImageImportDraftsController < ApplicationController
 
       attributes = params.dig(:drafts, id.to_s) || ActionController::Parameters.new
       Imports::Applier.call(entry_id: draft.import_entry_id, action: "approve",
-        attributes: attributes.permit(*ImageImportDraft::EDITABLE_ATTRIBUTES).to_h)
+        attributes: attributes.permit(*ImageImportDraft::EDITABLE_ATTRIBUTES).to_h,
+        confirmation: attributes.permit(:date_confirmed, :kind_correction, :kind_correction_reason).to_h)
     end
     success = results.count { |result| result.status == :applied }
     remaining = results.count { |result| %i[held conflict failed].include?(result.status) }
@@ -56,7 +57,7 @@ class ImageImportDraftsController < ApplicationController
   private
 
   def draft_filter_params
-    params.permit(:batch_id, :page, document_ids: [], image_numbers: {}).to_h
+    params.permit(:batch_id, :page, :filter, document_ids: [], image_numbers: {}).to_h
   end
   helper_method :draft_filter_params
 end

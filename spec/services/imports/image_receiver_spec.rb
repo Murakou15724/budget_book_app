@@ -65,8 +65,10 @@ RSpec.describe Imports::ImageReceiver do
 
   it "承認不要設定でも新規だけを反映し、別画像の類似候補は停止する" do
     category = Category.create!(name: "画像分類", kind: :expense)
-    payment = PaymentMethod.create!(name: "画像方法")
-    valid_item = item.merge("category_name" => category.name, "payment_method_name" => payment.name, "account_name" => source.account.name)
+    payment = PaymentMethod.create!(import_kind: "bank", name: "画像方法")
+    source.update!(image_auto_apply_enabled: true)
+    confirmed_rule(source: source, category: category, payment: payment)
+    valid_item = extraction_payload.merge("category_name" => category.name, "payment_method_name" => payment.name, "account_name" => source.account.name)
     allow(Gemini::TransactionExtractor).to receive(:new).and_return(instance_double(Gemini::TransactionExtractor,
       call: Gemini::ExtractionResult.success([valid_item])))
     Setting.current.update!(image_import_requires_approval: false)

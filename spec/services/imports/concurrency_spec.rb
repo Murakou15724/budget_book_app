@@ -11,7 +11,7 @@ RSpec.describe "import concurrency", type: :model do
   def candidate
     account = Account.create!(name: "並行口座-#{SecureRandom.hex(4)}", kind: :bank)
     category = Category.create!(name: "並行費-#{SecureRandom.hex(4)}", kind: :expense)
-    method = PaymentMethod.create!(name: "並行方法-#{SecureRandom.hex(4)}")
+    method = PaymentMethod.create!(import_kind: "bank", name: "並行方法-#{SecureRandom.hex(4)}")
     tracked_draft(account: account, category: category, payment_method: method,
       date: Date.new(2026, 10, 1), direction: "expense", amount: 1000).import_entry
   end

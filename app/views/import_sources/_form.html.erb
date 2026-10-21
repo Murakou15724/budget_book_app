@@ -8,5 +8,9 @@
   <% else %>
     <p><%= @source.service_key %> / <%= @source.account.name %></p>
   <% end %>
+  <p>自動反映の対象はこのサービス・元口座の画像経路です。一般設定の「承認必須」が無効で、確認済みルールと原文根拠が揃う新規通常取引だけを登録します。</p>
+  <p><%= f.check_box :image_auto_apply_enabled %><%= f.label :image_auto_apply_enabled, "この取込元の画像自動反映を許可する" %></p>
   <%= f.submit "保存" %>
 <% end %>
+
+<%= link_to "確認済み取込ルール", import_classification_rules_path %>

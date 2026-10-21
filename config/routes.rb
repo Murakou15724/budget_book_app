@@ -51,6 +51,11 @@ Rails.application.routes.draw do
   resources :payment_methods, except: [:show]
   resources :quick_entry_templates, except: [:show]
   resource :image_imports, only: [:new, :create]
+  resources :import_classification_rules, except: [:show, :destroy]
+  post "import_draft_dates/preview", to: "import_draft_dates#preview", as: :preview_import_draft_dates
+  patch "import_draft_dates", to: "import_draft_dates#update", as: :import_draft_dates
+  post "import_entries/:import_entry_id/correction/preview", to: "import_transaction_corrections#preview", as: :preview_import_entry_correction
+  patch "import_entries/:import_entry_id/correction", to: "import_transaction_corrections#update", as: :import_entry_correction
   resources :import_sources, except: [:show, :destroy]
   resources :import_documents, only: [:index, :show]
   resources :import_entries, only: [:show] do

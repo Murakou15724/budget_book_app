@@ -3,7 +3,7 @@ require "digest"
 module Imports
   module Fingerprint
     SOURCE_KEYS = %w[amount date occurred_at direction currency source_status merchant memo].freeze
-    PAYLOAD_KEYS = (SOURCE_KEYS + %w[category_name payment_method_name account_name]).freeze
+    PAYLOAD_KEYS = (SOURCE_KEYS + %w[category_name payment_method_name account_name transaction_kind raw_date date_year_explicit uncertain_fields evidence]).freeze
     SNAPSHOT_KEYS = %w[date entry_type direction amount category_id payment_method_id account_id to_account_id memo satisfaction regret credit_card_status credit_card_payment_due_on_override credit_card_paid_on].freeze
     module_function
 

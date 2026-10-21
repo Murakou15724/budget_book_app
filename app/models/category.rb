@@ -1,4 +1,6 @@
 class Category < ApplicationRecord
+  include ImportConfigurationGuard
+  has_many :import_classification_rules, dependent: :restrict_with_error
   enum :kind, { expense: 0, income: 1 }
 
   KIND_LABELS = { "expense" => "支出", "income" => "収入" }.freeze
