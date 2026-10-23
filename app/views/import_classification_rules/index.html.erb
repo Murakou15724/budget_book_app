@@ -1,0 +1,11 @@
+<h1>確認済み取込ルール</h1>
+<p>同一取引先でも取込元・元口座・収支ごとに適用します。複数の有効ルールが一致した場合は、優先順位に関係なく保留します。</p>
+<%= link_to "ルールを新規作成", new_import_classification_rule_path %>
+<% @rules.each do |rule| %>
+  <section class="entry-card">
+    <h2><%= link_to "ルール ##{rule.id}: #{rule.merchant_key}", edit_import_classification_rule_path(rule) %></h2>
+    <p><%= rule.enabled? ? "有効" : "停止" %> / 優先順位 <%= rule.priority %> / version <%= rule.version %> / 確認 <%= rule.confirmed_at %></p>
+    <p><%= rule.import_source.name %> / <%= rule.import_source.service_key %> / 元口座 <%= rule.import_source.account&.name %> / <%= rule.channel %> / <%= Transaction::DIRECTION_LABELS[rule.direction] %></p>
+    <%= render "import_entries/values", snapshot: rule.snapshot %>
+  </section>
+<% end %>

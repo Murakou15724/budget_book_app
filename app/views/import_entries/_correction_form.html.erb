@@ -1,0 +1,20 @@
+<% target = Transaction.find_by(id: @effective.target_transaction_id) %>
+<% if target && %w[applied linked].include?(@entry.state) && !@entry.reference_entry_id %>
+  <details><summary>対応実績を訂正する（保存前に差分を確認）</summary>
+    <%= form_with url: preview_import_entry_correction_path(@entry), method: :post do %>
+      <%= fields_for :transaction, target do |f| %>
+        <p><%= f.label :date, "利用日" %><%= f.date_field :date %></p>
+        <p><%= f.label :direction, "収支" %><%= f.select :direction, Transaction::DIRECTION_LABELS.map { |key, label| [label, key] } %></p>
+        <p><%= f.label :amount, "金額" %><%= f.number_field :amount %></p>
+        <p><%= f.label :category_id, "カテゴリ" %><%= f.collection_select :category_id, Category.order(:name), :id, :name, include_blank: true %></p>
+        <p><%= f.label :payment_method_id, "支払方法" %><%= f.collection_select :payment_method_id, PaymentMethod.order(:name), :id, :name %></p>
+        <p><%= f.label :account_id, "口座" %><%= f.collection_select :account_id, Account.order(:name), :id, :name %></p>
+        <p><%= f.label :to_account_id, "移動先" %><%= f.collection_select :to_account_id, Account.order(:name), :id, :name, include_blank: true %></p>
+        <p><%= f.label :memo, "メモ" %><%= f.text_field :memo %></p>
+        <p><%= f.label :credit_card_status, "クレカ状態" %><%= f.select :credit_card_status, Transaction::CREDIT_CARD_STATUS_LABELS.map { |key, label| [label, key] } %></p>
+        <p><%= f.label :credit_card_payment_due_on_override, "支払予定日の指定" %><%= f.date_field :credit_card_payment_due_on_override %></p>
+      <% end %>
+      <%= submit_tag "対象と差分をプレビュー" %>
+    <% end %>
+  </details>
+<% end %>

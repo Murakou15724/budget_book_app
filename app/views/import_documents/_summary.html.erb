@@ -12,6 +12,16 @@
     <% entries.group_by { |entry| entry.effective_entry.state }.each do |state, group| %>
       <span><%= import_state_label(state) %>: <%= group.size %>件 / 金額 <%= group.sum { |entry| entry.image_import_draft&.amount.to_i } %>円</span>
     <% end %>
+    <% automatic = document.import_events.select { |event| event.kind == "applied" && event.details["mode"] == "automatic" } %>
+    <% if automatic.any? %>
+      <p>自動反映 <%= automatic.size %>件（個別承認は不要）</p>
+      <% automatic.group_by { |event| event.details["direction"] }.each do |direction, events| %>
+        <p><%= Transaction::DIRECTION_LABELS[direction] %>: <%= events.sum { |event| event.details["amount"].to_i } %>円</p>
+      <% end %>
+      <% automatic.group_by { |event| event.details.dig("rule_decision", "matched_rules") }.each do |rules, events| %>
+        <p>適用ルール: <%= Array(rules).map { |rule| "##{rule['id']} v#{rule['version']} #{rule['merchant_key']}" }.join("、") %> / <%= events.size %>件</p>
+      <% end %>
+    <% end %>
     <% entries.each do |entry| %>
       <p>行<%= entry.row_number %>: <%= link_to "候補 ##{entry.id}", import_entry_path(entry) %>
         <%= import_state_label(entry.effective_entry.state) %> / <%= import_reason_label(entry.effective_entry.reason_code) %>

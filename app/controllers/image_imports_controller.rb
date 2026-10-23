@@ -4,13 +4,18 @@ class ImageImportsController < ApplicationController
   end
 
   def create
+    if params[:manual_date].present?
+      @sources = ImportSource.available.includes(:account).order(:name)
+      flash.now[:alert] = "日付の一括指定は抽出後に対象と結果を確認して行ってください。"
+      return render :new, status: :unprocessable_entity
+    end
     images = Array(params[:images]).select(&:present?)
     return redirect_to new_image_imports_path, alert: "画像ファイルを選択してください。" if images.empty?
 
     source = ImportSource.available.find_by(id: params[:import_source_id])
     return redirect_to new_image_imports_path, alert: "取込元を選択してください。" unless source
 
-    result = Imports::ImageReceiver.call(source: source, images: images, manual_date: parse_manual_date)
+    result = Imports::ImageReceiver.call(source: source, images: images, manual_date: nil)
     if result.documents.empty?
       redirect_to new_image_imports_path, alert: result.errors.join(" / ")
     else
@@ -20,11 +25,4 @@ class ImageImportsController < ApplicationController
     end
   end
 
-  private
-
-  def parse_manual_date
-    Date.iso8601(params[:manual_date]) if params[:manual_date].present?
-  rescue ArgumentError
-    nil
-  end
 end

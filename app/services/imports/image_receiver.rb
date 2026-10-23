@@ -36,9 +36,9 @@ module Imports
             next
           end
           fresh_entries = commit_extraction(document, response.items)
-          unless Setting.current.image_import_requires_approval?
+          if fresh_entries.any?
             fresh_entries.each do |entry|
-              result = Applier.call(entry_id: entry.id, action: "approve")
+              result = Applier.call(entry_id: entry.id, action: "auto_apply")
               applied += 1 if result.status == :applied
             end
           end

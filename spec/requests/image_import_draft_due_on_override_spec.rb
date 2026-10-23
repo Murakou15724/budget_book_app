@@ -4,7 +4,7 @@ RSpec.describe "image import draft payment due override carries through to the t
   before { Setting.current.update!(credit_card_closing_day: 31, credit_card_payment_day: 26) }
 
   let!(:category) { Category.create!(name: "食費", kind: :expense, position: 1) }
-  let!(:payment_method) { PaymentMethod.create!(name: "クレカ", position: 1) }
+  let!(:payment_method) { PaymentMethod.create!(import_kind: "credit_card", name: "クレカ", position: 1) }
   let!(:account) { Account.create!(name: "クレカ仮置き", kind: :credit_pending, position: 1) }
 
   it "レビュー画面で支払予定日を手動で変更すると、登録された取引にも反映される" do

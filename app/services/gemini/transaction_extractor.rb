@@ -17,8 +17,14 @@ module Gemini
         type: "OBJECT",
         properties: {
           date: { type: "STRING", description: "取引日(YYYY-MM-DD形式)。読み取れない場合は空文字。" },
-          direction: { type: "STRING", enum: %w[expense income] },
+          direction: { type: "STRING", enum: %w[expense income transfer investment unknown] },
           amount: { type: "INTEGER" },
+          merchant: { type: "STRING", description: "取引先の原文。メモと区別する" },
+          transaction_kind: { type: "STRING", enum: %w[normal charge transfer card_settlement refund cancellation fee unknown] },
+          raw_date: { type: "STRING", description: "画像の年月日表記をそのまま。年なしは補完しない" },
+          date_year_explicit: { type: "BOOLEAN" },
+          uncertain_fields: { type: "ARRAY", items: { type: "STRING", enum: %w[date amount direction merchant transaction_kind] } },
+          evidence: { type: "OBJECT", properties: %i[amount direction transaction_kind merchant].to_h { |key| [key, { type: "STRING" }] } },
           memo: { type: "STRING", description: "店名や取引内容の簡潔なメモ" },
           category_name: { type: "STRING", description: "候補リストの中から最も近いカテゴリ名。無ければ空文字。" },
           payment_method_name: { type: "STRING", description: "候補リストの中から最も近い支払方法名。無ければ空文字。" },
@@ -92,6 +98,9 @@ module Gemini
         支払方法候補: #{PaymentMethod.order(:position, :name).pluck(:name).join(", ")}
         口座候補: #{Account.order(:position, :name).pluck(:name).join(", ")}
 
+        merchantは店名の原文、raw_dateは画像の日付原文、evidenceは金額・収支・種別・取引先の短い原文です。不確実な項目をuncertain_fieldsに列挙してください。
+        原文に4桁の年が明記されている場合はdate_year_explicit=trueにしてください。年が欠落している場合はdate_year_explicit=falseにし、年を当年で補わずdateは空文字にしてください。
+        チャージ・振替・カード引落・返金・取消・手数料を通常支出に丸めず、読めない収支や種別はunknownにしてください。
         日付が画像から読み取れない場合は空文字にしてください。金額は手数料等を含まない実際の支払い・入金額の整数にしてください。
       PROMPT
     end

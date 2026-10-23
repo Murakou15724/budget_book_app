@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Imports::EntryRecorder do
   let!(:category) { Category.create!(name: "食費", kind: :expense) }
-  let!(:payment) { PaymentMethod.create!(name: "電子マネー") }
+  let!(:payment) { PaymentMethod.create!(import_kind: "e_money", name: "電子マネー") }
   let!(:account) { Account.create!(name: "残高", kind: :e_money) }
   let(:attributes) { { account: account, category: category, payment_method: payment, date: Date.new(2026, 9, 30), direction: :expense, amount: 500, memo: "店" } }
   let(:document) { import_document(account: account) }

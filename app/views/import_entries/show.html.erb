@@ -1,7 +1,11 @@
 <h1>取込候補 #<%= @entry.id %></h1>
+<% if flash[:invalid_planned_target_id] %>
+  <p><%= link_to "対象予定 ##{flash[:invalid_planned_target_id]} を修正する", edit_transaction_path(flash[:invalid_planned_target_id]) %>。修正後は差分を再プレビューしてください。</p>
+<% end %>
 <p><%= link_to "文書 ##{@entry.import_document_id}", import_document_path(@entry.import_document_id) %> / 行<%= @entry.row_number %> /
   <%= @entry.import_document.import_source.name %> / 反映口座: <%= @draft.account&.name || "未選択" %></p>
 <p><%= import_state_label(@effective.state) %> / <%= import_reason_label(@effective.reason_code) %></p>
+<%= render "decision", draft: @draft %>
 <h2>元の候補（編集前）</h2><%= render "values", snapshot: @entry.payload %>
 <p>まとめ入力: 未導入（部分金額の配分は専用機能の対象です）</p>
 <% if @entry.reference_entry_id %>
@@ -10,6 +14,10 @@
 <% if @effective.target_transaction_id %>
   <p>対応取引 #<%= @effective.target_transaction_id %>（削除後も歴史IDを保持）</p>
   <%= render "values", snapshot: @effective.target_snapshot %>
+  <% if %w[applied linked].include?(@entry.state) && !@entry.reference_entry_id && Imports::RuleWriter.eligible?(@entry) %>
+    <p><%= link_to "この確認内容からルールを作る", new_import_classification_rule_path(entry_id: @entry.id) %></p>
+  <% end %>
+  <%= render "correction_form" %>
   <% if Transaction.exists?(@effective.target_transaction_id) %><%= link_to "現在の取引を編集", edit_transaction_path(@effective.target_transaction_id) %><% end %>
 <% end %>
 <% unless @entry.reference_entry_id || @entry.terminal? %>
@@ -27,14 +35,19 @@
   <%= form_with url: preview_import_entry_path(@entry), method: :post do %>
     <%= fields_for :draft, @draft do |f| %>
       <div class="field"><%= f.label :date, "日付" %><%= f.date_field :date %></div>
-      <div class="field"><%= f.label :direction, "収支" %><%= f.select :direction, Transaction::DIRECTION_LABELS.map { |k,v| [v,k] } %></div>
+      <div class="field"><%= f.label :direction, "収支" %><%= f.select :direction, Transaction::DIRECTION_LABELS.map { |k,v| [v,k] }, include_blank: "未確定" %></div>
       <div class="field"><%= f.label :amount, "金額" %><%= f.number_field :amount %></div>
       <div class="field"><%= f.label :category_id, "カテゴリ" %><%= f.collection_select :category_id, Category.order(:name), :id, :name, include_blank: true %></div>
       <div class="field"><%= f.label :payment_method_id, "支払方法" %><%= f.collection_select :payment_method_id, PaymentMethod.order(:name), :id, :name, include_blank: true %></div>
       <div class="field"><%= f.label :account_id, "反映口座" %><%= f.collection_select :account_id, Account.order(:name), :id, :name, include_blank: true %></div>
+      <p><%= f.label :transaction_kind, "取引種別" %><%= f.select :transaction_kind, ImportsHelper::KIND_LABELS.map { |key, label| [label, key] } %></p>
+      <p><%= f.label :to_account_id, "移動先口座" %><%= f.collection_select :to_account_id, Account.order(:name), :id, :name, include_blank: true %></p>
       <div class="field"><%= f.label :memo, "メモ" %><%= f.text_field :memo %></div>
-      <%= f.hidden_field :credit_card_status %><%= f.hidden_field :credit_card_payment_due_on_override %>
+      <%= f.select :credit_card_status, Transaction::CREDIT_CARD_STATUS_LABELS.map { |key, label| [label, key] } %>
+      <% if @draft.unpaid? || @draft.credit_card_payment_due_on_override.present? %><%= f.date_field :credit_card_payment_due_on_override %><% end %>
     <% end %>
+    <p><label><%= check_box_tag "confirmation[date_confirmed]", "1", false %>この日付を確認</label></p>
+    <p><label><%= check_box_tag "confirmation[kind_correction]", "1", false %>原文の特殊取引を通常取引へ訂正する</label><%= text_field_tag "confirmation[kind_correction_reason]", nil, placeholder: "訂正理由" %></p>
     <%= label_tag :target_id, "同一と判断する取引ID（予定も選択可能）" %><%= number_field_tag :target_id, @target&.id %>
     <%= select_tag :decision, options_for_select([["別取引として登録", "distinct"], ["既存取引・予定と同一", "link"], ["この訂正版を初回採用", "adopt_revision"], ["現在の取引内容を確認して対応を維持", "acknowledge_current"], ["削除を確認して再登録しない", "acknowledge_deleted"]], @action) %>
     <%= submit_tag "編集値を保存して差分をプレビュー" %>

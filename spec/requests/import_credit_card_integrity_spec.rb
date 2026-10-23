@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "imported credit card integrity", type: :request do
   let!(:category) { Category.create!(name: "食費", kind: :expense) }
-  let!(:payment_method) { PaymentMethod.create!(name: "カード") }
+  let!(:payment_method) { PaymentMethod.create!(import_kind: "credit_card", name: "カード") }
   let!(:account) { Account.create!(name: "カード未払", kind: :credit_pending) }
   let!(:bank) { Account.create!(name: "引落元", kind: :bank) }
   let(:draft) do

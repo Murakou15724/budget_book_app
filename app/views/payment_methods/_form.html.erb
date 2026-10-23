@@ -22,8 +22,11 @@
     <%= f.number_field :position %>
   </div>
 
+  <div class="field"><%= f.label :import_kind, "画像取込での支払種別" %><%= f.select :import_kind, PaymentMethod::IMPORT_KIND_LABELS.map { |key, value| [value, key] } %></div>
   <div class="actions">
     <%= f.submit "保存" %>
     <%= link_to "キャンセル", payment_methods_path %>
   </div>
 <% end %>
+
+<p>画像取込の支払経路は支払方法の種別で確認します。未設定の場合は画像から自動登録されません。</p>

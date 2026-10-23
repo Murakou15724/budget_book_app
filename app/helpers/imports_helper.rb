@@ -1,5 +1,14 @@
 module ImportsHelper
+  KIND_LABELS = { "normal" => "通常取引", "charge" => "チャージ", "transfer" => "口座間移動", "investment" => "投資", "card_settlement" => "カード引落", "refund" => "返金", "cancellation" => "取消", "fee" => "手数料", "unknown" => "未確定" }.freeze
   REASONS = {
+    "rule_missing" => "確認済みルールがありません", "rule_ambiguous" => "複数のルールが一致しています",
+    "rule_invalid" => "ルールの分類・支払経路が不正です", "rule_changed" => "抽出後にルールが変更・停止されました",
+    "date_unresolved" => "日付が未確定または不正です", "extraction_evidence_missing" => "原文根拠が不足しています",
+    "extraction_uncertain" => "抽出に不確実な項目があります", "special_transaction" => "特殊取引・種別未確定のため手動確認が必要です",
+    "payment_route_unconfirmed" => "支払方法の種別が未設定・対象外です", "payment_route_mismatch" => "支払方法・口座・クレカ状態が一致しません",
+    "category_direction_mismatch" => "カテゴリの区分と収支が一致しません", "auto_apply_disabled" => "この経路の自動反映は許可されていません",
+    "candidate_edited" => "編集済みの候補は自動反映しません", "invalid_planned_target" => "対応先予定の分類・支払経路が不正です。予定を修正して再プレビューしてください",
+    "correction_confirmed" => "実績の訂正内容を確認しました",
     "similar_candidates" => "同じ口座・収支・金額で日付±7日の候補があります", "external_id_changed" => "同じ外部IDの内容が変わっています",
     "invalid_transaction" => "必須項目または入力値の修正が必要です", "source_account_mismatch" => "元口座と反映口座が異なります",
     "legacy_origin_unknown" => "移行前の候補のため元画像・元口座は不明です", "target_changed" => "対応先の取引が変更されています",

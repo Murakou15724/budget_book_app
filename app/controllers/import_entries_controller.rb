@@ -8,7 +8,8 @@ class ImportEntriesController < ApplicationController
       @entry = ImportEntry.lock.find(params[:id])
       if !@entry.reference_entry_id && !@entry.terminal?
         before = Imports::Fingerprint.draft_snapshot(@entry.image_import_draft)
-        @entry.image_import_draft.update!(draft_params)
+        Imports::CandidateConfirmation.apply(@entry.image_import_draft, attributes: draft_params.to_h,
+          confirmation: confirmation_params.to_h).save!
         after = Imports::Fingerprint.draft_snapshot(@entry.image_import_draft)
         @entry.event!("edited", details: { "before" => before, "after" => after }) if before != after
         Imports::Matcher.classify!(@entry)
@@ -28,8 +29,14 @@ class ImportEntriesController < ApplicationController
   end
 
   def resolve
+    return head :unprocessable_entity unless (Imports::Applier::ACTIONS - ["auto_apply"]).include?(params[:decision])
+
     result = Imports::Applier.call(entry_id: params[:id], action: params[:decision],
       target_id: params[:target_id], review_token: params[:review_token])
+    if result.reason == "invalid_planned_target"
+      flash[:invalid_planned_target_id] = result.target_id
+      return redirect_to import_entry_path(params[:id]), alert: ([result.reason] + result.reason_codes).map { |reason| helpers.import_reason_label(reason) }.join(" / ")
+    end
     redirect_to import_entry_path(params[:id]), notice: import_result_message(result)
   end
 
@@ -53,6 +60,10 @@ class ImportEntriesController < ApplicationController
     @targets = @targets.limit(50)
   rescue Date::Error
     @targets = Transaction.none
+  end
+
+  def confirmation_params
+    params.fetch(:confirmation, ActionController::Parameters.new).permit(:date_confirmed, :kind_correction, :kind_correction_reason)
   end
 
   def draft_params

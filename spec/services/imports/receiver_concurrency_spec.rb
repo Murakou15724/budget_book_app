@@ -18,14 +18,20 @@ RSpec.describe "image receiver concurrency", type: :model do
   def fixture_item
     account = Account.create!(name: "並行画像口座-#{SecureRandom.hex(4)}", kind: :bank)
     category = Category.create!(name: "並行画像分類-#{SecureRandom.hex(4)}", kind: :expense)
-    method = PaymentMethod.create!(name: "並行画像方法-#{SecureRandom.hex(4)}")
-    [account, { "date" => "2026-10-01", "amount" => 500, "direction" => "expense", "memo" => "店",
-      "category_name" => category.name, "payment_method_name" => method.name, "account_name" => account.name }]
+    method = PaymentMethod.create!(import_kind: "bank", name: "並行画像方法-#{SecureRandom.hex(4)}")
+    [account, extraction_payload(amount: 500).merge("memo" => "店",
+      "category_name" => category.name, "payment_method_name" => method.name, "account_name" => account.name)]
+  end
+
+  def enable_source(source, item)
+    source.update!(image_auto_apply_enabled: true)
+    confirmed_rule(source: source, category: Category.find_by!(name: item["category_name"]), payment: PaymentMethod.find_by!(name: item["payment_method_name"]))
   end
 
   it "同一画像の並行再送は外部応答が二つでも文書・候補・取引を一つだけ確定する" do
     account, item = fixture_item
     source = import_document(account: account).import_source
+    enable_source(source, item)
     arrived = Queue.new
     release = Queue.new
     allow(Gemini::TransactionExtractor).to receive(:new) do
@@ -61,6 +67,8 @@ RSpec.describe "image receiver concurrency", type: :model do
     account, item = fixture_item
     first_source = import_document(account: account).import_source
     second_source = import_document(account: account).import_source
+    enable_source(first_source, item)
+    enable_source(second_source, item)
     arrived = Queue.new
     release = Queue.new
     allow(Gemini::TransactionExtractor).to receive(:new) do |image_bytes:, **|
@@ -95,6 +103,7 @@ RSpec.describe "image receiver concurrency", type: :model do
   it "先行成功を遅れて届いた抽出失敗が上書きしない" do
     account, item = fixture_item
     source = import_document(account: account).import_source
+    enable_source(source, item)
     arrived = Queue.new
     release = Queue.new
     slow = Thread.new do

@@ -1,0 +1,6 @@
+<h1>対応実績の訂正を確認</h1>
+<p>対象取引 #<%= @result.entry.target_transaction_id %>。この変更からルールは作成しません。</p>
+<%= render "import_entries/values", snapshot: @result.before, comparison: @result.after, label: "現在値 → 保存後" %>
+<p>関連候補: <%= @result.related_entries.map(&:id).join("、") %>。起点以外の候補には変更確認を求めます。</p>
+<%= button_to "差分を確認して訂正", import_entry_correction_path(@result.entry), method: :patch, params: { token: @result.token } %>
+<%= link_to "候補へ戻る", import_entry_path(@result.entry) %>

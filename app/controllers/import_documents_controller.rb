@@ -1,7 +1,7 @@
 class ImportDocumentsController < ApplicationController
   def index
     @page = [params[:page].to_i, 1].max
-    @documents = ImportDocument.includes(import_source: :account, import_entries: [:image_import_draft, :reference_entry]).order(id: :desc)
+    @documents = ImportDocument.includes(:import_events, import_source: :account, import_entries: [:image_import_draft, :reference_entry]).order(id: :desc)
     @documents = @documents.where(import_source_id: params[:source_id]) if params[:source_id].present?
     @documents = @documents.where(state: params[:state]) if %w[received failed extracted].include?(params[:state])
     @documents = @documents.where("received_at >= ?", Date.iso8601(params[:from_date])) if valid_date?(params[:from_date])
