@@ -1,0 +1,45 @@
+...........................***....**........................*...........*......*................................./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+................................................../home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_dispatch/http/response.rb:234: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/actionpack-7.1.6/lib/action_controller/metal/rendering.rb:207: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+/home/murakamiko/.rbenv/versions/3.3.2/lib/ruby/gems/3.3.0/gems/rspec-rails-7.1.1/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.........................................................................................................................................................
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Account add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/account_spec.rb
+     # Not yet implemented
+     # ./spec/models/account_spec.rb:4
+
+  2) AssetBalance add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_balance_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_balance_spec.rb:4
+
+  3) AssetSnapshot add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/asset_snapshot_spec.rb
+     # Not yet implemented
+     # ./spec/models/asset_snapshot_spec.rb:4
+
+  4) CategoryMonthlyBudget add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_monthly_budget_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_monthly_budget_spec.rb:4
+
+  5) Category add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/category_spec.rb
+     # Not yet implemented
+     # ./spec/models/category_spec.rb:4
+
+  6) MonthlyReview add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/monthly_review_spec.rb
+     # Not yet implemented
+     # ./spec/models/monthly_review_spec.rb:4
+
+  7) PaymentMethod add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/payment_method_spec.rb
+     # Not yet implemented
+     # ./spec/models/payment_method_spec.rb:4
+
+  8) Setting add some examples to (or delete) /home/murakamiko/projects/budget_book_app/spec/models/setting_spec.rb
+     # Not yet implemented
+     # ./spec/models/setting_spec.rb:4
+
+Finished in 26.96 seconds (files took 0.85799 seconds to load)
+317 examples, 0 failures, 8 pending
+

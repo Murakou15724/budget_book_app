@@ -1,0 +1,18 @@
+{
+  "adapter": "PostgreSQL",
+  "preserved_tables": [
+    "import_documents",
+    "import_entries",
+    "image_import_drafts",
+    "transactions"
+  ],
+  "interrupted_ddl_resume": true,
+  "repeat_up": true,
+  "legacy_defaults": true,
+  "direction_nullable_without_default": true,
+  "foreign_keys": 6,
+  "irreversible_down": true,
+  "final_schema_load": true,
+  "migration_tests_success": true,
+  "schema_tests_success": true
+}

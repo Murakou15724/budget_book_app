@@ -1,0 +1,21 @@
+{
+  "mode": "before",
+  "metrics": {
+    "transaction_form_inputs": 10,
+    "reselected_fields": 10,
+    "file_acquisitions": 1,
+    "uploads": 1,
+    "normal_approvals": 10,
+    "screens": 3,
+    "source_selections": 1
+  },
+  "initial_setup": {
+    "screens": 0,
+    "form_submissions": 0,
+    "submitted_fields": 0
+  },
+  "transactions": 10,
+  "total": 10045,
+  "image": "fixed synthetic 10-item image",
+  "extraction": "HTTP boundary stub; same payload before/after"
+}
