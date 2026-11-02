@@ -1,5 +1,6 @@
 <h1>取込履歴と処理結果</h1>
 <%= link_to "画像から取引を登録", new_image_imports_path %>
+<%= link_to "PayPay CSVを取り込む", new_csv_imports_path %>
 <%= form_with url: import_documents_path, method: :get do %>
   <%= label_tag :source_id, "取込元" %><%= select_tag :source_id, options_from_collection_for_select(ImportSource.order(:name), :id, :name, params[:source_id]), include_blank: "すべて" %>
   <%= label_tag :state, "解析状態" %><%= select_tag :state, options_for_select([["解析完了", "extracted"], ["解析失敗", "failed"], ["未完了", "received"]], params[:state]), include_blank: "すべて" %>

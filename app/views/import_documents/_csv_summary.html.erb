@@ -1,0 +1,12 @@
+<p>解析完了 <%= summary[:count] %>行。以下は文書全体の累積結果です。</p>
+<table>
+  <thead><tr><th>区分</th><th>件数</th><th>出金円</th><th>入金円</th><th>金額不明</th><th>内訳</th></tr></thead>
+  <tbody>
+    <% summary[:groups].each do |key, group| %>
+      <tr><th><%= Imports::CsvSummary::LABELS.fetch(key) %></th><td><%= group[:count] %></td><td><%= group[:outgoing] %></td><td><%= group[:incoming] %></td><td><%= group[:unknown_amount_count] %>件</td>
+        <td><% group[:details].each do |reason, count| %><%= import_reason_label(reason) %>: <%= count %>件 / <% end %></td></tr>
+    <% end %>
+  </tbody>
+</table>
+<p>CSV記載額（重複を含む）: 出金 <%= summary[:raw][:outgoing] %>円 / 入金 <%= summary[:raw][:incoming] %>円 / 不明 <%= summary[:raw][:unknown_amount_count] %>件。外貨は換算しません。</p>
+<p>正常・自動反映欄は確定イベントに記録した実績化額です。未確定・重複等はCSV原文の円額です。対象外は原文を残して手動確認する行です。</p>

@@ -1,5 +1,6 @@
 class PaymentMethod < ApplicationRecord
   include ImportConfigurationGuard
+  has_many :import_payment_routes, inverse_of: :payment_method, dependent: :restrict_with_error
   has_many :import_classification_rules, dependent: :restrict_with_error
   has_many :image_import_drafts, dependent: :restrict_with_error
   has_many :transactions, dependent: :restrict_with_error

@@ -10,7 +10,10 @@
   <% end %>
   <p>自動反映の対象はこのサービス・元口座の画像経路です。一般設定の「承認必須」が無効で、確認済みルールと原文根拠が揃う新規通常取引だけを登録します。</p>
   <p><%= f.check_box :image_auto_apply_enabled %><%= f.label :image_auto_apply_enabled, "この取込元の画像自動反映を許可する" %></p>
+  <p><%= f.check_box :csv_auto_apply_enabled %><%= f.label :csv_auto_apply_enabled, "この取込元のPayPay CSV自動反映を許可する（画像とは独立）" %></p>
+  <p>CSVはサービスキーpaypayが対象です。元口座は利用者の識別用で、反映先は取引方法ごとの支払経路で指定します。一般設定の承認必須はCSVにも適用します。</p>
   <%= f.submit "保存" %>
 <% end %>
 
 <%= link_to "確認済み取込ルール", import_classification_rules_path %>
+<% if @source.persisted? && @source.csv_eligible? %><%= link_to "CSV支払経路を設定", import_source_import_payment_routes_path(@source) %><% end %>

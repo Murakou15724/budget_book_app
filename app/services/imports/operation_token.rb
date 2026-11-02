@@ -36,7 +36,7 @@ module Imports
       masters = [draft.category, draft.payment_method, draft.account, draft.to_account].map do |master|
         master && [master.id, master.updated_at&.iso8601(6)]
       end
-      { "masters" => masters, "source" => entry.import_document.import_source.reload.updated_at.iso8601(6),
+      { "csv_route" => entry.import_document.channel == "paypay_csv" ? SourceRoute.resolve(entry: entry).snapshot : nil, "masters" => masters, "source" => entry.import_document.import_source.reload.updated_at.iso8601(6),
         "rules" => ImportClassificationRule.where(import_source_id: entry.import_document.import_source_id).order(:id).pluck(:id, :version),
         "setting" => Setting.current.reload.updated_at.iso8601(6) }
     end

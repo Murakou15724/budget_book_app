@@ -9,7 +9,8 @@ class ImportClassificationRulesController < ApplicationController
       entry = ImportEntry.find(params[:entry_id])
       @rule.assign_attributes(entry.target_snapshot.slice(*ImportClassificationRule::OUTPUT_KEYS))
       @rule.assign_attributes(import_source_id: entry.import_document.import_source_id,
-        merchant_key: Imports::MerchantKey.normalize(entry.payload["merchant"]), direction: entry.payload["direction"])
+        merchant_key: Imports::MerchantKey.normalize(entry.payload["merchant"]), direction: entry.payload["direction"],
+        channel: entry.import_document.channel, import_payment_route_id: entry.import_document.channel == "paypay_csv" ? Imports::SourceRoute.resolve(entry: entry).route&.id : nil)
     end
     @token = Imports::RuleWriter.form(entry_id: params[:entry_id])
   rescue ArgumentError => e

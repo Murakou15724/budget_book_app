@@ -1,6 +1,6 @@
 class ImageImportDraftsController < ApplicationController
   def index
-    @documents = ImportDocument.includes(:import_events, import_entries: [:image_import_draft, :reference_entry], import_source: :account).order(id: :desc)
+    @documents = ImportDocument.includes(import_source: :account).order(id: :desc)
     @documents = @documents.where(batch_id: params[:batch_id]) if params[:batch_id].present?
     @documents = @documents.where(id: params[:document_ids]) if params[:document_ids].present?
     if params[:document_ids].present?
@@ -14,10 +14,15 @@ class ImageImportDraftsController < ApplicationController
     @total_pages = [(@total_documents + 49) / 50, 1].max
     @page = params[:page].to_i.clamp(1, @total_pages)
     @documents = @documents.offset((@page - 1) * 50).limit(50)
-    Imports::TargetIntegrity.refresh!(@documents.flat_map(&:import_entries))
-    @documents.each { |document| document.import_entries.reset }
-    ActiveRecord::Associations::Preloader.new(records: @documents, associations: { import_entries: [:image_import_draft, :reference_entry] }).call
-    @drafts = ImageImportDraft.pending.where(import_entries: { import_document_id: @documents.map(&:id) }).includes(:import_entry, :category, :payment_method, :account, :to_account).order(:id)
+    @documents = @documents.to_a
+    @documents.each { |document| Imports::TargetIntegrity.refresh_scope!(document.import_entries) }
+    scope = ImageImportDraft.pending.where(import_entries: { import_document_id: @documents.map(&:id) }).order(:id)
+    @total_candidates = scope.count
+    @candidate_pages = [(@total_candidates + 99) / 100, 1].max
+    @candidate_page = params[:candidate_page].to_i.clamp(1, @candidate_pages)
+    @drafts = scope.offset((@candidate_page - 1) * 100).limit(100).includes(:category, :payment_method, :account, :to_account).to_a
+    entry_columns = ImportEntry.column_names - ["payload"]
+    ActiveRecord::Associations::Preloader.new(records: @drafts, associations: :import_entry, scope: ImportEntry.select(*entry_columns)).call
     @expense_categories = Category.expense.order(:position, :name)
     @income_categories = Category.income.order(:position, :name)
     @payment_methods = PaymentMethod.order(:position, :name)
@@ -25,7 +30,10 @@ class ImageImportDraftsController < ApplicationController
   end
 
   def bulk_approve
-    results = Array(params[:draft_ids]).uniq.filter_map do |id|
+    ids = bulk_ids
+    return head :unprocessable_entity unless ids
+
+    results = ids.filter_map do |id|
       draft = ImageImportDraft.find_by(id: id)
       next unless draft
 
@@ -40,7 +48,10 @@ class ImageImportDraftsController < ApplicationController
   end
 
   def bulk_reject
-    results = ImageImportDraft.where(id: Array(params[:draft_ids]).uniq).map do |draft|
+    ids = bulk_ids
+    return head :unprocessable_entity unless ids
+
+    results = ImageImportDraft.where(id: ids).map do |draft|
       Imports::Applier.call(entry_id: draft.import_entry_id, action: "reject")
     end
     rejected = results.count { |result| result.status == :rejected }
@@ -56,8 +67,16 @@ class ImageImportDraftsController < ApplicationController
 
   private
 
+  def bulk_ids
+    values = params[:draft_ids]
+    return unless values.is_a?(Array) && values.all? { |id| /\A[1-9][0-9]*\z/.match?(id.to_s) }
+
+    ids = values.map(&:to_i).uniq
+    ids if ids.size.between?(1, 100)
+  end
+
   def draft_filter_params
-    params.permit(:batch_id, :page, :filter, document_ids: [], image_numbers: {}).to_h
+    params.permit(:batch_id, :page, :candidate_page, :filter, document_ids: [], image_numbers: {}).to_h
   end
   helper_method :draft_filter_params
 end

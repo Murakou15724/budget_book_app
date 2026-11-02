@@ -1,0 +1,6 @@
+<h1><%= @source.name %> のCSV支払経路</h1>
+<%= link_to "経路を追加", new_import_source_import_payment_route_path(@source) %> / <%= link_to "CSV取込", new_csv_imports_path %> / <%= link_to "取込元一覧", import_sources_path %>
+<% @routes.each do |route| %>
+  <p><%= route.source_method %> → <%= route.account.name %> / <%= route.payment_method.name %> / <%= Transaction::CREDIT_CARD_STATUS_LABELS[route.credit_card_status] %> / <%= route.enabled? ? "有効" : "停止" %> / v<%= route.version %>
+    <%= link_to "編集・停止", edit_import_source_import_payment_route_path(@source, route) %></p>
+<% end %>

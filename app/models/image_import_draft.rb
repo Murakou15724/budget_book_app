@@ -1,4 +1,5 @@
 class ImageImportDraft < ApplicationRecord
+  self.filter_attributes += [:confirmation_metadata, :rule_decision]
   include CreditCardPaymentCycle
 
   EDITABLE_ATTRIBUTES = %w[date direction amount memo category_id payment_method_id account_id credit_card_status credit_card_payment_due_on_override transaction_kind to_account_id].freeze

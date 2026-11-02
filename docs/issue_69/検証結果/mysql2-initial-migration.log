@@ -1,0 +1,340 @@
+Created database 'budget_book_app_test_69'
+== 20260813025621 CreateCategories: migrating =================================
+-- create_table(:categories)
+   -> 0.0211s
+-- add_index(:categories, [:kind, :name], {:unique=>true})
+   -> 0.0155s
+== 20260813025621 CreateCategories: migrated (0.0368s) ========================
+
+== 20260813025622 CreateAccounts: migrating ===================================
+-- create_table(:accounts)
+   -> 0.0211s
+-- add_index(:accounts, :name, {:unique=>true})
+   -> 0.0230s
+== 20260813025622 CreateAccounts: migrated (0.0443s) ==========================
+
+== 20260813025623 CreatePaymentMethods: migrating =============================
+-- create_table(:payment_methods)
+   -> 0.0353s
+-- add_index(:payment_methods, :name, {:unique=>true})
+   -> 0.0183s
+== 20260813025623 CreatePaymentMethods: migrated (0.0538s) ====================
+
+== 20260813025624 CreateSettings: migrating ===================================
+-- create_table(:settings)
+   -> 0.0247s
+== 20260813025624 CreateSettings: migrated (0.0248s) ==========================
+
+== 20260813025634 CreateCategoryMonthlyBudgets: migrating =====================
+-- create_table(:category_monthly_budgets)
+   -> 0.0225s
+-- add_index(:category_monthly_budgets, [:category_id, :year, :month], {:unique=>true, :name=>"index_category_monthly_budgets_on_category_year_month"})
+   -> 0.0139s
+== 20260813025634 CreateCategoryMonthlyBudgets: migrated (0.0365s) ============
+
+== 20260813025635 CreateTransactions: migrating ===============================
+-- create_table(:transactions)
+   -> 0.0394s
+-- add_index(:transactions, :date)
+   -> 0.0240s
+-- add_index(:transactions, [:direction, :entry_type])
+   -> 0.0211s
+== 20260813025635 CreateTransactions: migrated (0.0847s) ======================
+
+== 20260813025636 CreateAssetSnapshots: migrating =============================
+-- create_table(:asset_snapshots)
+   -> 0.0216s
+-- add_index(:asset_snapshots, :recorded_on)
+   -> 0.0151s
+== 20260813025636 CreateAssetSnapshots: migrated (0.0368s) ====================
+
+== 20260813025637 CreateAssetBalances: migrating ==============================
+-- create_table(:asset_balances)
+   -> 0.0292s
+-- add_index(:asset_balances, [:asset_snapshot_id, :account_id], {:unique=>true, :name=>"index_asset_balances_on_snapshot_and_account"})
+   -> 0.0316s
+== 20260813025637 CreateAssetBalances: migrated (0.0609s) =====================
+
+== 20260813025638 CreateMonthlyReviews: migrating =============================
+-- create_table(:monthly_reviews)
+   -> 0.0245s
+-- add_index(:monthly_reviews, [:year, :month], {:unique=>true})
+   -> 0.0164s
+== 20260813025638 CreateMonthlyReviews: migrated (0.0410s) ====================
+
+== 20260828031521 CreateQuickEntryTemplates: migrating ========================
+-- create_table(:quick_entry_templates)
+   -> 0.0351s
+-- add_index(:quick_entry_templates, :name, {:unique=>true})
+   -> 0.0180s
+== 20260828031521 CreateQuickEntryTemplates: migrated (0.0532s) ===============
+
+== 20260828035557 CreateImageImportDrafts: migrating ==========================
+-- create_table(:image_import_drafts)
+   -> 0.0357s
+-- add_index(:image_import_drafts, :batch_id)
+   -> 0.0183s
+== 20260828035557 CreateImageImportDrafts: migrated (0.0541s) =================
+
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrating =========
+-- add_column(:settings, :image_import_requires_approval, :boolean, {:null=>false, :default=>true})
+   -> 0.0357s
+== 20260828035611 AddImageImportRequiresApprovalToSettings: migrated (0.0358s)
+
+== 20260902033240 AddCreditCardCycleToSettings: migrating =====================
+-- add_column(:settings, :credit_card_closing_day, :integer, {:default=>15, :null=>false})
+   -> 0.0333s
+-- add_column(:settings, :credit_card_payment_day, :integer, {:default=>26, :null=>false})
+   -> 0.0302s
+== 20260902033240 AddCreditCardCycleToSettings: migrated (0.0637s) ============
+
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrating ======
+-- change_column_default(:settings, :credit_card_closing_day, {:from=>15, :to=>31})
+   -> 0.0108s
+-- execute("UPDATE settings SET credit_card_closing_day = 31 WHERE credit_card_closing_day = 15")
+   -> 0.0006s
+== 20260902071946 UpdateCreditCardClosingDayDefaultToMonthEnd: migrated (0.0114s)
+
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrating
+-- add_column(:transactions, :credit_card_payment_due_on_override, :date)
+   -> 0.0486s
+-- add_column(:image_import_drafts, :credit_card_payment_due_on_override, :date)
+   -> 0.0443s
+== 20260902073040 AddCreditCardPaymentDueOnOverrideToTransactionsAndDrafts: migrated (0.0930s)
+
+== 20260904000001 AddTransferSupportToTransactions: migrating =================
+-- change_column_null(:transactions, :category_id, true)
+   -> 0.0489s
+-- change_column_null(:quick_entry_templates, :category_id, true)
+   -> 0.0443s
+-- add_reference(:transactions, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.1254s
+-- add_reference(:quick_entry_templates, :to_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.1746s
+== 20260904000001 AddTransferSupportToTransactions: migrated (0.3935s) ========
+
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrating ============
+-- add_reference(:settings, :credit_card_payment_account, {:foreign_key=>{:to_table=>:accounts}, :null=>true})
+   -> 0.0973s
+== 20260904000002 AddCreditCardPaymentAccountToSettings: migrated (0.0974s) ===
+
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrating ===============
+-- add_column(:settings, :monthly_income_estimate, :integer)
+   -> 0.0338s
+== 20260908000001 AddMonthlyIncomeEstimateToSettings: migrated (0.0339s) ======
+
+== 20260908000002 CreateIncomeMonthlyEstimates: migrating =====================
+-- create_table(:income_monthly_estimates)
+   -> 0.0164s
+-- add_index(:income_monthly_estimates, [:year, :month], {:unique=>true})
+   -> 0.0203s
+== 20260908000002 CreateIncomeMonthlyEstimates: migrated (0.0368s) ============
+
+== 20260908010001 CreateExercises: migrating ==================================
+-- create_table(:exercises)
+   -> 0.0205s
+-- add_index(:exercises, :name, {:unique=>true})
+   -> 0.0141s
+== 20260908010001 CreateExercises: migrated (0.0347s) =========================
+
+== 20260908010002 CreateWorkoutDays: migrating ================================
+-- create_table(:workout_days)
+   -> 0.0235s
+-- add_index(:workout_days, :date, {:unique=>true})
+   -> 0.0158s
+== 20260908010002 CreateWorkoutDays: migrated (0.0394s) =======================
+
+== 20260908010003 CreateWorkoutEntries: migrating =============================
+-- create_table(:workout_entries)
+   -> 0.0293s
+== 20260908010003 CreateWorkoutEntries: migrated (0.0294s) ====================
+
+== 20260908010004 CreateWeeklyReviews: migrating ==============================
+-- create_table(:weekly_reviews)
+   -> 0.0179s
+-- add_index(:weekly_reviews, :week_start_date, {:unique=>true})
+   -> 0.0141s
+== 20260908010004 CreateWeeklyReviews: migrated (0.0322s) =====================
+
+== 20260908010005 CreateBadges: migrating =====================================
+-- create_table(:badges)
+   -> 0.0188s
+-- add_index(:badges, :required_xp, {:unique=>true})
+   -> 0.0131s
+== 20260908010005 CreateBadges: migrated (0.0320s) ============================
+
+== 20260908010006 CreateWorkoutSettings: migrating ============================
+-- create_table(:workout_settings)
+   -> 0.0161s
+== 20260908010006 CreateWorkoutSettings: migrated (0.0162s) ===================
+
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrating ================
+-- add_column(:transactions, :credit_card_paid_on, :date)
+   -> 0.0482s
+-- add_index(:transactions, :credit_card_paid_on)
+   -> 0.0162s
+== 20260925000001 AddCreditCardPaidOnToTransactions: migrated (0.1031s) =======
+
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrating =========
+-- add_column(:asset_balances, :reconciliation_baseline, :boolean, {:default=>false, :null=>false})
+   -> 0.0430s
+== 20261019000001 AddReconciliationBaselineToAssetBalances: migrated (0.0431s)
+
+== 20261019000002 CreateImportTracking: migrating =============================
+-- create_table(:import_sources, {:if_not_exists=>true})
+   -> 0.0257s
+-- create_table(:import_documents, {:if_not_exists=>true})
+   -> 0.0308s
+-- create_table(:import_identities, {:if_not_exists=>true})
+   -> 0.0307s
+-- create_table(:import_entries, {:if_not_exists=>true})
+   -> 0.0429s
+-- foreign_key_exists?(:import_entries, {:column=>:reference_entry_id})
+   -> 0.0017s
+-- add_foreign_key(:import_entries, :import_entries, {:column=>:reference_entry_id})
+   -> 0.0770s
+-- foreign_key_exists?(:import_identities, {:column=>:bound_entry_id})
+   -> 0.0017s
+-- add_foreign_key(:import_identities, :import_entries, {:column=>:bound_entry_id})
+   -> 0.0598s
+-- create_table(:import_events, {:if_not_exists=>true})
+   -> 0.0274s
+-- create_table(:import_guards, {:if_not_exists=>true})
+   -> 0.0220s
+-- column_exists?(:image_import_drafts, :import_entry_id)
+   -> 0.0015s
+-- add_column(:image_import_drafts, :import_entry_id, :bigint)
+   -> 0.0445s
+-- add_index(:image_import_drafts, :import_entry_id, {:unique=>true, :if_not_exists=>true})
+   -> 0.0251s
+-- foreign_key_exists?(:image_import_drafts, :import_entries)
+   -> 0.0032s
+-- add_foreign_key(:image_import_drafts, :import_entries)
+   -> 0.0751s
+-- add_index(:transactions, [:account_id, :direction, :amount, :date], {:name=>"index_transactions_on_import_match", :if_not_exists=>true})
+   -> 0.0325s
+-- add_index(:image_import_drafts, [:account_id, :direction, :amount, :date], {:name=>"index_image_import_drafts_on_import_match", :if_not_exists=>true})
+   -> 0.0225s
+-- change_column_null(:image_import_drafts, :import_entry_id, false)
+   -> 0.0448s
+== 20261019000002 CreateImportTracking: migrated (0.6322s) ====================
+
+== 20261021000001 AddImportClassification: migrating ==========================
+-- column_exists?(:import_sources, :image_auto_apply_enabled)
+   -> 0.0013s
+-- add_column(:import_sources, :image_auto_apply_enabled, :boolean, {:null=>false, :default=>false})
+   -> 0.0177s
+-- column_exists?(:payment_methods, :import_kind)
+   -> 0.0015s
+-- add_column(:payment_methods, :import_kind, :string, {:null=>false, :default=>"unknown"})
+   -> 0.0428s
+-- change_column_null(:image_import_drafts, :direction, true)
+   -> 0.0532s
+-- change_column_default(:image_import_drafts, :direction, nil)
+   -> 0.0098s
+-- column_exists?(:image_import_drafts, :date_origin)
+   -> 0.0015s
+-- add_column(:image_import_drafts, :date_origin, :string, {:null=>false, :default=>"unresolved"})
+   -> 0.0534s
+-- column_exists?(:image_import_drafts, :transaction_kind)
+   -> 0.0023s
+-- add_column(:image_import_drafts, :transaction_kind, :string, {:null=>false, :default=>"unknown"})
+   -> 0.0555s
+-- column_exists?(:image_import_drafts, :confirmation_metadata)
+   -> 0.0024s
+-- add_column(:image_import_drafts, :confirmation_metadata, :json)
+   -> 0.0489s
+-- change_column_null(:image_import_drafts, :confirmation_metadata, false)
+   -> 0.0557s
+-- column_exists?(:image_import_drafts, :rule_decision)
+   -> 0.0021s
+-- add_column(:image_import_drafts, :rule_decision, :json)
+   -> 0.0498s
+-- change_column_null(:image_import_drafts, :rule_decision, false)
+   -> 0.0573s
+-- column_exists?(:image_import_drafts, :to_account_id)
+   -> 0.0022s
+-- add_column(:image_import_drafts, :to_account_id, :bigint)
+   -> 0.0482s
+-- add_index(:image_import_drafts, :to_account_id, {:if_not_exists=>true})
+   -> 0.0194s
+-- foreign_key_exists?(:image_import_drafts, {:column=>:to_account_id})
+   -> 0.0014s
+-- add_foreign_key(:image_import_drafts, :accounts, {:column=>:to_account_id})
+   -> 0.0736s
+-- create_table(:import_classification_rules, {:if_not_exists=>true})
+   -> 0.0191s
+-- add_index(:import_classification_rules, [:import_source_id, :channel, :enabled], {:name=>"index_import_rules_on_scope", :if_not_exists=>true})
+   -> 0.0191s
+-- add_index(:import_classification_rules, :creation_nonce, {:unique=>true, :if_not_exists=>true})
+   -> 0.0175s
+-- add_index(:import_classification_rules, :import_source_id, {:if_not_exists=>true})
+   -> 0.0197s
+-- foreign_key_exists?(:import_classification_rules, {:column=>:import_source_id})
+   -> 0.0013s
+-- add_foreign_key(:import_classification_rules, :import_sources, {:column=>:import_source_id})
+   -> 0.0732s
+-- add_index(:import_classification_rules, :category_id, {:if_not_exists=>true})
+   -> 0.0251s
+-- foreign_key_exists?(:import_classification_rules, {:column=>:category_id})
+   -> 0.0016s
+-- add_foreign_key(:import_classification_rules, :categories, {:column=>:category_id})
+   -> 0.0725s
+-- add_index(:import_classification_rules, :payment_method_id, {:if_not_exists=>true})
+   -> 0.0272s
+-- foreign_key_exists?(:import_classification_rules, {:column=>:payment_method_id})
+   -> 0.0015s
+-- add_foreign_key(:import_classification_rules, :payment_methods, {:column=>:payment_method_id})
+   -> 0.0710s
+-- add_index(:import_classification_rules, :account_id, {:if_not_exists=>true})
+   -> 0.0208s
+-- foreign_key_exists?(:import_classification_rules, {:column=>:account_id})
+   -> 0.0016s
+-- add_foreign_key(:import_classification_rules, :accounts, {:column=>:account_id})
+   -> 0.0749s
+-- add_index(:import_classification_rules, :confirmation_entry_id, {:if_not_exists=>true})
+   -> 0.0255s
+-- foreign_key_exists?(:import_classification_rules, {:column=>:confirmation_entry_id})
+   -> 0.0013s
+-- add_foreign_key(:import_classification_rules, :import_entries, {:column=>:confirmation_entry_id})
+   -> 0.0695s
+== 20261021000001 AddImportClassification: migrated (1.1562s) =================
+
+== 20261030090000 AddPaypayCsvImport: migrating ===============================
+-- create_table(:import_payment_routes, {:if_not_exists=>true})
+   -> 0.0188s
+-- add_index(:import_payment_routes, [:import_source_id, :source_method_digest], {:unique=>true, :name=>"index_import_routes_on_source_method", :if_not_exists=>true})
+   -> 0.0167s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:import_source_id})
+   -> 0.0011s
+-- add_foreign_key(:import_payment_routes, :import_sources, {:column=>:import_source_id})
+   -> 0.0455s
+-- add_index(:import_payment_routes, :account_id, {:if_not_exists=>true})
+   -> 0.0163s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:account_id})
+   -> 0.0012s
+-- add_foreign_key(:import_payment_routes, :accounts, {:column=>:account_id})
+   -> 0.0486s
+-- add_index(:import_payment_routes, :payment_method_id, {:if_not_exists=>true})
+   -> 0.0176s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:payment_method_id})
+   -> 0.0014s
+-- add_foreign_key(:import_payment_routes, :payment_methods, {:column=>:payment_method_id})
+   -> 0.0525s
+-- column_exists?(:import_sources, :csv_auto_apply_enabled)
+   -> 0.0015s
+-- add_column(:import_sources, :csv_auto_apply_enabled, :boolean, {:null=>false, :default=>false})
+   -> 0.0181s
+-- column_exists?(:import_classification_rules, :import_payment_route_id)
+   -> 0.0021s
+-- add_column(:import_classification_rules, :import_payment_route_id, :bigint)
+   -> 0.0593s
+-- add_index(:import_classification_rules, :import_payment_route_id, {:if_not_exists=>true})
+   -> 0.0213s
+-- foreign_key_exists?(:import_classification_rules, :import_payment_routes)
+   -> 0.0015s
+-- add_foreign_key(:import_classification_rules, :import_payment_routes)
+   -> 0.0756s
+-- change_column(:import_identities, :external_id, :text, {:limit=>16777215, :null=>false})
+   -> 0.0606s
+== 20261030090000 AddPaypayCsvImport: migrated (0.4627s) ======================

@@ -1,6 +1,7 @@
 class ImportSource < ApplicationRecord
   include ImportConfigurationGuard
   has_many :import_classification_rules, dependent: :restrict_with_error
+  has_many :import_payment_routes, inverse_of: :import_source, dependent: :restrict_with_error
   belongs_to :account, optional: true
   has_many :import_documents, dependent: :restrict_with_error
   has_many :import_identities, dependent: :restrict_with_error
@@ -12,6 +13,10 @@ class ImportSource < ApplicationRecord
   validate :legacy_is_reserved
 
   scope :available, -> { where(legacy: false) }
+
+  def csv_eligible?
+    service_key == "paypay" && !legacy?
+  end
 
   private
 

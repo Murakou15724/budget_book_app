@@ -1,0 +1,15 @@
+<p>取込元: <%= @source.name %>。CSVの取引方法原文と完全一致で対応します。元口座は利用者識別用で、各行の反映先はここで設定します。</p>
+<%= form_with model: [@source, @route] do |f| %>
+  <p role="alert"><%= @route.errors.full_messages.to_sentence %></p>
+  <%= f.hidden_field :lock_version %>
+  <% if @route.new_record? %>
+    <p><%= f.label :source_method, "CSVの取引方法（原文のまま）" %><%= f.text_field :source_method, maxlength: 255, required: true %></p>
+  <% else %><p>取引方法: <%= @route.source_method %>（変更不可）</p><% end %>
+  <p><%= f.label :account_id, "反映口座" %><%= f.collection_select :account_id, Account.order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :payment_method_id, "支払方法" %><%= f.collection_select :payment_method_id, PaymentMethod.order(:name), :id, :name, include_blank: true %></p>
+  <p><%= f.label :credit_card_status, "クレカ状態" %><%= f.select :credit_card_status, [["対象外", "not_applicable"], ["未払", "unpaid"]] %></p>
+  <p><%= f.check_box :enabled %><%= f.label :enabled, "この支払経路を有効にする" %></p>
+  <p><%= check_box_tag :confirmed, "1", false, required: true %><%= label_tag :confirmed, "取引方法の意味と反映口座・支払方法・クレカ状態を確認しました" %></p>
+  <%= f.submit "確認して保存" %>
+<% end %>
+<%= link_to "経路一覧", import_source_import_payment_routes_path(@source) %>

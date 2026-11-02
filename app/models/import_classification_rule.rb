@@ -2,14 +2,15 @@ class ImportClassificationRule < ApplicationRecord
   include ImportConfigurationGuard
 
   OUTPUT_KEYS = %w[category_id payment_method_id account_id credit_card_status].freeze
-  INPUT_KEYS = %w[import_source_id channel merchant_key direction priority enabled].freeze
+  INPUT_KEYS = %w[import_source_id channel merchant_key direction priority enabled import_payment_route_id].freeze
   EDITABLE_ATTRIBUTES = (INPUT_KEYS + OUTPUT_KEYS).freeze
   belongs_to :import_source
+  belongs_to :import_payment_route, optional: true, inverse_of: :import_classification_rules
   belongs_to :category
   belongs_to :payment_method
   belongs_to :account
   belongs_to :confirmation_entry, class_name: "ImportEntry", optional: true
-  validates :channel, inclusion: { in: ["image"] }
+  validates :channel, inclusion: { in: %w[image paypay_csv] }
   validates :direction, inclusion: { in: %w[income expense] }
   validates :credit_card_status, inclusion: { in: %w[not_applicable unpaid] }
   validates :merchant_key, :confirmed_at, :creation_nonce, :creation_request_digest, presence: true
@@ -31,7 +32,15 @@ class ImportClassificationRule < ApplicationRecord
   def consistent_output
     return unless import_source && category && payment_method && account
 
-    errors.add(:account, "は元口座と一致させてください") if account_id != import_source.account_id
+    if channel == "image"
+      errors.add(:import_payment_route, "は画像ルールに指定できません") if import_payment_route_id.present?
+      errors.add(:account, "は元口座と一致させてください") if account_id != import_source.account_id
+    else
+      route = import_payment_route
+      valid = import_source.csv_eligible? && route && route.import_source_id == import_source_id && route.valid? &&
+        route.attributes.slice(*ImportPaymentRoute::OUTPUT_KEYS) == attributes.slice(*ImportPaymentRoute::OUTPUT_KEYS)
+      errors.add(:import_payment_route, "と出力・取込元を一致させてください") unless valid
+    end
     projection = Transaction.new(direction: direction, category: category, payment_method: payment_method,
       account: account, credit_card_status: credit_card_status, amount: 1, date: Date.new(2026, 1, 1), entry_type: :actual)
     Imports::CandidateValidator.transaction_reasons(transaction: projection).each { |reason| errors.add(:base, reason) }

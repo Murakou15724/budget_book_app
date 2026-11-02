@@ -1,4 +1,5 @@
 class ImportEntry < ApplicationRecord
+  self.filter_attributes += [:payload]
   TERMINAL_STATES = %w[applied linked rejected superseded deletion_acknowledged].freeze
   UNRESOLVED_STATES = %w[pending held conflict].freeze
   belongs_to :import_document

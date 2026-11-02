@@ -54,15 +54,22 @@ module Imports
       entry = OperationToken.lock_entries([id.to_i]).first
       draft = entry.image_import_draft
       target = Transaction.where(id: entry.target_transaction_id).lock.first
+      route_matches_target = if entry.import_document.channel == "paypay_csv"
+        target && SourceRoute.resolve(entry: entry).outputs == target.attributes.slice(*ImportPaymentRoute::OUTPUT_KEYS)
+      else
+        target && target.account_id == entry.import_document.import_source.account_id
+      end
       valid = %w[applied linked].include?(entry.state) && !entry.reference_entry_id && target &&
         Fingerprint.transaction_matches?(target, entry.target_snapshot) &&
         draft.transaction_kind == "normal" && draft.confirmation_metadata["source_kind"] == "normal" &&
         MerchantKey.normalize(entry.payload["merchant"]) && (Array(entry.payload["uncertain_fields"]) & %w[merchant direction]).empty? &&
-        entry.payload["direction"] == target.direction && target.account_id == entry.import_document.import_source.account_id &&
+        entry.payload["direction"] == target.direction &&
+        route_matches_target && SourceRoute.reasons(entry: entry, draft: draft, mode: :manual).empty? &&
         CandidateValidator.transaction_reasons(transaction: target).empty?
       raise ArgumentError, "通常取引の確認済み履歴からだけ作成できます" unless valid
 
-      { "entry_id" => entry.id, "version" => entry.lock_version, "snapshot" => Fingerprint.digest(Fingerprint.transaction_snapshot(target)) }
+      { "entry_id" => entry.id, "version" => entry.lock_version, "snapshot" => Fingerprint.digest(Fingerprint.transaction_snapshot(target)),
+        "configuration" => OperationToken.configuration_context(entry) }
     end
 
     def eligible?(entry)
