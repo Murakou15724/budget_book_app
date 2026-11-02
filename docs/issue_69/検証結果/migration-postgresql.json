@@ -1,0 +1,27 @@
+{
+  "adapter": "postgresql",
+  "database": "budget_book_app_test_69",
+  "port": 15369,
+  "preserved_tables": [
+    "accounts",
+    "categories",
+    "payment_methods",
+    "import_sources",
+    "import_documents",
+    "import_identities",
+    "import_entries",
+    "image_import_drafts",
+    "transactions",
+    "import_classification_rules"
+  ],
+  "interrupted_ddl_resume": true,
+  "repeat_up": true,
+  "foreign_keys": 4,
+  "unique_index": true,
+  "csv_permission_default_false": true,
+  "routes_initially_empty": true,
+  "external_id_type": "text",
+  "irreversible_down": true,
+  "migration_tests_success": true,
+  "schema_tests_success": true
+}

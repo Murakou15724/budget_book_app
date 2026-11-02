@@ -18,7 +18,8 @@ module Imports
           external_id_digest: Digest::SHA256.hexdigest(external_id.b)) { |i| i.external_id = external_id }
         raise IdentityCollision unless identity.external_id.b == external_id.b
 
-        representative = identity.import_entries.where(payload_digest: digest, reference_entry_id: nil).order(:id).lock.first
+        representative_id = identity.import_entries.where(payload_digest: digest, reference_entry_id: nil).order(:id).lock.pick(:id)
+        representative = representative_id && ImportEntry.lock.find(representative_id)
       end
       entry = document.import_entries.create!(row_number: row_number, payload: permitted, payload_digest: digest,
         import_identity: identity, reference_entry: representative,

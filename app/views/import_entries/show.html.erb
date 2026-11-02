@@ -7,6 +7,7 @@
 <p><%= import_state_label(@effective.state) %> / <%= import_reason_label(@effective.reason_code) %></p>
 <%= render "decision", draft: @draft %>
 <h2>元の候補（編集前）</h2><%= render "values", snapshot: @entry.payload %>
+<% if @entry.import_document.channel == "paypay_csv" %><%= render "csv_raw", entry: @entry %><% end %>
 <p>まとめ入力: 未導入（部分金額の配分は専用機能の対象です）</p>
 <% if @entry.reference_entry_id %>
   <p>同じ外部ID・同じ内容です。<%= link_to "代表候補 ##{@effective.id} の結果・確認", import_entry_path(@effective) %></p>

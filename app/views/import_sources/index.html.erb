@@ -1,7 +1,9 @@
 <h1>取込元の設定</h1>
 <%= link_to "取込元を追加", new_import_source_path %>
 <%= link_to "画像から取引を登録", new_image_imports_path %>
+<%= link_to "PayPay CSV取込", new_csv_imports_path %>
 <% @sources.each do |source| %>
   <p><%= source.name %> / <%= source.service_key %> / 元口座: <%= source.account.name %>
+    <% if source.csv_eligible? %><%= link_to "CSV支払経路", import_source_import_payment_routes_path(source) %><% end %>
     <%= link_to "表示名を編集", edit_import_source_path(source) %></p>
 <% end %>

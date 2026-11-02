@@ -32,6 +32,10 @@ module Imports
       end
     end
 
+    def refresh_scope!(scope)
+      scope.in_batches(of: 100) { |batch| refresh!(batch.reorder(nil).to_a) }
+    end
+
     def refresh!(entries)
       ImportGuard.synchronize do
         entries.map(&:effective_entry).uniq(&:id).sort_by(&:id).each do |entry|

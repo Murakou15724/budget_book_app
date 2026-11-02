@@ -106,8 +106,8 @@ module Imports
       else
         CandidateValidator.call(draft: draft).reason_codes
       end
-      if @action == "approve" && draft.account_id != @entry.import_document.import_source.account_id && !@entry.import_document.import_source.legacy?
-        reasons << "source_account_mismatch"
+      if @entry.import_document.channel == "paypay_csv" || @action == "approve"
+        reasons.concat(SourceRoute.reasons(entry: @entry, draft: draft, mode: @action == "auto_apply" ? :automatic : :manual))
       end
       unless reasons.empty?
         draft.update!(rule_decision: draft.rule_decision.merge("reason_codes" => reasons.uniq))

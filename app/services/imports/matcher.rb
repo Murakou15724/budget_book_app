@@ -19,13 +19,16 @@ module Imports
         classification, reason = "correction", "external_id_changed"
       elsif %w[legacy_origin_unknown user_held].include?(@entry.reason_code)
         classification, reason = "hold", @entry.reason_code
+      elsif @entry.import_document.channel == "paypay_csv" &&
+          @draft.confirmation_metadata["confirmed_values"] != Fingerprint.draft_snapshot(@draft) &&
+          (Array(@entry.payload["csv_errors"]) + Array(@entry.payload["csv_holds"])).any?
+        classification, reason = "hold", (Array(@entry.payload["csv_errors"]) + Array(@entry.payload["csv_holds"])).first
       elsif transactions.any? || drafts.any?
         classification, reason = "hold", "similar_candidates"
       elsif !Transaction.new(@draft.transaction_attributes).valid?
         classification, reason = "hold", "invalid_transaction"
-      elsif @entry.import_document.import_source.account_id.present? &&
-          @draft.account_id != @entry.import_document.import_source.account_id
-        classification, reason = "hold", "source_account_mismatch"
+      elsif (route_reasons = SourceRoute.reasons(entry: @entry, draft: @draft, mode: :manual)).any?
+        classification, reason = "hold", route_reasons.first
       end
       if classification == "new"
         confirmed = @draft.confirmation_metadata["confirmed_values"] == Fingerprint.draft_snapshot(@draft)

@@ -1,4 +1,5 @@
 class ImportIdentity < ApplicationRecord
+  self.filter_attributes += [:external_id]
   belongs_to :import_source
   belongs_to :bound_entry, class_name: "ImportEntry", optional: true
   has_many :import_entries, dependent: :restrict_with_error

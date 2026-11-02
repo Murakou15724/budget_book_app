@@ -1,4 +1,5 @@
 class ImportEvent < ApplicationRecord
+  self.filter_attributes += [:details]
   belongs_to :import_document
   belongs_to :import_entry, optional: true
   validates :kind, presence: true

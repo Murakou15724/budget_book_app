@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_30_090000) do
   create_table "accounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.integer "kind", default: 0, null: false
@@ -133,10 +133,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
     t.string "creation_request_digest", limit: 64, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "import_payment_route_id"
     t.index ["account_id"], name: "index_import_classification_rules_on_account_id"
     t.index ["category_id"], name: "index_import_classification_rules_on_category_id"
     t.index ["confirmation_entry_id"], name: "index_import_classification_rules_on_confirmation_entry_id"
     t.index ["creation_nonce"], name: "index_import_classification_rules_on_creation_nonce", unique: true
+    t.index ["import_payment_route_id"], name: "index_import_classification_rules_on_import_payment_route_id"
     t.index ["import_source_id", "channel", "enabled"], name: "index_import_rules_on_scope"
     t.index ["import_source_id"], name: "index_import_classification_rules_on_import_source_id"
     t.index ["payment_method_id"], name: "index_import_classification_rules_on_payment_method_id"
@@ -206,7 +208,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
 
   create_table "import_identities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "import_source_id", null: false
-    t.text "external_id", null: false
+    t.text "external_id", limit: 16777215, null: false
     t.string "external_id_digest", limit: 64, null: false
     t.bigint "bound_entry_id"
     t.datetime "created_at", null: false
@@ -214,6 +216,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
     t.index ["bound_entry_id"], name: "index_import_identities_on_bound_entry_id"
     t.index ["import_source_id", "external_id_digest"], name: "index_import_identities_on_external_key", unique: true
     t.index ["import_source_id"], name: "index_import_identities_on_import_source_id"
+  end
+
+  create_table "import_payment_routes", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "import_source_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "payment_method_id", null: false
+    t.string "source_method", null: false
+    t.string "source_method_digest", limit: 64, null: false
+    t.string "credit_card_status", limit: 32, null: false
+    t.boolean "enabled", default: false, null: false
+    t.integer "version", default: 1, null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_import_payment_routes_on_account_id"
+    t.index ["import_source_id", "source_method_digest"], name: "index_import_routes_on_source_method", unique: true
+    t.index ["payment_method_id"], name: "index_import_payment_routes_on_payment_method_id"
   end
 
   create_table "import_sources", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -224,6 +243,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "image_auto_apply_enabled", default: false, null: false
+    t.boolean "csv_auto_apply_enabled", default: false, null: false
     t.index ["account_id"], name: "index_import_sources_on_account_id"
     t.index ["service_key", "account_id"], name: "index_import_sources_on_service_key_and_account_id", unique: true
   end
@@ -375,6 +395,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
   add_foreign_key "import_classification_rules", "accounts"
   add_foreign_key "import_classification_rules", "categories"
   add_foreign_key "import_classification_rules", "import_entries", column: "confirmation_entry_id"
+  add_foreign_key "import_classification_rules", "import_payment_routes"
   add_foreign_key "import_classification_rules", "import_sources"
   add_foreign_key "import_classification_rules", "payment_methods"
   add_foreign_key "import_documents", "import_sources"
@@ -385,6 +406,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_21_000001) do
   add_foreign_key "import_events", "import_entries"
   add_foreign_key "import_identities", "import_entries", column: "bound_entry_id"
   add_foreign_key "import_identities", "import_sources"
+  add_foreign_key "import_payment_routes", "accounts"
+  add_foreign_key "import_payment_routes", "import_sources"
+  add_foreign_key "import_payment_routes", "payment_methods"
   add_foreign_key "import_sources", "accounts"
   add_foreign_key "quick_entry_templates", "accounts"
   add_foreign_key "quick_entry_templates", "accounts", column: "to_account_id"

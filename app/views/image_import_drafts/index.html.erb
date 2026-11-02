@@ -1,16 +1,22 @@
 <%= link_to "← 戻る", "#", class: "back-link", data: { controller: "back", action: "click->back#go" } %>
 
-<h1>画像取込レビュー</h1>
+<h1>取込候補レビュー</h1>
 <%= link_to "取込履歴", import_documents_path %> / <%= link_to "要確認", image_import_drafts_path(filter: "pending") %> / <%= link_to "処理済み", image_import_drafts_path(filter: "processed") %> / <%= link_to "確認済みルール", import_classification_rules_path %>
 <p>対象文書 <%= @total_documents %>件 / <%= @page %> / <%= @total_pages %>ページ</p>
 <nav aria-label="レビュー対象文書のページ送り">
-  <%= link_to "前の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page - 1)) if @page > 1 %>
-  <%= link_to "次の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page + 1)) if @page < @total_pages %>
+  <%= link_to "前の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page - 1, candidate_page: 1)) if @page > 1 %>
+  <%= link_to "次の50文書", image_import_drafts_path(draft_filter_params.merge(page: @page + 1, candidate_page: 1)) if @page < @total_pages %>
 </nav>
 <% @documents.each do |document| %>
   <%= render "import_documents/summary", document: document, image_number: import_image_number(document) %>
 <% end %>
-<%= render "application/info_note", icon: "🔍", text: "AIが画像から読み取った内容です。必要に応じて修正してから登録してください。" %>
+<%= render "application/info_note", icon: "🔍", text: "画像またはCSVから取り込んだ内容です。原文と判定理由を確認し、必要に応じて修正してから登録してください。" %>
+
+<p>対象候補 <%= @total_candidates %>件 / 候補ページ <%= @candidate_page %> / <%= @candidate_pages %></p>
+<nav aria-label="候補のページ送り">
+  <%= link_to "前の100候補", image_import_drafts_path(draft_filter_params.merge(candidate_page: @candidate_page - 1)) if @candidate_page > 1 %>
+  <%= link_to "次の100候補", image_import_drafts_path(draft_filter_params.merge(candidate_page: @candidate_page + 1)) if @candidate_page < @candidate_pages %>
+</nav>
 
 <% if @drafts.empty? %>
   <p class="text-muted">レビュー待ちの候補はありません。</p>
@@ -67,6 +73,12 @@
           <%= select_tag "drafts[#{draft.id}][to_account_id]", options_from_collection_for_select(@accounts, :id, :name, draft.to_account_id), include_blank: "移動先を選択" %>
           <label><%= check_box_tag "drafts[#{draft.id}][kind_correction]", "1", false %>原文の特殊種別を通常取引へ訂正する</label>
           <%= text_field_tag "drafts[#{draft.id}][kind_correction_reason]", nil, placeholder: "種別訂正の理由" %>
+          <% if draft.confirmation_metadata.key?("csv_route") %>
+            <% preview = draft.confirmation_metadata.fetch("csv_preview", {}) %>
+            <p>CSV行 <%= draft.import_entry.row_number %> / <%= preview["occurred_at"] %> / <%= preview["merchant"] %> /
+              取引方法: <%= preview["source_method"] %> / 取引番号（要約）: <%= preview["external_id"] %></p>
+            <% Array(preview["reasons"]).each do |reason| %><p><%= import_reason_label(reason) %></p><% end %>
+          <% end %>
           <%= render "import_entries/decision", draft: draft %>
           <div class="field">
             <%= label_tag nil, "カテゴリ" %>

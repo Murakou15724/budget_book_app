@@ -1,5 +1,6 @@
 class Account < ApplicationRecord
   include ImportConfigurationGuard
+  has_many :import_payment_routes, inverse_of: :account, dependent: :restrict_with_error
   has_many :import_classification_rules, dependent: :restrict_with_error
   enum :kind, { bank: 0, e_money: 1, securities: 2, cash: 3, credit_pending: 4 }
 

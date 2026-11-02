@@ -1,0 +1,9 @@
+<% raw = entry.payload.fetch("csv_raw", {}) %>
+<p>CSV論理行 <%= entry.row_number %> / parser行 <%= entry.payload["csv_physical_line"] %></p>
+<% (Array(entry.payload["csv_errors"]) + Array(entry.payload["csv_holds"])).each do |reason| %><p><%= import_reason_label(reason) %></p><% end %>
+<dl>
+  <% raw.each do |key, value| %>
+    <dt><%= key %></dt><dd><%= local_assigns[:compact] ? value.first(255) : value %></dd>
+  <% end %>
+</dl>
+<% if local_assigns[:compact] %><p><%= link_to "原文全文・差分を確認", import_entry_path(entry) %></p><% end %>

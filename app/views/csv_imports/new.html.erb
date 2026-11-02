@@ -1,0 +1,10 @@
+<h1>PayPay明細CSVを取り込む</h1>
+<p>PayPayからCSVをダウンロードし、毎回ここから送信してください。UTF-8の公式13列書式、1ファイル8MiB・1,000行まで対応します。日時は2000〜2099年の日本時間、円の正の整数が対象です。</p>
+<p>通常の支払い・給与のうち、支払経路と確認済みルールが揃ったものだけが自動反映の候補です。チャージ・送金・返金・ポイント・外貨・不明な行は保留します。原文13列を履歴としてDBに保持し、CSV本体とファイル名は保存しません。</p>
+<%= link_to "取込元・支払経路を設定", import_sources_path %> / <%= link_to "確認済みルール", import_classification_rules_path %> / <%= link_to "取込履歴", import_documents_path %>
+<p role="alert"><%= @error %></p>
+<%= form_with url: csv_imports_path, multipart: true do %>
+  <p><%= label_tag :source_id, "取込元（同じPayPay利用者では同じ設定を再利用）" %><%= select_tag :source_id, options_from_collection_for_select(@sources, :id, :name, params[:source_id]), include_blank: "選択してください", required: true %></p>
+  <p><%= label_tag :csv_file, "明細CSV" %><%= file_field_tag :csv_file, required: true %></p>
+  <%= submit_tag "CSVを送信して結果を確認" %>
+<% end %>

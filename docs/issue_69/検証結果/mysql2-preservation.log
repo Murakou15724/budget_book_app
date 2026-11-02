@@ -1,0 +1,330 @@
+-- create_table("accounts", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0888s
+-- create_table("asset_balances", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0589s
+-- create_table("asset_snapshots", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0592s
+-- create_table("badges", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0632s
+-- create_table("categories", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0767s
+-- create_table("category_monthly_budgets", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0649s
+-- create_table("exercises", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0545s
+-- create_table("image_import_drafts", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0837s
+-- create_table("import_classification_rules", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0860s
+-- create_table("import_documents", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0618s
+-- create_table("import_entries", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0856s
+-- create_table("import_events", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0499s
+-- create_table("import_guards", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0437s
+-- create_table("import_identities", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0542s
+-- create_table("import_sources", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0448s
+-- create_table("income_monthly_estimates", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0438s
+-- create_table("monthly_reviews", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0408s
+-- create_table("payment_methods", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0476s
+-- create_table("quick_entry_templates", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0625s
+-- create_table("settings", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0519s
+-- create_table("transactions", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0714s
+-- create_table("weekly_reviews", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0417s
+-- create_table("workout_days", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0724s
+-- create_table("workout_entries", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0834s
+-- create_table("workout_settings", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0444s
+-- add_foreign_key("asset_balances", "accounts")
+   -> 0.0115s
+-- add_foreign_key("asset_balances", "asset_snapshots")
+   -> 0.0107s
+-- add_foreign_key("category_monthly_budgets", "categories")
+   -> 0.0111s
+-- add_foreign_key("image_import_drafts", "accounts")
+   -> 0.0126s
+-- add_foreign_key("image_import_drafts", "accounts", {:column=>"to_account_id"})
+   -> 0.0136s
+-- add_foreign_key("image_import_drafts", "categories")
+   -> 0.0113s
+-- add_foreign_key("image_import_drafts", "import_entries")
+   -> 0.0115s
+-- add_foreign_key("image_import_drafts", "payment_methods")
+   -> 0.0106s
+-- add_foreign_key("import_classification_rules", "accounts")
+   -> 0.0128s
+-- add_foreign_key("import_classification_rules", "categories")
+   -> 0.0117s
+-- add_foreign_key("import_classification_rules", "import_entries", {:column=>"confirmation_entry_id"})
+   -> 0.0138s
+-- add_foreign_key("import_classification_rules", "import_sources")
+   -> 0.0108s
+-- add_foreign_key("import_classification_rules", "payment_methods")
+   -> 0.0100s
+-- add_foreign_key("import_documents", "import_sources")
+   -> 0.0105s
+-- add_foreign_key("import_entries", "import_documents")
+   -> 0.0220s
+-- add_foreign_key("import_entries", "import_entries", {:column=>"reference_entry_id"})
+   -> 0.0184s
+-- add_foreign_key("import_entries", "import_identities")
+   -> 0.0151s
+-- add_foreign_key("import_events", "import_documents")
+   -> 0.0109s
+-- add_foreign_key("import_events", "import_entries")
+   -> 0.0101s
+-- add_foreign_key("import_identities", "import_entries", {:column=>"bound_entry_id"})
+   -> 0.0134s
+-- add_foreign_key("import_identities", "import_sources")
+   -> 0.0128s
+-- add_foreign_key("import_sources", "accounts")
+   -> 0.0112s
+-- add_foreign_key("quick_entry_templates", "accounts")
+   -> 0.0105s
+-- add_foreign_key("quick_entry_templates", "accounts", {:column=>"to_account_id"})
+   -> 0.0108s
+-- add_foreign_key("quick_entry_templates", "categories")
+   -> 0.0101s
+-- add_foreign_key("quick_entry_templates", "payment_methods")
+   -> 0.0097s
+-- add_foreign_key("settings", "accounts", {:column=>"credit_card_payment_account_id"})
+   -> 0.0102s
+-- add_foreign_key("transactions", "accounts")
+   -> 0.0114s
+-- add_foreign_key("transactions", "accounts", {:column=>"to_account_id"})
+   -> 0.0214s
+-- add_foreign_key("transactions", "categories")
+   -> 0.0197s
+-- add_foreign_key("transactions", "payment_methods")
+   -> 0.0114s
+-- add_foreign_key("workout_entries", "exercises")
+   -> 0.0108s
+-- add_foreign_key("workout_entries", "workout_days")
+   -> 0.0123s
+==  AddPaypayCsvImport: migrating =============================================
+-- create_table(:import_payment_routes, {:if_not_exists=>true})
+   -> 0.0229s
+-- add_index(:import_payment_routes, [:import_source_id, :source_method_digest], {:unique=>true, :name=>"index_import_routes_on_source_method", :if_not_exists=>true})
+   -> 0.0192s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:import_source_id})
+   -> 0.0012s
+-- add_foreign_key(:import_payment_routes, :import_sources, {:column=>:import_source_id})
+   -> 0.0593s
+-- add_index(:import_payment_routes, :account_id, {:if_not_exists=>true})
+   -> 0.0211s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:account_id})
+   -> 0.0014s
+-- add_foreign_key(:import_payment_routes, :accounts, {:column=>:account_id})
+   -> 0.0598s
+-- add_index(:import_payment_routes, :payment_method_id, {:if_not_exists=>true})
+   -> 0.0234s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:payment_method_id})
+   -> 0.0018s
+-- add_foreign_key(:import_payment_routes, :payment_methods, {:column=>:payment_method_id})
+   -> 0.0771s
+-- column_exists?(:import_sources, :csv_auto_apply_enabled)
+   -> 0.0016s
+-- add_column(:import_sources, :csv_auto_apply_enabled, :boolean, {:null=>false, :default=>false})
+   -> 0.0233s
+-- column_exists?(:import_classification_rules, :import_payment_route_id)
+   -> 0.0022s
+-- add_column(:import_classification_rules, :import_payment_route_id, :bigint)
+   -> 0.0219s
+-- add_index(:import_classification_rules, :import_payment_route_id, {:if_not_exists=>true})
+   -> 0.0453s
+-- foreign_key_exists?(:import_classification_rules, :import_payment_routes)
+   -> 0.0020s
+==  AddPaypayCsvImport: migrating =============================================
+-- create_table(:import_payment_routes, {:if_not_exists=>true})
+   -> 0.0037s
+-- add_index(:import_payment_routes, [:import_source_id, :source_method_digest], {:unique=>true, :name=>"index_import_routes_on_source_method", :if_not_exists=>true})
+   -> 0.0037s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:import_source_id})
+   -> 0.0014s
+-- add_index(:import_payment_routes, :account_id, {:if_not_exists=>true})
+   -> 0.0011s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:account_id})
+   -> 0.0010s
+-- add_index(:import_payment_routes, :payment_method_id, {:if_not_exists=>true})
+   -> 0.0012s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:payment_method_id})
+   -> 0.0019s
+-- column_exists?(:import_sources, :csv_auto_apply_enabled)
+   -> 0.0017s
+-- column_exists?(:import_classification_rules, :import_payment_route_id)
+   -> 0.0017s
+-- add_index(:import_classification_rules, :import_payment_route_id, {:if_not_exists=>true})
+   -> 0.0039s
+-- foreign_key_exists?(:import_classification_rules, :import_payment_routes)
+   -> 0.0014s
+-- add_foreign_key(:import_classification_rules, :import_payment_routes)
+   -> 0.1046s
+-- change_column(:import_identities, :external_id, :text, {:limit=>16777215, :null=>false})
+   -> 0.0707s
+==  AddPaypayCsvImport: migrated (0.2009s) ====================================
+
+==  AddPaypayCsvImport: migrating =============================================
+-- create_table(:import_payment_routes, {:if_not_exists=>true})
+   -> 0.0035s
+-- add_index(:import_payment_routes, [:import_source_id, :source_method_digest], {:unique=>true, :name=>"index_import_routes_on_source_method", :if_not_exists=>true})
+   -> 0.0012s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:import_source_id})
+   -> 0.0012s
+-- add_index(:import_payment_routes, :account_id, {:if_not_exists=>true})
+   -> 0.0010s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:account_id})
+   -> 0.0012s
+-- add_index(:import_payment_routes, :payment_method_id, {:if_not_exists=>true})
+   -> 0.0009s
+-- foreign_key_exists?(:import_payment_routes, {:column=>:payment_method_id})
+   -> 0.0016s
+-- column_exists?(:import_sources, :csv_auto_apply_enabled)
+   -> 0.0014s
+-- column_exists?(:import_classification_rules, :import_payment_route_id)
+   -> 0.0012s
+-- add_index(:import_classification_rules, :import_payment_route_id, {:if_not_exists=>true})
+   -> 0.0010s
+-- foreign_key_exists?(:import_classification_rules, :import_payment_routes)
+   -> 0.0010s
+==  AddPaypayCsvImport: migrated (0.0168s) ====================================
+
+-- create_table("accounts", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0571s
+-- create_table("asset_balances", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0422s
+-- create_table("asset_snapshots", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0292s
+-- create_table("badges", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0421s
+-- create_table("categories", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0556s
+-- create_table("category_monthly_budgets", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0555s
+-- create_table("exercises", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0384s
+-- create_table("image_import_drafts", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.0782s
+-- create_table("import_classification_rules", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2169s
+-- create_table("import_documents", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1711s
+-- create_table("import_entries", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2257s
+-- create_table("import_events", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1873s
+-- create_table("import_guards", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1936s
+-- create_table("import_identities", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1800s
+-- create_table("import_payment_routes", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1821s
+-- create_table("import_sources", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1461s
+-- create_table("income_monthly_estimates", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1347s
+-- create_table("monthly_reviews", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1646s
+-- create_table("payment_methods", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2168s
+-- create_table("quick_entry_templates", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1828s
+-- create_table("settings", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1301s
+-- create_table("transactions", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2130s
+-- create_table("weekly_reviews", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1265s
+-- create_table("workout_days", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2010s
+-- create_table("workout_entries", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.2033s
+-- create_table("workout_settings", {:charset=>"utf8mb4", :collation=>"utf8mb4_0900_ai_ci", :force=>:cascade})
+   -> 0.1177s
+-- add_foreign_key("asset_balances", "accounts")
+   -> 0.0204s
+-- add_foreign_key("asset_balances", "asset_snapshots")
+   -> 0.0209s
+-- add_foreign_key("category_monthly_budgets", "categories")
+   -> 0.0167s
+-- add_foreign_key("image_import_drafts", "accounts")
+   -> 0.0247s
+-- add_foreign_key("image_import_drafts", "accounts", {:column=>"to_account_id"})
+   -> 0.0148s
+-- add_foreign_key("image_import_drafts", "categories")
+   -> 0.0228s
+-- add_foreign_key("image_import_drafts", "import_entries")
+   -> 0.0240s
+-- add_foreign_key("image_import_drafts", "payment_methods")
+   -> 0.0252s
+-- add_foreign_key("import_classification_rules", "accounts")
+   -> 0.0204s
+-- add_foreign_key("import_classification_rules", "categories")
+   -> 0.0181s
+-- add_foreign_key("import_classification_rules", "import_entries", {:column=>"confirmation_entry_id"})
+   -> 0.0221s
+-- add_foreign_key("import_classification_rules", "import_payment_routes")
+   -> 0.0212s
+-- add_foreign_key("import_classification_rules", "import_sources")
+   -> 0.0302s
+-- add_foreign_key("import_classification_rules", "payment_methods")
+   -> 0.0228s
+-- add_foreign_key("import_documents", "import_sources")
+   -> 0.0220s
+-- add_foreign_key("import_entries", "import_documents")
+   -> 0.0325s
+-- add_foreign_key("import_entries", "import_entries", {:column=>"reference_entry_id"})
+   -> 0.0225s
+-- add_foreign_key("import_entries", "import_identities")
+   -> 0.0255s
+-- add_foreign_key("import_events", "import_documents")
+   -> 0.0223s
+-- add_foreign_key("import_events", "import_entries")
+   -> 0.0173s
+-- add_foreign_key("import_identities", "import_entries", {:column=>"bound_entry_id"})
+   -> 0.0364s
+-- add_foreign_key("import_identities", "import_sources")
+   -> 0.0239s
+-- add_foreign_key("import_payment_routes", "accounts")
+   -> 0.0199s
+-- add_foreign_key("import_payment_routes", "import_sources")
+   -> 0.0209s
+-- add_foreign_key("import_payment_routes", "payment_methods")
+   -> 0.0383s
+-- add_foreign_key("import_sources", "accounts")
+   -> 0.0412s
+-- add_foreign_key("quick_entry_templates", "accounts")
+   -> 0.0378s
+-- add_foreign_key("quick_entry_templates", "accounts", {:column=>"to_account_id"})
+   -> 0.0348s
+-- add_foreign_key("quick_entry_templates", "categories")
+   -> 0.0376s
+-- add_foreign_key("quick_entry_templates", "payment_methods")
+   -> 0.0333s
+-- add_foreign_key("settings", "accounts", {:column=>"credit_card_payment_account_id"})
+   -> 0.0385s
+-- add_foreign_key("transactions", "accounts")
+   -> 0.0259s
+-- add_foreign_key("transactions", "accounts", {:column=>"to_account_id"})
+   -> 0.0199s
+-- add_foreign_key("transactions", "categories")
+   -> 0.0262s
+-- add_foreign_key("transactions", "payment_methods")
+   -> 0.0225s
+-- add_foreign_key("workout_entries", "exercises")
+   -> 0.0241s
+-- add_foreign_key("workout_entries", "workout_days")
+   -> 0.0183s
+mysql2: migration PASS, schema PASS

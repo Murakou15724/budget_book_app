@@ -15,7 +15,7 @@ module Imports
       match = Matcher.call(entry: entry, draft: entry.image_import_draft)
       target_id = entry.target_transaction_id if %w[acknowledge_current acknowledge_deleted].include?(action.to_s)
       target = Transaction.where(id: target_id).lock.first if target_id.present?
-      versions = entry.import_identity&.import_entries&.order(:id)&.lock&.map { |e| [e.id, e.lock_version] }
+      versions = entry.import_identity&.import_entries&.order(:id)&.lock&.pluck(:id, :lock_version)
       { "entry_id" => entry.id, "lock_version" => entry.lock_version,
         "source_account" => entry.import_document.import_source.account_id,
         "source_account_mismatch" => entry.image_import_draft.account_id != entry.import_document.import_source.account_id,
